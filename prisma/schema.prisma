@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ================= ENUM =================
+enum ProductCategory {
+  ACCESSORY
+  VOUCHER
+  PULSA
+}
+
+enum TransactionType {
+  SALE
+  PURCHASE
+}
+
+enum TransactionStatus {
+  ACTIVE
+  CANCELLED
+}
+
+// ================= USER =================
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+}
+
+// ================= PHONE (HP) =================
+model Phone {
+  id        String  @id @default(cuid())
+  code      String  @unique
+  brand     String
+  type      String
+  imei      String  @unique
+  color     String?
+
+  purchasePrice Int
+  purchaseDate  DateTime @default(now())
+
+  stock Int @default(1)
+  
+  image String?  // URL atau path gambar
+
+  createdAt        DateTime          @default(now())
+  transactionItems TransactionItem[]
+  
+  metadata PhoneMetadata[]
+}
+
+// ================= PHONE METADATA (Dynamic) =================
+model PhoneMetadata {
+  id        String @id @default(cuid())
+  phoneId   String
+  phone     Phone  @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([phoneId, key])
+}
+// ================= PRODUCT (NON-HP) =================
+model Product {
+  id       String          @id @default(cuid())
+  code     String          @unique
+  name     String
+  category ProductCategory
+
+  costPrice Int?
+  sellPrice Int?
+
+  stock Int @default(0)
+  
+  image String?  // URL atau path gambar
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  transactionItems TransactionItem[]
+}
+
+// ================= TRANSACTION =================
+model Transaction {
+  id     String            @id @default(cuid())
+  type   TransactionType
+  status TransactionStatus @default(ACTIVE)
+
+  totalAmount Int
+  totalCost   Int
+  profit      Int
+
+  note String?
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  items TransactionItem[]
+
+  @@index([createdAt])
+}
+
+// ================= TRANSACTION ITEM =================
+model TransactionItem {
+  id String @id @default(cuid())
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  phoneId String?
+  phone   Phone?  @relation(fields: [phoneId], references: [id])
+
+  quantity Int @default(1)
+
+  sellPrice Int
+  costPrice Int
+}
