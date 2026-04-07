@@ -3,7 +3,7 @@ import ClientLayout from "./components/ClientLayout";
 import "./globals.css";
 
 export const metadata = {
-  title: "Taurus Store - Aplikasi Pembukuan",
+  title: "Taurus Cellular - Aplikasi Pembukuan",
   description: "Aplikasi pembukuan untuk toko",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes",
 };

@@ -274,9 +274,6 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-gray-800">
                 Transaksi Terbaru
               </h2>
-              <a href="/transaksi" className="text-sm text-purple-600 hover:text-purple-700">
-                Lihat semua
-              </a>
             </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
@@ -343,9 +340,6 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-gray-800">
                 ⚠️ Stok Menipis
               </h2>
-              <a href="/produk" className="text-sm text-purple-600 hover:text-purple-700">
-                Kelola stok
-              </a>
             </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">

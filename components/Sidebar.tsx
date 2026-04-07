@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 export default function Sidebar() {
   const pathname = usePathname();
   const [openInventory, setOpenInventory] = useState(false);
+  const [openOtherProducts, setOpenOtherProducts] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Tutup mobile menu saat ganti halaman
@@ -58,7 +59,7 @@ export default function Sidebar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <span className="font-semibold text-gray-800 text-lg">Taurus Store</span>
+            <span className="font-semibold text-gray-800 text-lg">Taurus Cellular</span>
           </div>
         </div>
 
@@ -94,7 +95,6 @@ export default function Sidebar() {
             <span className="text-sm font-medium">Kasir</span>
           </Link>
 
-
           {/* Inventori Dropdown */}
           <div>
             <button
@@ -123,6 +123,7 @@ export default function Sidebar() {
 
             {openInventory && (
               <div className="ml-4 mt-1 space-y-1">
+                {/* HP - berdiri sendiri */}
                 <Link
                   href="/hp"
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
@@ -136,45 +137,77 @@ export default function Sidebar() {
                   </svg>
                   <span className="text-sm">HP</span>
                 </Link>
-                <Link
-                  href="/voucher"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                    isActive("/voucher")
-                      ? "bg-purple-50 text-purple-700"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5h14a2 2 0 012 2v3a2 2 0 00-2 2v3a2 2 0 002 2v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 002-2v-3a2 2 0 00-2-2V7a2 2 0 012-2z" />
-                  </svg>
-                  <span className="text-sm">Voucher</span>
-                </Link>
-                <Link
-                  href="/pulsa"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                    isActive("/pulsa")
-                      ? "bg-purple-50 text-purple-700"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm">Pulsa</span>
-                </Link>
-                <Link
-                  href="/aksesoris"
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                    isActive("/aksesoris")
-                      ? "bg-purple-50 text-purple-700"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <span className="text-sm">Aksesoris</span>
-                </Link>
+
+                {/* Produk Lain - Dropdown */}
+                <div>
+                  <button
+                    onClick={() => setOpenOtherProducts(!openOtherProducts)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition ${
+                      isActive("/voucher") || isActive("/pulsa") || isActive("/aksesoris")
+                        ? "text-purple-700"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <span className="text-sm">Produk Lain</span>
+                    </div>
+                    <svg
+                      className={`w-3 h-3 transition-transform ${openOtherProducts ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {openOtherProducts && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      <Link
+                        href="/voucher"
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                          isActive("/voucher")
+                            ? "bg-purple-50 text-purple-700"
+                            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5h14a2 2 0 012 2v3a2 2 0 00-2 2v3a2 2 0 002 2v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 002-2v-3a2 2 0 00-2-2V7a2 2 0 012-2z" />
+                        </svg>
+                        <span className="text-sm">Voucher</span>
+                      </Link>
+                      <Link
+                        href="/pulsa"
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                          isActive("/pulsa")
+                            ? "bg-purple-50 text-purple-700"
+                            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm">Pulsa</span>
+                      </Link>
+                      <Link
+                        href="/aksesoris"
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                          isActive("/aksesoris")
+                            ? "bg-purple-50 text-purple-700"
+                            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className="text-sm">Aksesoris</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
