@@ -46,7 +46,8 @@ export async function GET(request: Request) {
         costPrice: true,
         sellPrice: true,
         stock: true,
-        image: true
+        image: true,
+        entryDate: true,
       },
       orderBy: { name: "asc" },
     });
@@ -69,7 +70,8 @@ export async function GET(request: Request) {
         type: true,
         purchasePrice: true,
         stock: true,
-        image: true
+        image: true,
+        entryDate: true,
       },
       orderBy: { brand: "asc" },
     });
@@ -85,7 +87,8 @@ export async function GET(request: Request) {
         sellPrice: p.sellPrice || p.costPrice || 0,
         stock: p.stock,
         type: "product",
-        image: p.image
+        image: p.image,
+        entryDate: p.entryDate
       })),
       ...phones.map(p => ({
         id: p.id,
@@ -96,7 +99,8 @@ export async function GET(request: Request) {
         sellPrice: p.purchasePrice, // harga jual awal = harga modal
         stock: p.stock,
         type: "phone",
-        image: p.image
+        image: p.image,
+        entryDate: p.entryDate
       })),
     ];
 
@@ -143,7 +147,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { code, name, category, costPrice, sellPrice, stock, image } = body;
+    const { code, name, category, costPrice, sellPrice, stock, image, entryDate } = body;
 
     const existingCode = await prisma.product.findUnique({
       where: { code },
@@ -158,9 +162,10 @@ export async function POST(request: Request) {
         name,
         category,
         costPrice: parseInt(costPrice),
-        sellPrice: sellPrice ? parseInt(sellPrice) : null,
+        sellPrice: sellPrice ? parseInt(sellPrice) : parseInt(costPrice),
         stock: parseInt(stock) || 0,
         image: image || null,
+        entryDate: entryDate ? new Date(entryDate) : new Date(), // ✅ tambah ini
       },
     });
 
@@ -180,7 +185,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, name, category, costPrice, sellPrice, stock, image } = body;
+    const { id, code, name, category, costPrice, sellPrice, stock, image, entryDate } = body;
 
     const product = await prisma.product.update({
       where: { id },
@@ -189,9 +194,10 @@ export async function PUT(request: Request) {
         name,
         category,
         costPrice: parseInt(costPrice),
-        sellPrice: sellPrice ? parseInt(sellPrice) : null,
+        sellPrice: sellPrice ? parseInt(sellPrice) : parseInt(costPrice),
         stock: parseInt(stock),
         image: image || null,
+        entryDate: entryDate ? new Date(entryDate) : undefined, // ✅ tambah ini
       },
     });
 

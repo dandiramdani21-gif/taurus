@@ -89,6 +89,7 @@ model Product {
   stock Int @default(0)
   
   image String?  // URL atau path gambar
+  entryDate DateTime @default(now())
 
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

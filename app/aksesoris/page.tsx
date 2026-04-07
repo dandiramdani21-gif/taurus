@@ -15,6 +15,7 @@ interface Aksesoris {
   stock: number;
   image: string | null;
   entryDate: string;
+  createdAt: string;
 }
 
 interface PaginationData {
@@ -358,9 +359,9 @@ export default function AksesorisPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {item.entryDate ? new Date(item.entryDate).toLocaleDateString("id-ID") : "-"}
-                        </td>
+<td className="px-6 py-4 text-sm text-gray-500">
+  {item.entryDate ? new Date(item.entryDate).toLocaleDateString("id-ID") : new Date(item.createdAt).toLocaleDateString("id-ID")}
+</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => setShowDetail(item)} className="text-gray-500 hover:text-gray-700">
