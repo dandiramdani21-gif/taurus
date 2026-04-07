@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Redirect jika sudah login
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.push("/kasir/hp");
     }
   }, [status, router]);
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/dashboard");
+        router.push("/kasir/hp");
       }
     } catch (error) {
       setError("Terjadi kesalahan");
