@@ -49,8 +49,18 @@ export default function KasirPage() {
     total: 0,
     totalPages: 0,
   });
-  const [showInvoice, setShowInvoice] = useState(false);
-  const [invoiceData, setInvoiceData] = useState<any>(null);
+  const [showCart, setShowCart] = useState(false); // Untuk mobile: tampilkan cart
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Cek apakah device mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -122,13 +132,18 @@ export default function KasirPage() {
           code: product.code,
           name: product.name,
           costPrice: product.costPrice,
-          sellPrice: 0,
+          sellPrice: product.sellPrice || product.costPrice,
           quantity: 1,
           subtotal: product.sellPrice || product.costPrice,
           profit: (product.sellPrice || product.costPrice) - product.costPrice,
         },
       ];
     });
+    
+    // Di mobile, setelah add to cart, tetap di halaman produk
+    if (isMobile) {
+      setShowCart(false);
+    }
   };
 
   const updateQuantity = (id: string, newQuantity: number) => {
@@ -190,45 +205,44 @@ export default function KasirPage() {
     return cart.reduce((sum, item) => sum + (item.costPrice * item.quantity), 0);
   };
 
-const handleCheckout = async () => {
-  if (cart.length === 0) {
-    alert("Keranjang kosong!");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "SALE",
-        items: cart.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          sellPrice: item.sellPrice,
-          costPrice: item.costPrice,
-        })),
-        totalAmount: calculateTotal(),
-        totalCost: calculateTotalCost(),
-        profit: calculateTotalProfit(),
-      }),
-    });
-
-    if (res.ok) {
-      const transaction = await res.json();
-      // Redirect ke halaman invoice
-      router.push(`/invoice/${transaction.id}`);
-      setCart([]);
-      fetchProducts();
-    } else {
-      const error = await res.json();
-      alert(error.error || "Gagal checkout");
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      alert("Keranjang kosong!");
+      return;
     }
-  } catch (error) {
-    console.error("Error checkout:", error);
-    alert("Gagal melakukan checkout");
-  }
-};
+
+    try {
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "SALE",
+          items: cart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            sellPrice: item.sellPrice,
+            costPrice: item.costPrice,
+          })),
+          totalAmount: calculateTotal(),
+          totalCost: calculateTotalCost(),
+          profit: calculateTotalProfit(),
+        }),
+      });
+
+      if (res.ok) {
+        const transaction = await res.json();
+        router.push(`/invoice/${transaction.id}`);
+        setCart([]);
+        fetchProducts();
+      } else {
+        const error = await res.json();
+        alert(error.error || "Gagal checkout");
+      }
+    } catch (error) {
+      console.error("Error checkout:", error);
+      alert("Gagal melakukan checkout");
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -238,6 +252,213 @@ const handleCheckout = async () => {
     );
   }
 
+  // Tampilan Mobile (Stack)
+  if (isMobile) {
+    return (
+      <div className="pb-20">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-xl font-bold text-gray-800">Kasir</h1>
+          <p className="text-xs text-gray-500">Pilih produk untuk dijual</p>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex gap-2 mb-4">
+          <div className="flex-1 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Cari produk..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+            />
+          </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+          >
+            <option value="all">Semua</option>
+            <option value="ACCESSORY">Aksesoris</option>
+            <option value="VOUCHER">Voucher</option>
+            <option value="PULSA">Pulsa</option>
+            <option value="PHONE">HP</option>
+          </select>
+        </div>
+
+        {/* Cart Summary Button (Mobile) */}
+        <button
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-4 right-4 z-50 bg-purple-600 text-white p-4 rounded-full shadow-lg flex items-center gap-2"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span className="font-bold">{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
+        </button>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {loading ? (
+            <div className="col-span-2 text-center py-8 text-purple-600">Loading...</div>
+          ) : products.length === 0 ? (
+            <div className="col-span-2 text-center py-8 text-gray-500">Tidak ada produk</div>
+          ) : (
+            products.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => addToCart(product)}
+                disabled={product.stock === 0}
+                className={`p-3 rounded-xl border text-left transition ${
+                  product.stock === 0
+                    ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                    : "bg-white border-gray-200 active:bg-gray-50"
+                }`}
+              >
+                <div className="aspect-square bg-gray-100 rounded-lg mb-2 overflow-hidden flex items-center justify-center">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="font-medium text-gray-800 text-sm truncate">{product.name}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{product.code}</div>
+                <div className="text-sm font-semibold text-purple-600 mt-1">
+                  Rp {(product.sellPrice || product.costPrice)?.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  Modal: Rp {product.costPrice?.toLocaleString()}
+                </div>
+                <div className={`text-xs mt-1 ${product.stock < 3 ? "text-orange-500" : "text-gray-400"}`}>
+                  Stok: {product.stock}
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+              disabled={pagination.page === 1}
+              className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="px-3 py-1 text-sm">
+              {pagination.page} / {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+              disabled={pagination.page === pagination.totalPages}
+              className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {/* Cart Modal (Mobile) */}
+        {showCart && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+            <div className="bg-white w-full max-h-[80vh] rounded-t-xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+                <h2 className="text-lg font-semibold">Keranjang</h2>
+                <button onClick={() => setShowCart(false)} className="text-gray-400">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {cart.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    <p>Keranjang kosong</p>
+                  </div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 text-sm">{item.name}</div>
+                          <div className="text-xs text-gray-400">{item.code}</div>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-red-400">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
+                          <span className="w-8 text-center text-sm">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs text-gray-500">Harga Jual</label>
+                          <input
+                            type="number"
+                            value={item.sellPrice}
+                            onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
+                            className="w-full mt-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Subtotal:</span>
+                          <span className="font-semibold">Rp {item.subtotal.toLocaleString()}</span>
+                        </div>
+                        <div className={`flex justify-between text-sm ${item.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          <span>Keuntungan:</span>
+                          <span>Rp {item.profit.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total Modal:</span>
+                  <span>Rp {calculateTotalCost().toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total Penjualan:</span>
+                  <span className="font-semibold">Rp {calculateTotal().toLocaleString()}</span>
+                </div>
+                <div className={`flex justify-between text-base font-bold ${calculateTotalProfit() >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <span>Keuntungan:</span>
+                  <span>Rp {calculateTotalProfit().toLocaleString()}</span>
+                </div>
+                <button
+                  onClick={handleCheckout}
+                  disabled={cart.length === 0}
+                  className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50"
+                >
+                  Bayar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Tampilan Desktop (Row - seperti sebelumnya)
   return (
     <div className="h-[calc(100vh-2rem)]">
       <div className="flex gap-6 h-full">
@@ -300,17 +521,9 @@ const handleCheckout = async () => {
                             : "bg-white border-gray-200 hover:border-purple-300 hover:shadow-md cursor-pointer"
                         }`}
                       >
-                        {/* Product Image */}
                         <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden flex items-center justify-center">
                           {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://placehold.co/200x200?text=No+Image";
-                              }}
-                            />
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
                               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,14 +532,14 @@ const handleCheckout = async () => {
                             </div>
                           )}
                         </div>
-                        
-                        {/* Product Info */}
                         <div className="font-medium text-gray-800 truncate text-sm">{product.name}</div>
                         <div className="text-xs text-gray-500 mt-0.5">{product.code}</div>
                         <div className="text-base font-semibold text-purple-600 mt-2">
                           Rp {(product.sellPrice || product.costPrice)?.toLocaleString()}
                         </div>
-                        
+                        <div className="text-xs text-gray-400 mt-1">
+                          Modal: Rp {product.costPrice?.toLocaleString()}
+                        </div>
                         <div className={`text-xs mt-1 ${product.stock < 3 ? "text-orange-500" : "text-gray-400"}`}>
                           Stok: {product.stock}
                         </div>
@@ -362,7 +575,7 @@ const handleCheckout = async () => {
           </div>
         </div>
 
-        {/* Right Side - Cart */}
+        {/* Right Side - Cart (Desktop) */}
         <div className="w-96 bg-white rounded-xl shadow-lg flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-800">Keranjang Belanja</h2>
@@ -385,10 +598,7 @@ const handleCheckout = async () => {
                       <div className="font-medium text-gray-800">{item.name}</div>
                       <div className="text-xs text-gray-500">{item.code}</div>
                     </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-red-400 hover:text-red-600"
-                    >
+                    <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-600">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -397,25 +607,16 @@ const handleCheckout = async () => {
                   
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-7 h-7 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
-                      >
-                        -
-                      </button>
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
                       <span className="w-10 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-7 h-7 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
-                      >
-                        +
-                      </button>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
                     </div>
                     
                     <div>
                       <label className="text-xs text-gray-500">Harga Jual</label>
                       <input
                         type="number"
+                        value={item.sellPrice}
                         onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
                         className="w-full mt-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 outline-none"
                       />
@@ -425,7 +626,6 @@ const handleCheckout = async () => {
                       <span className="text-gray-500">Modal:</span>
                       <span>Rp {item.costPrice.toLocaleString()}</span>
                     </div>
-
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Subtotal:</span>
                       <span className="font-semibold">Rp {item.subtotal.toLocaleString()}</span>
@@ -440,7 +640,6 @@ const handleCheckout = async () => {
             )}
           </div>
 
-          {/* Cart Summary */}
           <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Total Modal:</span>
@@ -464,109 +663,6 @@ const handleCheckout = async () => {
           </div>
         </div>
       </div>
-
-      {/* Invoice Page */}
-      {showInvoice && (
-        <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-          <div className="max-w-2xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">INVOICE</h1>
-              <button
-                onClick={() => setShowInvoice(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-              {/* Header */}
-              <div className="text-center border-b border-gray-200 pb-4">
-                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                {/* <h2 className="text-xl font-bold text-gray-800">Taurus Cellular</h2>
-                <p className="text-sm text-gray-500 mt-1">Jl. Contoh No. 123, Kota</p>
-                <p className="text-sm text-gray-500">Telp: 0812-3456-7890</p> */}
-              </div>
-
-              {/* Info */}
-              <div className="flex justify-between text-sm">
-                <div>
-                  <p className="text-gray-500">No. Invoice</p>
-                  <p className="font-medium">{invoiceData?.id?.slice(-8) || "INV-001"}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-500">Tanggal</p>
-                  <p className="font-medium">{new Date().toLocaleString("id-ID")}</p>
-                </div>
-              </div>
-
-              {/* Items */}
-              <table className="w-full text-sm">
-                <thead className="border-t border-b border-gray-200">
-                  <tr>
-                    <th className="text-left py-2">Item</th>
-                    <th className="text-center py-2">Qty</th>
-                    <th className="text-right py-2">Harga</th>
-                    <th className="text-right py-2">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoiceData?.items.map((item: CartItem, idx: number) => (
-                    <tr key={idx} className="border-b border-gray-100">
-                      <td className="py-2">
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-xs text-gray-400">{item.code}</div>
-                       </td>
-                      <td className="text-center py-2">{item.quantity}</td>
-                      <td className="text-right py-2">Rp {item.sellPrice.toLocaleString()}</td>
-                      <td className="text-right py-2">Rp {item.subtotal.toLocaleString()}</td>
-                     </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Summary */}
-              <div className="border-t border-gray-200 pt-4 space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span>Rp {calculateTotal().toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
-                  <span>Total</span>
-                  <span>Rp {Math.floor(calculateTotal() * 1.1).toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="text-center text-xs text-gray-400 pt-4 border-t border-gray-200">
-                <p>Terima kasih telah berbelanja!</p>
-                <p className="mt-1">*** Simpan struk ini sebagai bukti pembelian ***</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => window.print()}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg transition"
-              >
-                Print
-              </button>
-              <button
-                onClick={() => setShowInvoice(false)}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition"
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
