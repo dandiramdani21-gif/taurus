@@ -54,7 +54,9 @@ export const ModelName = {
   User: 'User',
   Phone: 'Phone',
   PhoneMetadata: 'PhoneMetadata',
-  Product: 'Product',
+  Accessory: 'Accessory',
+  Voucher: 'Voucher',
+  Pulsa: 'Pulsa',
   Transaction: 'Transaction',
   TransactionItem: 'TransactionItem'
 } as const
@@ -115,11 +117,10 @@ export const PhoneMetadataScalarFieldEnum = {
 export type PhoneMetadataScalarFieldEnum = (typeof PhoneMetadataScalarFieldEnum)[keyof typeof PhoneMetadataScalarFieldEnum]
 
 
-export const ProductScalarFieldEnum = {
+export const AccessoryScalarFieldEnum = {
   id: 'id',
   code: 'code',
   name: 'name',
-  category: 'category',
   costPrice: 'costPrice',
   sellPrice: 'sellPrice',
   stock: 'stock',
@@ -129,7 +130,39 @@ export const ProductScalarFieldEnum = {
   updatedAt: 'updatedAt'
 } as const
 
-export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+export type AccessoryScalarFieldEnum = (typeof AccessoryScalarFieldEnum)[keyof typeof AccessoryScalarFieldEnum]
+
+
+export const VoucherScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  costPrice: 'costPrice',
+  sellPrice: 'sellPrice',
+  stock: 'stock',
+  image: 'image',
+  entryDate: 'entryDate',
+  expiredAt: 'expiredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type VoucherScalarFieldEnum = (typeof VoucherScalarFieldEnum)[keyof typeof VoucherScalarFieldEnum]
+
+
+export const PulsaScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  denomination: 'denomination',
+  costPrice: 'costPrice',
+  sellPrice: 'sellPrice',
+  note: 'note',
+  image: 'image',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PulsaScalarFieldEnum = (typeof PulsaScalarFieldEnum)[keyof typeof PulsaScalarFieldEnum]
 
 
 export const TransactionScalarFieldEnum = {
@@ -150,7 +183,9 @@ export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[key
 export const TransactionItemScalarFieldEnum = {
   id: 'id',
   transactionId: 'transactionId',
-  productId: 'productId',
+  accessoryId: 'accessoryId',
+  voucherId: 'voucherId',
+  pulsaId: 'pulsaId',
   phoneId: 'phoneId',
   quantity: 'quantity',
   sellPrice: 'sellPrice',

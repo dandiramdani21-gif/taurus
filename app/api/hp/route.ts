@@ -124,27 +124,29 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { id, code, brand, type, imei, color, purchasePrice, stock, image, metadata, entryDate } = body;
 
+    // Build data object hanya dengan field yang dikirim
+    const updateData: any = {};
+    
+    if (code !== undefined) updateData.code = code;
+    if (brand !== undefined) updateData.brand = brand;
+    if (type !== undefined) updateData.type = type;
+    if (imei !== undefined) updateData.imei = imei;
+    if (color !== undefined) updateData.color = color;
+    if (purchasePrice !== undefined) updateData.purchasePrice = parseInt(purchasePrice);
+    if (stock !== undefined) updateData.stock = parseInt(stock);
+    if (image !== undefined) updateData.image = image;
+    if (entryDate !== undefined) updateData.entryDate = entryDate ? new Date(entryDate) : undefined;
+
     await prisma.phone.update({
       where: { id },
-      data: {
-        code,
-        brand,
-        type,
-        imei,
-        color: color || null,
-        purchasePrice: parseInt(purchasePrice),
-        entryDate: entryDate ? new Date(entryDate) : undefined,
-        stock: parseInt(stock),
-        image: image || null,
-      },
+      data: updateData,
     });
 
-    // Update metadata
-    await prisma.phoneMetadata.deleteMany({
-      where: { phoneId: id },
-    });
-
+    // Update metadata jika ada
     if (metadata && metadata.length > 0) {
+      await prisma.phoneMetadata.deleteMany({
+        where: { phoneId: id },
+      });
       await prisma.phoneMetadata.createMany({
         data: metadata.map((m: any) => ({
           phoneId: id,

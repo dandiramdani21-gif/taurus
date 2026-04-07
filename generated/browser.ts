@@ -33,10 +33,20 @@ export type Phone = Prisma.PhoneModel
  */
 export type PhoneMetadata = Prisma.PhoneMetadataModel
 /**
- * Model Product
+ * Model Accessory
  * 
  */
-export type Product = Prisma.ProductModel
+export type Accessory = Prisma.AccessoryModel
+/**
+ * Model Voucher
+ * 
+ */
+export type Voucher = Prisma.VoucherModel
+/**
+ * Model Pulsa
+ * 
+ */
+export type Pulsa = Prisma.PulsaModel
 /**
  * Model Transaction
  * 

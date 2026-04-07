@@ -1,3 +1,4 @@
+// app/api/laporan/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -11,142 +12,88 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const productType = searchParams.get("productType"); // all, phone, accessory, voucher, pulsa
 
-    const whereCondition: any = {
-      status: "ACTIVE",
-    };
-
-    if (startDate && endDate) {
-      whereCondition.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate + "T23:59:59"),
-      };
+    if (!startDate || !endDate) {
+      return NextResponse.json({ error: "Tanggal mulai dan akhir diperlukan" }, { status: 400 });
     }
 
-    // Get all transactions with items
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // sampai akhir hari
+
+    // Filter dasar
+    let whereClause: any = {
+      type: "SALE",
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+    };
+
+    // Filter berdasarkan tipe produk
+    if (productType && productType !== "all") {
+      whereClause.items = {
+        some: {},
+      };
+
+      if (productType === "phone") whereClause.items.some.phoneId = { not: null };
+      if (productType === "accessory") whereClause.items.some.accessoryId = { not: null };
+      if (productType === "voucher") whereClause.items.some.voucherId = { not: null };
+      if (productType === "pulsa") whereClause.items.some.pulsaId = { not: null };
+    }
+
     const transactions = await prisma.transaction.findMany({
-      where: whereCondition,
+      where: whereClause,
       include: {
         items: {
           include: {
-            product: true,
             phone: true,
+            accessory: true,
+            voucher: true,
+            pulsa: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    const laporanData: any[] = [];
-    let totalRevenue = 0;
-    let totalCost = 0;
-    let totalProfit = 0;
-    let totalTransactions = transactions.length;
-    let totalItemsSold = 0;
+    // Hitung ringkasan
+    const totalRevenue = transactions.reduce((sum, t) => sum + t.totalAmount, 0);
+    const totalCost = transactions.reduce((sum, t) => sum + t.totalCost, 0);
+    const totalProfit = transactions.reduce((sum, t) => sum + t.profit, 0);
 
-    // Process each transaction
-    for (const transaction of transactions) {
-      for (const item of transaction.items) {
-        const product = item.product;
-        const phone = item.phone;
-        
-        const productName = product?.name || (phone ? `${phone.brand} ${phone.type}` : "-");
-        const productCode = product?.code || phone?.code || "-";
-        const buyPrice = item.costPrice;
-        const sellPrice = item.sellPrice;
-        const quantity = item.quantity;
-        const totalBuy = buyPrice * quantity;
-        const totalSell = sellPrice * quantity;
-        const profit = totalSell - totalBuy;
+    // Data untuk chart (group by tanggal)
+    const dailyMap = new Map<string, any>();
 
-        totalRevenue += totalSell;
-        totalCost += totalBuy;
-        totalProfit += profit;
-        totalItemsSold += quantity;
-
-        // Hitung sisa stok (cari dari database)
-        let stockLeft = 0;
-        if (product) {
-          stockLeft = product.stock;
-        } else if (phone) {
-          stockLeft = phone.stock;
-        }
-
-        laporanData.push({
-          id: transaction.id,
-          date: transaction.createdAt,
-          type: transaction.type,
-          productName,
-          productCode,
-          quantity,
-          buyPrice,
-          sellPrice,
-          totalBuy,
-          totalSell,
-          profit,
-          stockLeft,
-        });
+    transactions.forEach((t) => {
+      const dateStr = t.createdAt.toISOString().split("T")[0]; // yyyy-mm-dd
+      if (!dailyMap.has(dateStr)) {
+        dailyMap.set(dateStr, { date: dateStr, revenue: 0, cost: 0, profit: 0 });
       }
-    }
+      const day = dailyMap.get(dateStr)!;
+      day.revenue += t.totalAmount;
+      day.cost += t.totalCost;
+      day.profit += t.profit;
+    });
 
-    // Get monthly sales data for chart
-    const monthlyData = await getMonthlySalesData(startDate, endDate);
+    const chartData = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     return NextResponse.json({
-      data: laporanData,
+      transactions,
       summary: {
         totalRevenue,
         totalCost,
         totalProfit,
-        totalTransactions,
-        totalItemsSold,
+        transactionCount: transactions.length,
       },
-      monthlyData,
+      chartData,
     });
   } catch (error) {
-    console.error("Laporan API Error:", error);
+    console.error("Error fetching laporan:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
-
-async function getMonthlySalesData(startDate?: string | null, endDate?: string | null) {
-  const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
-  const end = endDate ? new Date(endDate + "T23:59:59") : new Date();
-
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      status: "ACTIVE",
-      type: "SALE",
-      createdAt: {
-        gte: start,
-        lte: end,
-      },
-    },
-    select: {
-      createdAt: true,
-      totalAmount: true,
-    },
-  });
-
-  const monthlyMap = new Map();
-
-  transactions.forEach((transaction) => {
-    const monthYear = transaction.createdAt.toLocaleDateString("id-ID", {
-      month: "short",
-      year: "numeric",
-    });
-    const currentTotal = monthlyMap.get(monthYear) || 0;
-    monthlyMap.set(monthYear, currentTotal + transaction.totalAmount);
-  });
-
-  const monthlyData = Array.from(monthlyMap.entries())
-    .map(([month, total]) => ({ month, total }))
-    .sort((a, b) => {
-      const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-      return months.indexOf(a.month.split(" ")[0]) - months.indexOf(b.month.split(" ")[0]);
-    });
-
-  return monthlyData;
 }

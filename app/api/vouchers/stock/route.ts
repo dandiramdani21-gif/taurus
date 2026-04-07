@@ -1,3 +1,4 @@
+// app/api/vouchers/stock/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
@@ -13,14 +14,18 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { id, stock } = body;
 
-    const product = await prisma.product.update({
+    if (!id || stock === undefined) {
+      return NextResponse.json({ error: "ID dan stok diperlukan" }, { status: 400 });
+    }
+
+    const voucher = await prisma.voucher.update({
       where: { id },
       data: { stock: parseInt(stock) },
     });
 
-    return NextResponse.json(product);
-  } catch (error) {
-    console.error("Error updating stock:", error);
+    return NextResponse.json(voucher);
+  } catch (error: any) {
+    console.error("Error updating voucher stock:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

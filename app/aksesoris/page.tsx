@@ -5,11 +5,10 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 
-interface Aksesoris {
+interface Accessory {
   id: string;
   code: string;
   name: string;
-  category: string;
   costPrice: number;
   sellPrice: number;
   stock: number;
@@ -28,13 +27,15 @@ interface PaginationData {
 export default function AksesorisPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [aksesorisList, setAksesorisList] = useState<Aksesoris[]>([]);
+
+  const [accessories, setAccessories] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showDetail, setShowDetail] = useState<Aksesoris | null>(null);
-  const [showStockModal, setShowStockModal] = useState<Aksesoris | null>(null);
-  const [editingAksesoris, setEditingAksesoris] = useState<Aksesoris | null>(null);
+  const [showDetail, setShowDetail] = useState<Accessory | null>(null);
+  const [showStockModal, setShowStockModal] = useState<Accessory | null>(null);
+  const [editingAccessory, setEditingAccessory] = useState<Accessory | null>(null);
   const [stockValue, setStockValue] = useState(0);
+
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 10,
@@ -49,7 +50,7 @@ export default function AksesorisPage() {
     name: "",
     costPrice: "",
     sellPrice: "",
-    stock: "",
+    stock: "0",
     image: "",
     entryDate: new Date().toISOString().split("T")[0],
   });
@@ -58,7 +59,7 @@ export default function AksesorisPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }, 500);
     return () => clearTimeout(timer);
   }, [search]);
@@ -70,63 +71,39 @@ export default function AksesorisPage() {
   }, [status, router]);
 
   useEffect(() => {
-    fetchAksesoris();
+    fetchAccessories();
   }, [pagination.page, debouncedSearch]);
 
-  const fetchAksesoris = async () => {
+  const fetchAccessories = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/products?page=${pagination.page}&limit=${pagination.limit}&search=${debouncedSearch}&category=ACCESSORY`
+        `/api/accessories?page=${pagination.page}&limit=${pagination.limit}&search=${debouncedSearch}`
       );
       const data = await res.json();
-      setAksesorisList(data.products || []);
+      setAccessories(data.accessories || []);
       setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
     } catch (error) {
-      console.error("Error fetching aksesoris:", error);
+      console.error("Error fetching accessories:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStock = async (id: string, newStock: number) => {
-    if (newStock < 0) {
-      alert("Stok tidak boleh minus!");
-      return;
-    }
-    
-    try {
-      const res = await fetch(`/api/products/stock`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, stock: newStock }),
-      });
-
-      if (res.ok) {
-        fetchAksesoris();
-        setShowStockModal(null);
-      } else {
-        alert("Gagal update stok");
-      }
-    } catch (error) {
-      console.error("Error updating stock:", error);
-      alert("Gagal update stok");
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (parseInt(formData.stock) < 0) {
       alert("Stok tidak boleh minus!");
       return;
     }
-    
-    const url = editingAksesoris ? "/api/products" : "/api/products";
-    const method = editingAksesoris ? "PUT" : "POST";
-    const body = editingAksesoris
-      ? { ...formData, id: editingAksesoris.id, category: "ACCESSORY" }
-      : { ...formData, category: "ACCESSORY" };
+
+    const url = editingAccessory ? "/api/accessories" : "/api/accessories";
+    const method = editingAccessory ? "PUT" : "POST";
+
+    const body = editingAccessory
+      ? { ...formData, id: editingAccessory.id }
+      : formData;
 
     try {
       const res = await fetch(url, {
@@ -136,16 +113,72 @@ export default function AksesorisPage() {
       });
 
       if (res.ok) {
-        fetchAksesoris();
+        fetchAccessories();
         setShowModal(false);
         resetForm();
+        alert(editingAccessory ? "Aksesoris berhasil diupdate!" : "Aksesoris berhasil ditambahkan!");
       } else {
-        const error = await res.json();
-        alert(error.error);
+        const err = await res.json();
+        alert(err.error || "Gagal menyimpan data");
       }
     } catch (error) {
-      console.error("Error saving aksesoris:", error);
-      alert("Gagal menyimpan data");
+      console.error("Error saving accessory:", error);
+      alert("Terjadi kesalahan saat menyimpan data");
+    }
+  };
+
+  const handleEdit = (item: Accessory) => {
+    setEditingAccessory(item);
+    setFormData({
+      code: item.code,
+      name: item.name,
+      costPrice: item.costPrice.toString(),
+      sellPrice: item.sellPrice.toString(),
+      stock: item.stock.toString(),
+      image: item.image || "",
+      entryDate: item.entryDate
+        ? new Date(item.entryDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+    });
+    setShowModal(true);
+  };
+
+  const resetForm = () => {
+    setEditingAccessory(null);
+    setFormData({
+      code: "",
+      name: "",
+      costPrice: "",
+      sellPrice: "",
+      stock: "0",
+      image: "",
+      entryDate: new Date().toISOString().split("T")[0],
+    });
+  };
+
+  const updateStock = async (id: string, newStock: number) => {
+    if (newStock < 0) {
+      alert("Stok tidak boleh minus!");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/accessories/stock", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, stock: newStock }),
+      });
+
+      if (res.ok) {
+        fetchAccessories();
+        setShowStockModal(null);
+        alert("Stok berhasil diupdate!");
+      } else {
+        alert("Gagal mengupdate stok");
+      }
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      alert("Gagal mengupdate stok");
     }
   };
 
@@ -153,50 +186,27 @@ export default function AksesorisPage() {
     if (!confirm("Yakin ingin menghapus aksesoris ini?")) return;
 
     try {
-      const res = await fetch(`/api/products?id=${id}`, {
+      const res = await fetch(`/api/accessories?id=${id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        fetchAksesoris();
+        fetchAccessories();
+        alert("Aksesoris berhasil dihapus!");
       } else {
-        alert("Gagal menghapus data");
+        const err = await res.json();
+        alert(err.error || "Gagal menghapus data");
       }
     } catch (error) {
-      console.error("Error deleting aksesoris:", error);
+      console.error("Error deleting accessory:", error);
       alert("Gagal menghapus data");
     }
   };
 
-  const handleEdit = (aksesoris: Aksesoris) => {
-    setEditingAksesoris(aksesoris);
-    setFormData({
-      code: aksesoris.code,
-      name: aksesoris.name,
-      costPrice: aksesoris.costPrice?.toString() || "",
-      sellPrice: aksesoris.sellPrice?.toString() || "",
-      stock: aksesoris.stock?.toString() || "",
-      image: aksesoris.image || "",
-      entryDate: aksesoris.entryDate ? new Date(aksesoris.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-    });
-    setShowModal(true);
-  };
-
-  const resetForm = () => {
-    setEditingAksesoris(null);
-    setFormData({
-      code: "",
-      name: "",
-      costPrice: "",
-      sellPrice: "",
-      stock: "",
-      image: "",
-      entryDate: new Date().toISOString().split("T")[0],
-    });
-  };
-
-  const goToPage = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString("id-ID");
   };
 
   if (status === "loading") {
@@ -207,16 +217,16 @@ export default function AksesorisPage() {
     );
   }
 
-  const totalStock = aksesorisList.reduce((sum, item) => sum + (item.stock || 0), 0);
-  const lowStockCount = aksesorisList.filter(item => item.stock > 0 && item.stock < 3).length;
+  const totalStock = accessories.reduce((sum, item) => sum + (item.stock || 0), 0);
+  const lowStockCount = accessories.filter((item) => item.stock > 0 && item.stock < 3).length;
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Aksesoris</h1>
-          <p className="text-gray-500 mt-1">Kelola data aksesoris</p>
+          <h1 className="text-2xl font-bold text-gray-800">Daftar Aksesoris</h1>
+          <p className="text-gray-500 mt-1">Kelola data aksesoris yang tersedia</p>
         </div>
         <button
           onClick={() => {
@@ -235,12 +245,17 @@ export default function AksesorisPage() {
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="text"
-            placeholder="Cari aksesoris..."
+            placeholder="Cari kode atau nama aksesoris..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
@@ -291,7 +306,7 @@ export default function AksesorisPage() {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <div className="text-purple-600">Loading...</div>
@@ -301,7 +316,7 @@ export default function AksesorisPage() {
           {/* Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-[900px] w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
@@ -315,14 +330,14 @@ export default function AksesorisPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {aksesorisList.length === 0 ? (
+                  {accessories.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="text-center py-12 text-gray-500">
                         Belum ada data aksesoris
                       </td>
                     </tr>
                   ) : (
-                    aksesorisList.map((item) => (
+                    accessories.map((item) => (
                       <tr key={item.id} className="hover:bg-gray-50 transition">
                         <td className="px-6 py-4">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
@@ -338,14 +353,12 @@ export default function AksesorisPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm font-mono text-gray-600">{item.code}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.costPrice?.toLocaleString() || 0}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.sellPrice?.toLocaleString() || 0}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{item.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.costPrice.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.sellPrice.toLocaleString()}</td>
                         <td className="px-6 py-4">
                           {item.stock === 0 ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Habis
-                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Habis</span>
                           ) : item.stock < 3 ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -359,9 +372,9 @@ export default function AksesorisPage() {
                             </span>
                           )}
                         </td>
-<td className="px-6 py-4 text-sm text-gray-500">
-  {item.entryDate ? new Date(item.entryDate).toLocaleDateString("id-ID") : new Date(item.createdAt).toLocaleDateString("id-ID")}
-</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {formatDate(item.entryDate)}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => setShowDetail(item)} className="text-gray-500 hover:text-gray-700">
@@ -370,7 +383,13 @@ export default function AksesorisPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                             </button>
-                            <button onClick={() => { setShowStockModal(item); setStockValue(item.stock); }} className="text-green-600 hover:text-green-800">
+                            <button
+                              onClick={() => {
+                                setShowStockModal(item);
+                                setStockValue(item.stock);
+                              }}
+                              className="text-green-600 hover:text-green-800"
+                            >
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
@@ -399,7 +418,7 @@ export default function AksesorisPage() {
           {pagination.totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-6">
               <button
-                onClick={() => goToPage(pagination.page - 1)}
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
                 disabled={pagination.page === 1}
                 className="px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
@@ -407,24 +426,21 @@ export default function AksesorisPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              
+
               <div className="flex gap-1">
                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (pagination.totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (pagination.page <= 3) {
-                    pageNum = i + 1;
-                  } else if (pagination.page >= pagination.totalPages - 2) {
-                    pageNum = pagination.totalPages - 4 + i;
-                  } else {
-                    pageNum = pagination.page - 2 + i;
-                  }
-                  
+                  let pageNum = pagination.page <= 3
+                    ? i + 1
+                    : pagination.page >= pagination.totalPages - 2
+                    ? pagination.totalPages - 4 + i
+                    : pagination.page - 2 + i;
+
+                  if (pagination.totalPages <= 5) pageNum = i + 1;
+
                   return (
                     <button
                       key={pageNum}
-                      onClick={() => goToPage(pageNum)}
+                      onClick={() => setPagination((prev) => ({ ...prev, page: pageNum }))}
                       className={`px-3 py-1 rounded-lg transition ${
                         pagination.page === pageNum
                           ? "bg-purple-600 text-white"
@@ -438,7 +454,7 @@ export default function AksesorisPage() {
               </div>
 
               <button
-                onClick={() => goToPage(pagination.page + 1)}
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
                 disabled={pagination.page === pagination.totalPages}
                 className="px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
@@ -449,9 +465,8 @@ export default function AksesorisPage() {
             </div>
           )}
 
-          {/* Info */}
           <div className="text-center text-sm text-gray-500 mt-3">
-            Menampilkan {aksesorisList.length} dari {pagination.total} data
+            Menampilkan {accessories.length} dari {pagination.total} data
           </div>
         </>
       )}
@@ -461,35 +476,27 @@ export default function AksesorisPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Detail Aksesoris</h2>
+              <h2 className="text-xl font-semibold">Detail Aksesoris</h2>
               <button onClick={() => setShowDetail(null)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                ✕
               </button>
             </div>
-            
             <div className="flex justify-center mb-4">
               <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-100">
                 {showDetail.image ? (
                   <img src={showDetail.image} alt={showDetail.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-5xl">📦</div>
                 )}
               </div>
             </div>
-            
             <div className="space-y-3">
               <div><span className="text-sm text-gray-500">Kode:</span> <p className="font-medium">{showDetail.code}</p></div>
               <div><span className="text-sm text-gray-500">Nama:</span> <p className="font-medium">{showDetail.name}</p></div>
-              <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.costPrice?.toLocaleString()}</p></div>
-              <div><span className="text-sm text-gray-500">Harga Jual:</span> <p className="font-medium">Rp {showDetail.sellPrice?.toLocaleString()}</p></div>
+              <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.costPrice.toLocaleString()}</p></div>
+              <div><span className="text-sm text-gray-500">Harga Jual:</span> <p className="font-medium">Rp {showDetail.sellPrice.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
-              <div><span className="text-sm text-gray-500">Tanggal Masuk:</span> <p className="font-medium">{showDetail.entryDate ? new Date(showDetail.entryDate).toLocaleDateString("id-ID") : "-"}</p></div>
+              <div><span className="text-sm text-gray-500">Tanggal Masuk:</span> <p className="font-medium">{formatDate(showDetail.entryDate)}</p></div>
             </div>
           </div>
         </div>
@@ -500,11 +507,9 @@ export default function AksesorisPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Atur Stok</h2>
+              <h2 className="text-xl font-semibold">Atur Stok</h2>
               <button onClick={() => setShowStockModal(null)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                ✕
               </button>
             </div>
             <div className="space-y-4">
@@ -520,20 +525,19 @@ export default function AksesorisPage() {
                   min="0"
                   value={stockValue}
                   onChange={(e) => setStockValue(parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
-                <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
               </div>
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => updateStock(showStockModal.id, stockValue)}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg"
                 >
                   Simpan
                 </button>
                 <button
                   onClick={() => setShowStockModal(null)}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg transition"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg"
                 >
                   Batal
                 </button>
@@ -546,15 +550,19 @@ export default function AksesorisPage() {
       {/* Modal Form */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
+          <div className="bg-white rounded-xl w-full max-w-md p-6 my-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
-                {editingAksesoris ? "Edit Aksesoris" : "Tambah Aksesoris"}
+                {editingAccessory ? "Edit Aksesoris" : "Tambah Aksesoris"}
               </h2>
-              <button onClick={() => { setShowModal(false); resetForm(); }} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
               </button>
             </div>
 
@@ -565,7 +573,7 @@ export default function AksesorisPage() {
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   required
                 />
               </div>
@@ -576,28 +584,30 @@ export default function AksesorisPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal (Rp) *</label>
                   <input
                     type="number"
                     value={formData.costPrice}
                     onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Jual</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Jual (Rp) *</label>
                   <input
                     type="number"
                     value={formData.sellPrice}
                     onChange={(e) => setFormData({ ...formData, sellPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    required
                   />
                 </div>
               </div>
@@ -610,9 +620,8 @@ export default function AksesorisPage() {
                     min="0"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
@@ -620,9 +629,8 @@ export default function AksesorisPage() {
                     type="date"
                     value={formData.entryDate}
                     onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
                 </div>
               </div>
 
@@ -634,11 +642,21 @@ export default function AksesorisPage() {
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition">
-                  {editingAksesoris ? "Update" : "Simpan"}
+              <div className="flex gap-3 pt-6">
+                <button
+                  type="submit"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg transition"
+                >
+                  {editingAccessory ? "Update Aksesoris" : "Simpan Aksesoris"}
                 </button>
-                <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg transition">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    resetForm();
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg transition"
+                >
                   Batal
                 </button>
               </div>

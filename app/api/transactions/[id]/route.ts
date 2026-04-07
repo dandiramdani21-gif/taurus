@@ -1,9 +1,9 @@
+// app/api/transactions/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
-// The params prop is now a Promise
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -14,19 +14,27 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ Await the params to get the 'id'
     const { id } = await params;
 
     const transaction = await prisma.transaction.findUnique({
-      where: { id: id }, // Use the unwrapped id
+      where: { id },
       include: {
+        user: {
+          select: { name: true }
+        },
         items: {
           include: {
-            product: {
-              select: { name: true, code: true, image: true },
-            },
             phone: {
-              select: { brand: true, type: true, code: true, image: true },
+              select: { brand: true, type: true, code: true, image: true }
+            },
+            accessory: {
+              select: { name: true, code: true, image: true }
+            },
+            voucher: {
+              select: { name: true, code: true, image: true }
+            },
+            pulsa: {
+              select: { denomination: true, code: true, note: true, image: true }
             },
           },
         },

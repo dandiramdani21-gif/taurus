@@ -41,7 +41,9 @@ export type TransactionItemSumAggregateOutputType = {
 export type TransactionItemMinAggregateOutputType = {
   id: string | null
   transactionId: string | null
-  productId: string | null
+  accessoryId: string | null
+  voucherId: string | null
+  pulsaId: string | null
   phoneId: string | null
   quantity: number | null
   sellPrice: number | null
@@ -51,7 +53,9 @@ export type TransactionItemMinAggregateOutputType = {
 export type TransactionItemMaxAggregateOutputType = {
   id: string | null
   transactionId: string | null
-  productId: string | null
+  accessoryId: string | null
+  voucherId: string | null
+  pulsaId: string | null
   phoneId: string | null
   quantity: number | null
   sellPrice: number | null
@@ -61,7 +65,9 @@ export type TransactionItemMaxAggregateOutputType = {
 export type TransactionItemCountAggregateOutputType = {
   id: number
   transactionId: number
-  productId: number
+  accessoryId: number
+  voucherId: number
+  pulsaId: number
   phoneId: number
   quantity: number
   sellPrice: number
@@ -85,7 +91,9 @@ export type TransactionItemSumAggregateInputType = {
 export type TransactionItemMinAggregateInputType = {
   id?: true
   transactionId?: true
-  productId?: true
+  accessoryId?: true
+  voucherId?: true
+  pulsaId?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -95,7 +103,9 @@ export type TransactionItemMinAggregateInputType = {
 export type TransactionItemMaxAggregateInputType = {
   id?: true
   transactionId?: true
-  productId?: true
+  accessoryId?: true
+  voucherId?: true
+  pulsaId?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -105,7 +115,9 @@ export type TransactionItemMaxAggregateInputType = {
 export type TransactionItemCountAggregateInputType = {
   id?: true
   transactionId?: true
-  productId?: true
+  accessoryId?: true
+  voucherId?: true
+  pulsaId?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -202,7 +214,9 @@ export type TransactionItemGroupByArgs<ExtArgs extends runtime.Types.Extensions.
 export type TransactionItemGroupByOutputType = {
   id: string
   transactionId: string
-  productId: string | null
+  accessoryId: string | null
+  voucherId: string | null
+  pulsaId: string | null
   phoneId: string | null
   quantity: number
   sellPrice: number
@@ -235,26 +249,34 @@ export type TransactionItemWhereInput = {
   NOT?: Prisma.TransactionItemWhereInput | Prisma.TransactionItemWhereInput[]
   id?: Prisma.StringFilter<"TransactionItem"> | string
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
-  productId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
   costPrice?: Prisma.IntFilter<"TransactionItem"> | number
   transaction?: Prisma.XOR<Prisma.TransactionScalarRelationFilter, Prisma.TransactionWhereInput>
-  product?: Prisma.XOR<Prisma.ProductNullableScalarRelationFilter, Prisma.ProductWhereInput> | null
+  accessory?: Prisma.XOR<Prisma.AccessoryNullableScalarRelationFilter, Prisma.AccessoryWhereInput> | null
+  voucher?: Prisma.XOR<Prisma.VoucherNullableScalarRelationFilter, Prisma.VoucherWhereInput> | null
+  pulsa?: Prisma.XOR<Prisma.PulsaNullableScalarRelationFilter, Prisma.PulsaWhereInput> | null
   phone?: Prisma.XOR<Prisma.PhoneNullableScalarRelationFilter, Prisma.PhoneWhereInput> | null
 }
 
 export type TransactionItemOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
-  productId?: Prisma.SortOrderInput | Prisma.SortOrder
+  accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
+  voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaId?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   transaction?: Prisma.TransactionOrderByWithRelationInput
-  product?: Prisma.ProductOrderByWithRelationInput
+  accessory?: Prisma.AccessoryOrderByWithRelationInput
+  voucher?: Prisma.VoucherOrderByWithRelationInput
+  pulsa?: Prisma.PulsaOrderByWithRelationInput
   phone?: Prisma.PhoneOrderByWithRelationInput
 }
 
@@ -264,20 +286,26 @@ export type TransactionItemWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.TransactionItemWhereInput[]
   NOT?: Prisma.TransactionItemWhereInput | Prisma.TransactionItemWhereInput[]
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
-  productId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
   costPrice?: Prisma.IntFilter<"TransactionItem"> | number
   transaction?: Prisma.XOR<Prisma.TransactionScalarRelationFilter, Prisma.TransactionWhereInput>
-  product?: Prisma.XOR<Prisma.ProductNullableScalarRelationFilter, Prisma.ProductWhereInput> | null
+  accessory?: Prisma.XOR<Prisma.AccessoryNullableScalarRelationFilter, Prisma.AccessoryWhereInput> | null
+  voucher?: Prisma.XOR<Prisma.VoucherNullableScalarRelationFilter, Prisma.VoucherWhereInput> | null
+  pulsa?: Prisma.XOR<Prisma.PulsaNullableScalarRelationFilter, Prisma.PulsaWhereInput> | null
   phone?: Prisma.XOR<Prisma.PhoneNullableScalarRelationFilter, Prisma.PhoneWhereInput> | null
 }, "id">
 
 export type TransactionItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
-  productId?: Prisma.SortOrderInput | Prisma.SortOrder
+  accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
+  voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaId?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -295,7 +323,9 @@ export type TransactionItemScalarWhereWithAggregatesInput = {
   NOT?: Prisma.TransactionItemScalarWhereWithAggregatesInput | Prisma.TransactionItemScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"TransactionItem"> | string
   transactionId?: Prisma.StringWithAggregatesFilter<"TransactionItem"> | string
-  productId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  accessoryId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  voucherId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  pulsaId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   phoneId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntWithAggregatesFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntWithAggregatesFilter<"TransactionItem"> | number
@@ -308,14 +338,18 @@ export type TransactionItemCreateInput = {
   sellPrice: number
   costPrice: number
   transaction: Prisma.TransactionCreateNestedOneWithoutItemsInput
-  product?: Prisma.ProductCreateNestedOneWithoutTransactionItemsInput
+  accessory?: Prisma.AccessoryCreateNestedOneWithoutTransactionItemsInput
+  voucher?: Prisma.VoucherCreateNestedOneWithoutTransactionItemsInput
+  pulsa?: Prisma.PulsaCreateNestedOneWithoutTransactionItemsInput
   phone?: Prisma.PhoneCreateNestedOneWithoutTransactionItemsInput
 }
 
 export type TransactionItemUncheckedCreateInput = {
   id?: string
   transactionId: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -328,14 +362,18 @@ export type TransactionItemUpdateInput = {
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   transaction?: Prisma.TransactionUpdateOneRequiredWithoutItemsNestedInput
-  product?: Prisma.ProductUpdateOneWithoutTransactionItemsNestedInput
+  accessory?: Prisma.AccessoryUpdateOneWithoutTransactionItemsNestedInput
+  voucher?: Prisma.VoucherUpdateOneWithoutTransactionItemsNestedInput
+  pulsa?: Prisma.PulsaUpdateOneWithoutTransactionItemsNestedInput
   phone?: Prisma.PhoneUpdateOneWithoutTransactionItemsNestedInput
 }
 
 export type TransactionItemUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -345,7 +383,9 @@ export type TransactionItemUncheckedUpdateInput = {
 export type TransactionItemCreateManyInput = {
   id?: string
   transactionId: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -362,7 +402,9 @@ export type TransactionItemUpdateManyMutationInput = {
 export type TransactionItemUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -382,7 +424,9 @@ export type TransactionItemOrderByRelationAggregateInput = {
 export type TransactionItemCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
-  productId?: Prisma.SortOrder
+  accessoryId?: Prisma.SortOrder
+  voucherId?: Prisma.SortOrder
+  pulsaId?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -398,7 +442,9 @@ export type TransactionItemAvgOrderByAggregateInput = {
 export type TransactionItemMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
-  productId?: Prisma.SortOrder
+  accessoryId?: Prisma.SortOrder
+  voucherId?: Prisma.SortOrder
+  pulsaId?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -408,7 +454,9 @@ export type TransactionItemMaxOrderByAggregateInput = {
 export type TransactionItemMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
-  productId?: Prisma.SortOrder
+  accessoryId?: Prisma.SortOrder
+  voucherId?: Prisma.SortOrder
+  pulsaId?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -463,45 +511,129 @@ export type TransactionItemUncheckedUpdateManyWithoutPhoneNestedInput = {
   deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
 }
 
-export type TransactionItemCreateNestedManyWithoutProductInput = {
-  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput> | Prisma.TransactionItemCreateWithoutProductInput[] | Prisma.TransactionItemUncheckedCreateWithoutProductInput[]
-  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutProductInput | Prisma.TransactionItemCreateOrConnectWithoutProductInput[]
-  createMany?: Prisma.TransactionItemCreateManyProductInputEnvelope
+export type TransactionItemCreateNestedManyWithoutAccessoryInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput> | Prisma.TransactionItemCreateWithoutAccessoryInput[] | Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput | Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput[]
+  createMany?: Prisma.TransactionItemCreateManyAccessoryInputEnvelope
   connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
 }
 
-export type TransactionItemUncheckedCreateNestedManyWithoutProductInput = {
-  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput> | Prisma.TransactionItemCreateWithoutProductInput[] | Prisma.TransactionItemUncheckedCreateWithoutProductInput[]
-  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutProductInput | Prisma.TransactionItemCreateOrConnectWithoutProductInput[]
-  createMany?: Prisma.TransactionItemCreateManyProductInputEnvelope
+export type TransactionItemUncheckedCreateNestedManyWithoutAccessoryInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput> | Prisma.TransactionItemCreateWithoutAccessoryInput[] | Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput | Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput[]
+  createMany?: Prisma.TransactionItemCreateManyAccessoryInputEnvelope
   connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
 }
 
-export type TransactionItemUpdateManyWithoutProductNestedInput = {
-  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput> | Prisma.TransactionItemCreateWithoutProductInput[] | Prisma.TransactionItemUncheckedCreateWithoutProductInput[]
-  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutProductInput | Prisma.TransactionItemCreateOrConnectWithoutProductInput[]
-  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutProductInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutProductInput[]
-  createMany?: Prisma.TransactionItemCreateManyProductInputEnvelope
+export type TransactionItemUpdateManyWithoutAccessoryNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput> | Prisma.TransactionItemCreateWithoutAccessoryInput[] | Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput | Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutAccessoryInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutAccessoryInput[]
+  createMany?: Prisma.TransactionItemCreateManyAccessoryInputEnvelope
   set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
-  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutProductInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutProductInput[]
-  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutProductInput | Prisma.TransactionItemUpdateManyWithWhereWithoutProductInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutAccessoryInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutAccessoryInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutAccessoryInput | Prisma.TransactionItemUpdateManyWithWhereWithoutAccessoryInput[]
   deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
 }
 
-export type TransactionItemUncheckedUpdateManyWithoutProductNestedInput = {
-  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput> | Prisma.TransactionItemCreateWithoutProductInput[] | Prisma.TransactionItemUncheckedCreateWithoutProductInput[]
-  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutProductInput | Prisma.TransactionItemCreateOrConnectWithoutProductInput[]
-  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutProductInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutProductInput[]
-  createMany?: Prisma.TransactionItemCreateManyProductInputEnvelope
+export type TransactionItemUncheckedUpdateManyWithoutAccessoryNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput> | Prisma.TransactionItemCreateWithoutAccessoryInput[] | Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput | Prisma.TransactionItemCreateOrConnectWithoutAccessoryInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutAccessoryInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutAccessoryInput[]
+  createMany?: Prisma.TransactionItemCreateManyAccessoryInputEnvelope
   set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
   connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
-  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutProductInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutProductInput[]
-  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutProductInput | Prisma.TransactionItemUpdateManyWithWhereWithoutProductInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutAccessoryInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutAccessoryInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutAccessoryInput | Prisma.TransactionItemUpdateManyWithWhereWithoutAccessoryInput[]
+  deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
+}
+
+export type TransactionItemCreateNestedManyWithoutVoucherInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput> | Prisma.TransactionItemCreateWithoutVoucherInput[] | Prisma.TransactionItemUncheckedCreateWithoutVoucherInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutVoucherInput | Prisma.TransactionItemCreateOrConnectWithoutVoucherInput[]
+  createMany?: Prisma.TransactionItemCreateManyVoucherInputEnvelope
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+}
+
+export type TransactionItemUncheckedCreateNestedManyWithoutVoucherInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput> | Prisma.TransactionItemCreateWithoutVoucherInput[] | Prisma.TransactionItemUncheckedCreateWithoutVoucherInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutVoucherInput | Prisma.TransactionItemCreateOrConnectWithoutVoucherInput[]
+  createMany?: Prisma.TransactionItemCreateManyVoucherInputEnvelope
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+}
+
+export type TransactionItemUpdateManyWithoutVoucherNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput> | Prisma.TransactionItemCreateWithoutVoucherInput[] | Prisma.TransactionItemUncheckedCreateWithoutVoucherInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutVoucherInput | Prisma.TransactionItemCreateOrConnectWithoutVoucherInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutVoucherInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutVoucherInput[]
+  createMany?: Prisma.TransactionItemCreateManyVoucherInputEnvelope
+  set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutVoucherInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutVoucherInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutVoucherInput | Prisma.TransactionItemUpdateManyWithWhereWithoutVoucherInput[]
+  deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
+}
+
+export type TransactionItemUncheckedUpdateManyWithoutVoucherNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput> | Prisma.TransactionItemCreateWithoutVoucherInput[] | Prisma.TransactionItemUncheckedCreateWithoutVoucherInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutVoucherInput | Prisma.TransactionItemCreateOrConnectWithoutVoucherInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutVoucherInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutVoucherInput[]
+  createMany?: Prisma.TransactionItemCreateManyVoucherInputEnvelope
+  set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutVoucherInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutVoucherInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutVoucherInput | Prisma.TransactionItemUpdateManyWithWhereWithoutVoucherInput[]
+  deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
+}
+
+export type TransactionItemCreateNestedManyWithoutPulsaInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput> | Prisma.TransactionItemCreateWithoutPulsaInput[] | Prisma.TransactionItemUncheckedCreateWithoutPulsaInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutPulsaInput | Prisma.TransactionItemCreateOrConnectWithoutPulsaInput[]
+  createMany?: Prisma.TransactionItemCreateManyPulsaInputEnvelope
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+}
+
+export type TransactionItemUncheckedCreateNestedManyWithoutPulsaInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput> | Prisma.TransactionItemCreateWithoutPulsaInput[] | Prisma.TransactionItemUncheckedCreateWithoutPulsaInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutPulsaInput | Prisma.TransactionItemCreateOrConnectWithoutPulsaInput[]
+  createMany?: Prisma.TransactionItemCreateManyPulsaInputEnvelope
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+}
+
+export type TransactionItemUpdateManyWithoutPulsaNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput> | Prisma.TransactionItemCreateWithoutPulsaInput[] | Prisma.TransactionItemUncheckedCreateWithoutPulsaInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutPulsaInput | Prisma.TransactionItemCreateOrConnectWithoutPulsaInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutPulsaInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutPulsaInput[]
+  createMany?: Prisma.TransactionItemCreateManyPulsaInputEnvelope
+  set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutPulsaInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutPulsaInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutPulsaInput | Prisma.TransactionItemUpdateManyWithWhereWithoutPulsaInput[]
+  deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
+}
+
+export type TransactionItemUncheckedUpdateManyWithoutPulsaNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput> | Prisma.TransactionItemCreateWithoutPulsaInput[] | Prisma.TransactionItemUncheckedCreateWithoutPulsaInput[]
+  connectOrCreate?: Prisma.TransactionItemCreateOrConnectWithoutPulsaInput | Prisma.TransactionItemCreateOrConnectWithoutPulsaInput[]
+  upsert?: Prisma.TransactionItemUpsertWithWhereUniqueWithoutPulsaInput | Prisma.TransactionItemUpsertWithWhereUniqueWithoutPulsaInput[]
+  createMany?: Prisma.TransactionItemCreateManyPulsaInputEnvelope
+  set?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  disconnect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  delete?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  connect?: Prisma.TransactionItemWhereUniqueInput | Prisma.TransactionItemWhereUniqueInput[]
+  update?: Prisma.TransactionItemUpdateWithWhereUniqueWithoutPulsaInput | Prisma.TransactionItemUpdateWithWhereUniqueWithoutPulsaInput[]
+  updateMany?: Prisma.TransactionItemUpdateManyWithWhereWithoutPulsaInput | Prisma.TransactionItemUpdateManyWithWhereWithoutPulsaInput[]
   deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
 }
 
@@ -553,13 +685,17 @@ export type TransactionItemCreateWithoutPhoneInput = {
   sellPrice: number
   costPrice: number
   transaction: Prisma.TransactionCreateNestedOneWithoutItemsInput
-  product?: Prisma.ProductCreateNestedOneWithoutTransactionItemsInput
+  accessory?: Prisma.AccessoryCreateNestedOneWithoutTransactionItemsInput
+  voucher?: Prisma.VoucherCreateNestedOneWithoutTransactionItemsInput
+  pulsa?: Prisma.PulsaCreateNestedOneWithoutTransactionItemsInput
 }
 
 export type TransactionItemUncheckedCreateWithoutPhoneInput = {
   id?: string
   transactionId: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -597,55 +733,157 @@ export type TransactionItemScalarWhereInput = {
   NOT?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
   id?: Prisma.StringFilter<"TransactionItem"> | string
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
-  productId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
   costPrice?: Prisma.IntFilter<"TransactionItem"> | number
 }
 
-export type TransactionItemCreateWithoutProductInput = {
+export type TransactionItemCreateWithoutAccessoryInput = {
   id?: string
   quantity?: number
   sellPrice: number
   costPrice: number
   transaction: Prisma.TransactionCreateNestedOneWithoutItemsInput
+  voucher?: Prisma.VoucherCreateNestedOneWithoutTransactionItemsInput
+  pulsa?: Prisma.PulsaCreateNestedOneWithoutTransactionItemsInput
   phone?: Prisma.PhoneCreateNestedOneWithoutTransactionItemsInput
 }
 
-export type TransactionItemUncheckedCreateWithoutProductInput = {
+export type TransactionItemUncheckedCreateWithoutAccessoryInput = {
   id?: string
   transactionId: string
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
   costPrice: number
 }
 
-export type TransactionItemCreateOrConnectWithoutProductInput = {
+export type TransactionItemCreateOrConnectWithoutAccessoryInput = {
   where: Prisma.TransactionItemWhereUniqueInput
-  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput>
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput>
 }
 
-export type TransactionItemCreateManyProductInputEnvelope = {
-  data: Prisma.TransactionItemCreateManyProductInput | Prisma.TransactionItemCreateManyProductInput[]
+export type TransactionItemCreateManyAccessoryInputEnvelope = {
+  data: Prisma.TransactionItemCreateManyAccessoryInput | Prisma.TransactionItemCreateManyAccessoryInput[]
   skipDuplicates?: boolean
 }
 
-export type TransactionItemUpsertWithWhereUniqueWithoutProductInput = {
+export type TransactionItemUpsertWithWhereUniqueWithoutAccessoryInput = {
   where: Prisma.TransactionItemWhereUniqueInput
-  update: Prisma.XOR<Prisma.TransactionItemUpdateWithoutProductInput, Prisma.TransactionItemUncheckedUpdateWithoutProductInput>
-  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutProductInput, Prisma.TransactionItemUncheckedCreateWithoutProductInput>
+  update: Prisma.XOR<Prisma.TransactionItemUpdateWithoutAccessoryInput, Prisma.TransactionItemUncheckedUpdateWithoutAccessoryInput>
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutAccessoryInput, Prisma.TransactionItemUncheckedCreateWithoutAccessoryInput>
 }
 
-export type TransactionItemUpdateWithWhereUniqueWithoutProductInput = {
+export type TransactionItemUpdateWithWhereUniqueWithoutAccessoryInput = {
   where: Prisma.TransactionItemWhereUniqueInput
-  data: Prisma.XOR<Prisma.TransactionItemUpdateWithoutProductInput, Prisma.TransactionItemUncheckedUpdateWithoutProductInput>
+  data: Prisma.XOR<Prisma.TransactionItemUpdateWithoutAccessoryInput, Prisma.TransactionItemUncheckedUpdateWithoutAccessoryInput>
 }
 
-export type TransactionItemUpdateManyWithWhereWithoutProductInput = {
+export type TransactionItemUpdateManyWithWhereWithoutAccessoryInput = {
   where: Prisma.TransactionItemScalarWhereInput
-  data: Prisma.XOR<Prisma.TransactionItemUpdateManyMutationInput, Prisma.TransactionItemUncheckedUpdateManyWithoutProductInput>
+  data: Prisma.XOR<Prisma.TransactionItemUpdateManyMutationInput, Prisma.TransactionItemUncheckedUpdateManyWithoutAccessoryInput>
+}
+
+export type TransactionItemCreateWithoutVoucherInput = {
+  id?: string
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+  transaction: Prisma.TransactionCreateNestedOneWithoutItemsInput
+  accessory?: Prisma.AccessoryCreateNestedOneWithoutTransactionItemsInput
+  pulsa?: Prisma.PulsaCreateNestedOneWithoutTransactionItemsInput
+  phone?: Prisma.PhoneCreateNestedOneWithoutTransactionItemsInput
+}
+
+export type TransactionItemUncheckedCreateWithoutVoucherInput = {
+  id?: string
+  transactionId: string
+  accessoryId?: string | null
+  pulsaId?: string | null
+  phoneId?: string | null
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+}
+
+export type TransactionItemCreateOrConnectWithoutVoucherInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput>
+}
+
+export type TransactionItemCreateManyVoucherInputEnvelope = {
+  data: Prisma.TransactionItemCreateManyVoucherInput | Prisma.TransactionItemCreateManyVoucherInput[]
+  skipDuplicates?: boolean
+}
+
+export type TransactionItemUpsertWithWhereUniqueWithoutVoucherInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  update: Prisma.XOR<Prisma.TransactionItemUpdateWithoutVoucherInput, Prisma.TransactionItemUncheckedUpdateWithoutVoucherInput>
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutVoucherInput, Prisma.TransactionItemUncheckedCreateWithoutVoucherInput>
+}
+
+export type TransactionItemUpdateWithWhereUniqueWithoutVoucherInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  data: Prisma.XOR<Prisma.TransactionItemUpdateWithoutVoucherInput, Prisma.TransactionItemUncheckedUpdateWithoutVoucherInput>
+}
+
+export type TransactionItemUpdateManyWithWhereWithoutVoucherInput = {
+  where: Prisma.TransactionItemScalarWhereInput
+  data: Prisma.XOR<Prisma.TransactionItemUpdateManyMutationInput, Prisma.TransactionItemUncheckedUpdateManyWithoutVoucherInput>
+}
+
+export type TransactionItemCreateWithoutPulsaInput = {
+  id?: string
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+  transaction: Prisma.TransactionCreateNestedOneWithoutItemsInput
+  accessory?: Prisma.AccessoryCreateNestedOneWithoutTransactionItemsInput
+  voucher?: Prisma.VoucherCreateNestedOneWithoutTransactionItemsInput
+  phone?: Prisma.PhoneCreateNestedOneWithoutTransactionItemsInput
+}
+
+export type TransactionItemUncheckedCreateWithoutPulsaInput = {
+  id?: string
+  transactionId: string
+  accessoryId?: string | null
+  voucherId?: string | null
+  phoneId?: string | null
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+}
+
+export type TransactionItemCreateOrConnectWithoutPulsaInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput>
+}
+
+export type TransactionItemCreateManyPulsaInputEnvelope = {
+  data: Prisma.TransactionItemCreateManyPulsaInput | Prisma.TransactionItemCreateManyPulsaInput[]
+  skipDuplicates?: boolean
+}
+
+export type TransactionItemUpsertWithWhereUniqueWithoutPulsaInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  update: Prisma.XOR<Prisma.TransactionItemUpdateWithoutPulsaInput, Prisma.TransactionItemUncheckedUpdateWithoutPulsaInput>
+  create: Prisma.XOR<Prisma.TransactionItemCreateWithoutPulsaInput, Prisma.TransactionItemUncheckedCreateWithoutPulsaInput>
+}
+
+export type TransactionItemUpdateWithWhereUniqueWithoutPulsaInput = {
+  where: Prisma.TransactionItemWhereUniqueInput
+  data: Prisma.XOR<Prisma.TransactionItemUpdateWithoutPulsaInput, Prisma.TransactionItemUncheckedUpdateWithoutPulsaInput>
+}
+
+export type TransactionItemUpdateManyWithWhereWithoutPulsaInput = {
+  where: Prisma.TransactionItemScalarWhereInput
+  data: Prisma.XOR<Prisma.TransactionItemUpdateManyMutationInput, Prisma.TransactionItemUncheckedUpdateManyWithoutPulsaInput>
 }
 
 export type TransactionItemCreateWithoutTransactionInput = {
@@ -653,13 +891,17 @@ export type TransactionItemCreateWithoutTransactionInput = {
   quantity?: number
   sellPrice: number
   costPrice: number
-  product?: Prisma.ProductCreateNestedOneWithoutTransactionItemsInput
+  accessory?: Prisma.AccessoryCreateNestedOneWithoutTransactionItemsInput
+  voucher?: Prisma.VoucherCreateNestedOneWithoutTransactionItemsInput
+  pulsa?: Prisma.PulsaCreateNestedOneWithoutTransactionItemsInput
   phone?: Prisma.PhoneCreateNestedOneWithoutTransactionItemsInput
 }
 
 export type TransactionItemUncheckedCreateWithoutTransactionInput = {
   id?: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -695,7 +937,9 @@ export type TransactionItemUpdateManyWithWhereWithoutTransactionInput = {
 export type TransactionItemCreateManyPhoneInput = {
   id?: string
   transactionId: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -707,13 +951,17 @@ export type TransactionItemUpdateWithoutPhoneInput = {
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   transaction?: Prisma.TransactionUpdateOneRequiredWithoutItemsNestedInput
-  product?: Prisma.ProductUpdateOneWithoutTransactionItemsNestedInput
+  accessory?: Prisma.AccessoryUpdateOneWithoutTransactionItemsNestedInput
+  voucher?: Prisma.VoucherUpdateOneWithoutTransactionItemsNestedInput
+  pulsa?: Prisma.PulsaUpdateOneWithoutTransactionItemsNestedInput
 }
 
 export type TransactionItemUncheckedUpdateWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -722,42 +970,140 @@ export type TransactionItemUncheckedUpdateWithoutPhoneInput = {
 export type TransactionItemUncheckedUpdateManyWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
-export type TransactionItemCreateManyProductInput = {
+export type TransactionItemCreateManyAccessoryInput = {
   id?: string
   transactionId: string
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
   costPrice: number
 }
 
-export type TransactionItemUpdateWithoutProductInput = {
+export type TransactionItemUpdateWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   transaction?: Prisma.TransactionUpdateOneRequiredWithoutItemsNestedInput
+  voucher?: Prisma.VoucherUpdateOneWithoutTransactionItemsNestedInput
+  pulsa?: Prisma.PulsaUpdateOneWithoutTransactionItemsNestedInput
   phone?: Prisma.PhoneUpdateOneWithoutTransactionItemsNestedInput
 }
 
-export type TransactionItemUncheckedUpdateWithoutProductInput = {
+export type TransactionItemUncheckedUpdateWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
-export type TransactionItemUncheckedUpdateManyWithoutProductInput = {
+export type TransactionItemUncheckedUpdateManyWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type TransactionItemCreateManyVoucherInput = {
+  id?: string
+  transactionId: string
+  accessoryId?: string | null
+  pulsaId?: string | null
+  phoneId?: string | null
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+}
+
+export type TransactionItemUpdateWithoutVoucherInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  transaction?: Prisma.TransactionUpdateOneRequiredWithoutItemsNestedInput
+  accessory?: Prisma.AccessoryUpdateOneWithoutTransactionItemsNestedInput
+  pulsa?: Prisma.PulsaUpdateOneWithoutTransactionItemsNestedInput
+  phone?: Prisma.PhoneUpdateOneWithoutTransactionItemsNestedInput
+}
+
+export type TransactionItemUncheckedUpdateWithoutVoucherInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type TransactionItemUncheckedUpdateManyWithoutVoucherInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type TransactionItemCreateManyPulsaInput = {
+  id?: string
+  transactionId: string
+  accessoryId?: string | null
+  voucherId?: string | null
+  phoneId?: string | null
+  quantity?: number
+  sellPrice: number
+  costPrice: number
+}
+
+export type TransactionItemUpdateWithoutPulsaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  transaction?: Prisma.TransactionUpdateOneRequiredWithoutItemsNestedInput
+  accessory?: Prisma.AccessoryUpdateOneWithoutTransactionItemsNestedInput
+  voucher?: Prisma.VoucherUpdateOneWithoutTransactionItemsNestedInput
+  phone?: Prisma.PhoneUpdateOneWithoutTransactionItemsNestedInput
+}
+
+export type TransactionItemUncheckedUpdateWithoutPulsaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  costPrice?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type TransactionItemUncheckedUpdateManyWithoutPulsaInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  transactionId?: Prisma.StringFieldUpdateOperationsInput | string
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -766,7 +1112,9 @@ export type TransactionItemUncheckedUpdateManyWithoutProductInput = {
 
 export type TransactionItemCreateManyTransactionInput = {
   id?: string
-  productId?: string | null
+  accessoryId?: string | null
+  voucherId?: string | null
+  pulsaId?: string | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -778,13 +1126,17 @@ export type TransactionItemUpdateWithoutTransactionInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
-  product?: Prisma.ProductUpdateOneWithoutTransactionItemsNestedInput
+  accessory?: Prisma.AccessoryUpdateOneWithoutTransactionItemsNestedInput
+  voucher?: Prisma.VoucherUpdateOneWithoutTransactionItemsNestedInput
+  pulsa?: Prisma.PulsaUpdateOneWithoutTransactionItemsNestedInput
   phone?: Prisma.PhoneUpdateOneWithoutTransactionItemsNestedInput
 }
 
 export type TransactionItemUncheckedUpdateWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -793,7 +1145,9 @@ export type TransactionItemUncheckedUpdateWithoutTransactionInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -805,66 +1159,86 @@ export type TransactionItemUncheckedUpdateManyWithoutTransactionInput = {
 export type TransactionItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   transactionId?: boolean
-  productId?: boolean
+  accessoryId?: boolean
+  voucherId?: boolean
+  pulsaId?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
   costPrice?: boolean
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }, ExtArgs["result"]["transactionItem"]>
 
 export type TransactionItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   transactionId?: boolean
-  productId?: boolean
+  accessoryId?: boolean
+  voucherId?: boolean
+  pulsaId?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
   costPrice?: boolean
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }, ExtArgs["result"]["transactionItem"]>
 
 export type TransactionItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   transactionId?: boolean
-  productId?: boolean
+  accessoryId?: boolean
+  voucherId?: boolean
+  pulsaId?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
   costPrice?: boolean
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }, ExtArgs["result"]["transactionItem"]>
 
 export type TransactionItemSelectScalar = {
   id?: boolean
   transactionId?: boolean
-  productId?: boolean
+  accessoryId?: boolean
+  voucherId?: boolean
+  pulsaId?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
   costPrice?: boolean
 }
 
-export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "productId" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
+export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "accessoryId" | "voucherId" | "pulsaId" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
 export type TransactionItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }
 export type TransactionItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }
 export type TransactionItemIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
-  product?: boolean | Prisma.TransactionItem$productArgs<ExtArgs>
+  accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
+  voucher?: boolean | Prisma.TransactionItem$voucherArgs<ExtArgs>
+  pulsa?: boolean | Prisma.TransactionItem$pulsaArgs<ExtArgs>
   phone?: boolean | Prisma.TransactionItem$phoneArgs<ExtArgs>
 }
 
@@ -872,13 +1246,17 @@ export type $TransactionItemPayload<ExtArgs extends runtime.Types.Extensions.Int
   name: "TransactionItem"
   objects: {
     transaction: Prisma.$TransactionPayload<ExtArgs>
-    product: Prisma.$ProductPayload<ExtArgs> | null
+    accessory: Prisma.$AccessoryPayload<ExtArgs> | null
+    voucher: Prisma.$VoucherPayload<ExtArgs> | null
+    pulsa: Prisma.$PulsaPayload<ExtArgs> | null
     phone: Prisma.$PhonePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     transactionId: string
-    productId: string | null
+    accessoryId: string | null
+    voucherId: string | null
+    pulsaId: string | null
     phoneId: string | null
     quantity: number
     sellPrice: number
@@ -1278,7 +1656,9 @@ readonly fields: TransactionItemFieldRefs;
 export interface Prisma__TransactionItemClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   transaction<T extends Prisma.TransactionDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionDefaultArgs<ExtArgs>>): Prisma.Prisma__TransactionClient<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  product<T extends Prisma.TransactionItem$productArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionItem$productArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  accessory<T extends Prisma.TransactionItem$accessoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionItem$accessoryArgs<ExtArgs>>): Prisma.Prisma__AccessoryClient<runtime.Types.Result.GetResult<Prisma.$AccessoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  voucher<T extends Prisma.TransactionItem$voucherArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionItem$voucherArgs<ExtArgs>>): Prisma.Prisma__VoucherClient<runtime.Types.Result.GetResult<Prisma.$VoucherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  pulsa<T extends Prisma.TransactionItem$pulsaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionItem$pulsaArgs<ExtArgs>>): Prisma.Prisma__PulsaClient<runtime.Types.Result.GetResult<Prisma.$PulsaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   phone<T extends Prisma.TransactionItem$phoneArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TransactionItem$phoneArgs<ExtArgs>>): Prisma.Prisma__PhoneClient<runtime.Types.Result.GetResult<Prisma.$PhonePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1311,7 +1691,9 @@ export interface Prisma__TransactionItemClient<T, Null = never, ExtArgs extends 
 export interface TransactionItemFieldRefs {
   readonly id: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly transactionId: Prisma.FieldRef<"TransactionItem", 'String'>
-  readonly productId: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly accessoryId: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly voucherId: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly pulsaId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly phoneId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly quantity: Prisma.FieldRef<"TransactionItem", 'Int'>
   readonly sellPrice: Prisma.FieldRef<"TransactionItem", 'Int'>
@@ -1717,22 +2099,60 @@ export type TransactionItemDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
 }
 
 /**
- * TransactionItem.product
+ * TransactionItem.accessory
  */
-export type TransactionItem$productArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type TransactionItem$accessoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Product
+   * Select specific fields to fetch from the Accessory
    */
-  select?: Prisma.ProductSelect<ExtArgs> | null
+  select?: Prisma.AccessorySelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Product
+   * Omit specific fields from the Accessory
    */
-  omit?: Prisma.ProductOmit<ExtArgs> | null
+  omit?: Prisma.AccessoryOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ProductInclude<ExtArgs> | null
-  where?: Prisma.ProductWhereInput
+  include?: Prisma.AccessoryInclude<ExtArgs> | null
+  where?: Prisma.AccessoryWhereInput
+}
+
+/**
+ * TransactionItem.voucher
+ */
+export type TransactionItem$voucherArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Voucher
+   */
+  select?: Prisma.VoucherSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Voucher
+   */
+  omit?: Prisma.VoucherOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VoucherInclude<ExtArgs> | null
+  where?: Prisma.VoucherWhereInput
+}
+
+/**
+ * TransactionItem.pulsa
+ */
+export type TransactionItem$pulsaArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Pulsa
+   */
+  select?: Prisma.PulsaSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Pulsa
+   */
+  omit?: Prisma.PulsaOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PulsaInclude<ExtArgs> | null
+  where?: Prisma.PulsaWhereInput
 }
 
 /**

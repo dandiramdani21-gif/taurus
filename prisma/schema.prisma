@@ -13,12 +13,6 @@ datasource db {
 }
 
 // ================= ENUM =================
-enum ProductCategory {
-  ACCESSORY
-  VOUCHER
-  PULSA
-}
-
 enum TransactionType {
   SALE
   PURCHASE
@@ -52,7 +46,7 @@ model Phone {
 
   purchasePrice Int
   purchaseDate  DateTime @default(now())
-  entryDate     DateTime @default(now())  // Tanggal barang masuk
+  entryDate     DateTime @default(now())
 
   stock Int @default(1)
   
@@ -76,23 +70,55 @@ model PhoneMetadata {
   
   @@unique([phoneId, key])
 }
-// ================= PRODUCT (NON-HP) =================
-model Product {
-  id       String          @id @default(cuid())
-  code     String          @unique
-  name     String
-  category ProductCategory
 
-  costPrice Int?
-  sellPrice Int?
-
-  stock Int @default(0)
-  
-  image String?  // URL atau path gambar
+// ================= ACCESSORY =================
+model Accessory {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  costPrice Int
+  sellPrice Int
+  stock     Int      @default(0)
+  image     String?
   entryDate DateTime @default(now())
 
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  transactionItems TransactionItem[]
+}
+
+// ================= VOUCHER =================
+model Voucher {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  costPrice Int      // harga modal
+  sellPrice Int      // harga jual
+  stock     Int      @default(0)
+  image     String?
+  entryDate DateTime @default(now())
+  expiredAt DateTime? // tanggal expired (opsional)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  transactionItems TransactionItem[]
+}
+
+// ================= PULSA =================
+model Pulsa {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  denomination Int      // nominal pulsa: 5,10,15,20,25,30,40,50,70,100
+  costPrice   Int      // harga modal
+  sellPrice   Int      // harga jual
+  note        String?  // TAGOG, DIGIPOS, PROMO, REGULER
+  image       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
   transactionItems TransactionItem[]
 }
 
@@ -125,14 +151,20 @@ model TransactionItem {
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id])
 
-  productId String?
-  product   Product? @relation(fields: [productId], references: [id])
-
+  // Support multiple product types
+  accessoryId String?
+  accessory   Accessory? @relation(fields: [accessoryId], references: [id])
+  
+  voucherId String?
+  voucher   Voucher? @relation(fields: [voucherId], references: [id])
+  
+  pulsaId String?
+  pulsa   Pulsa? @relation(fields: [pulsaId], references: [id])
+  
   phoneId String?
-  phone   Phone?  @relation(fields: [phoneId], references: [id])
+  phone   Phone? @relation(fields: [phoneId], references: [id])
 
   quantity Int @default(1)
-
   sellPrice Int
   costPrice Int
 }

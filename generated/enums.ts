@@ -9,15 +9,6 @@
 * 🟢 You can import this file directly.
 */
 
-export const ProductCategory = {
-  ACCESSORY: 'ACCESSORY',
-  VOUCHER: 'VOUCHER',
-  PULSA: 'PULSA'
-} as const
-
-export type ProductCategory = (typeof ProductCategory)[keyof typeof ProductCategory]
-
-
 export const TransactionType = {
   SALE: 'SALE',
   PURCHASE: 'PURCHASE'

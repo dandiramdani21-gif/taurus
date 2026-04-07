@@ -49,8 +49,9 @@ export default function KasirPage() {
     total: 0,
     totalPages: 0,
   });
-  const [showCart, setShowCart] = useState(false); // Untuk mobile: tampilkan cart
+  const [showCart, setShowCart] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
 
   // Cek apakah device mobile
   useEffect(() => {
@@ -139,11 +140,6 @@ export default function KasirPage() {
         },
       ];
     });
-    
-    // Di mobile, setelah add to cart, tetap di halaman produk
-    if (isMobile) {
-      setShowCart(false);
-    }
   };
 
   const updateQuantity = (id: string, newQuantity: number) => {
@@ -172,6 +168,62 @@ export default function KasirPage() {
           : item
       )
     );
+  };
+
+  // Update cost price ke database
+  const updateCostPrice = async (id: string, productId: string, newCostPrice: number) => {
+    if (newCostPrice < 0) {
+      alert("Harga modal tidak boleh minus!");
+      return;
+    }
+
+    setUpdating(id);
+    try {
+      // Update ke database
+      const res = await fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: productId,
+          costPrice: newCostPrice,
+          sellPrice: newCostPrice, // optional, bisa disesuaikan
+        }),
+      });
+
+      if (res.ok) {
+        // Update local cart
+        setCart(prevCart =>
+          prevCart.map(item =>
+            item.id === id
+              ? {
+                  ...item,
+                  costPrice: newCostPrice,
+                  profit: (item.sellPrice - newCostPrice) * item.quantity,
+                }
+              : item
+          )
+        );
+        
+        // Update products list
+        setProducts(prevProducts =>
+          prevProducts.map(product =>
+            product.id === productId
+              ? { ...product, costPrice: newCostPrice }
+              : product
+          )
+        );
+        
+        alert("Harga modal berhasil diupdate");
+      } else {
+        const error = await res.json();
+        alert(error.error || "Gagal update harga modal");
+      }
+    } catch (error) {
+      console.error("Error updating cost price:", error);
+      alert("Gagal update harga modal");
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const updateSellPrice = (id: string, newPrice: number) => {
@@ -252,17 +304,15 @@ export default function KasirPage() {
     );
   }
 
-  // Tampilan Mobile (Stack)
+  // Tampilan Mobile
   if (isMobile) {
     return (
       <div className="pb-20">
-        {/* Header */}
         <div className="mb-4">
           <h1 className="text-xl font-bold text-gray-800">Kasir</h1>
           <p className="text-xs text-gray-500">Pilih produk untuk dijual</p>
         </div>
 
-        {/* Search and Filter */}
         <div className="flex gap-2 mb-4">
           <div className="flex-1 relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +339,6 @@ export default function KasirPage() {
           </select>
         </div>
 
-        {/* Cart Summary Button (Mobile) */}
         <button
           onClick={() => setShowCart(true)}
           className="fixed bottom-4 right-4 z-50 bg-purple-600 text-white p-4 rounded-full shadow-lg flex items-center gap-2"
@@ -300,7 +349,6 @@ export default function KasirPage() {
           <span className="font-bold">{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
         </button>
 
-        {/* Products Grid */}
         <div className="grid grid-cols-2 gap-3">
           {loading ? (
             <div className="col-span-2 text-center py-8 text-purple-600">Loading...</div>
@@ -343,7 +391,6 @@ export default function KasirPage() {
           )}
         </div>
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-4">
             <button
@@ -366,10 +413,10 @@ export default function KasirPage() {
           </div>
         )}
 
-        {/* Cart Modal (Mobile) */}
+        {/* Cart Modal Mobile */}
         {showCart && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-            <div className="bg-white w-full max-h-[80vh] rounded-t-xl overflow-hidden flex flex-col">
+            <div className="bg-white w-full max-h-[85vh] rounded-t-xl overflow-hidden flex flex-col">
               <div className="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
                 <h2 className="text-lg font-semibold">Keranjang</h2>
                 <button onClick={() => setShowCart(false)} className="text-gray-400">
@@ -400,22 +447,62 @@ export default function KasirPage() {
                       </div>
                       
                       <div className="mt-2 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
-                          <span className="w-8 text-center text-sm">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
+                        {/* Quantity */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-500 w-8">Qty:</span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
+                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
+                          </div>
                         </div>
                         
+                        {/* Harga Modal - Update ke database */}
+                        <div>
+                          <label className="text-xs text-gray-500">Harga Modal</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              value={item.costPrice}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value) || 0;
+                                setCart(prevCart =>
+                                  prevCart.map(cartItem =>
+                                    cartItem.id === item.id
+                                      ? { ...cartItem, costPrice: newValue }
+                                      : cartItem
+                                  )
+                                );
+                              }}
+                              onBlur={(e) => {
+                                const newValue = parseInt(e.target.value) || 0;
+                                if (newValue !== item.costPrice) {
+                                  updateCostPrice(item.id, item.productId, newValue);
+                                }
+                              }}
+                              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 outline-none"
+                              disabled={updating === item.id}
+                            />
+                            {updating === item.id && (
+                              <div className="w-5 h-5 animate-spin rounded-full border-2 border-purple-600 border-t-transparent"></div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Harga Jual */}
                         <div>
                           <label className="text-xs text-gray-500">Harga Jual</label>
                           <input
                             type="number"
                             value={item.sellPrice}
                             onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
-                            className="w-full mt-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                            className="w-full mt-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 outline-none"
                           />
                         </div>
                         
+                        <div className="text-xs text-gray-400">
+                          Keuntungan/Unit: Rp {(item.sellPrice - item.costPrice).toLocaleString()}
+                        </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Subtotal:</span>
                           <span className="font-semibold">Rp {item.subtotal.toLocaleString()}</span>
@@ -458,7 +545,7 @@ export default function KasirPage() {
     );
   }
 
-  // Tampilan Desktop (Row - seperti sebelumnya)
+  // Tampilan Desktop
   return (
     <div className="h-[calc(100vh-2rem)]">
       <div className="flex gap-6 h-full">
@@ -469,7 +556,6 @@ export default function KasirPage() {
             <p className="text-gray-500 mt-1">Pilih produk untuk dijual</p>
           </div>
 
-          {/* Search and Filter */}
           <div className="flex gap-4 mb-4">
             <div className="flex-1 relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,7 +582,6 @@ export default function KasirPage() {
             </select>
           </div>
 
-          {/* Products Grid */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center h-64">
@@ -548,7 +633,6 @@ export default function KasirPage() {
                   )}
                 </div>
 
-                {/* Pagination */}
                 {pagination.totalPages > 1 && (
                   <div className="flex justify-center gap-2 mt-6">
                     <button
@@ -575,7 +659,7 @@ export default function KasirPage() {
           </div>
         </div>
 
-        {/* Right Side - Cart (Desktop) */}
+        {/* Right Side - Cart Desktop */}
         <div className="w-96 bg-white rounded-xl shadow-lg flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <h2 className="text-lg font-semibold text-gray-800">Keranjang Belanja</h2>
@@ -606,12 +690,49 @@ export default function KasirPage() {
                   </div>
                   
                   <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
-                      <span className="w-10 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
+                    {/* Quantity */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-8">Qty:</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-7 h-7 rounded border border-gray-300">-</button>
+                        <span className="w-8 text-center text-sm">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-7 h-7 rounded border border-gray-300">+</button>
+                      </div>
                     </div>
                     
+                    {/* Harga Modal - Update ke database */}
+                    <div>
+                      <label className="text-xs text-gray-500">Harga Modal</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={item.costPrice}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value) || 0;
+                            setCart(prevCart =>
+                              prevCart.map(cartItem =>
+                                cartItem.id === item.id
+                                  ? { ...cartItem, costPrice: newValue }
+                                  : cartItem
+                              )
+                            );
+                          }}
+                          onBlur={(e) => {
+                            const newValue = parseInt(e.target.value) || 0;
+                            if (newValue !== item.costPrice) {
+                              updateCostPrice(item.id, item.productId, newValue);
+                            }
+                          }}
+                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 outline-none"
+                          disabled={updating === item.id}
+                        />
+                        {updating === item.id && (
+                          <div className="w-5 h-5 animate-spin rounded-full border-2 border-purple-600 border-t-transparent"></div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Harga Jual */}
                     <div>
                       <label className="text-xs text-gray-500">Harga Jual</label>
                       <input
@@ -622,9 +743,8 @@ export default function KasirPage() {
                       />
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Modal:</span>
-                      <span>Rp {item.costPrice.toLocaleString()}</span>
+                    <div className="text-xs text-gray-400">
+                      Keuntungan/Unit: Rp {(item.sellPrice - item.costPrice).toLocaleString()}
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Subtotal:</span>

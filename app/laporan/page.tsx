@@ -1,468 +1,289 @@
+// app/laporan/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { format, subDays } from "date-fns";
 import * as XLSX from "xlsx";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
+  ResponsiveContainer,
   Legend,
-  ArcElement
-);
+} from "recharts";
 
-interface LaporanItem {
-  id: string;
+interface DailyReport {
   date: string;
-  type: string;
-  productName: string;
-  productCode: string;
-  quantity: number;
-  buyPrice: number;
-  sellPrice: number;
-  totalBuy: number;
-  totalSell: number;
+  revenue: number;
+  cost: number;
   profit: number;
-  stockLeft: number;
 }
 
-interface SummaryData {
-  totalRevenue: number;
-  totalCost: number;
-  totalProfit: number;
-  totalTransactions: number;
-  totalItemsSold: number;
-}
-
-export default function LaporanPage() {
+export default function LaporanKeuanganPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<LaporanItem[]>([]);
-  const [summary, setSummary] = useState<SummaryData>({
-    totalRevenue: 0,
-    totalCost: 0,
-    totalProfit: 0,
-    totalTransactions: 0,
-    totalItemsSold: 0,
-  });
-  const [startDate, setStartDate] = useState(() => {
-    const date = new Date();
-    date.setDate(1);
-    return date.toISOString().split("T")[0];
-  });
-  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [monthlyData, setMonthlyData] = useState<{ month: string; total: number }[]>([]);
+
+  // Filter
+  const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [productFilter, setProductFilter] = useState<"all" | "phone" | "accessory" | "voucher" | "pulsa">("all");
+  const [search, setSearch] = useState("");
+
+  // Ringkasan
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalCost, setTotalCost] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
+
+  // Chart Data
+  const [chartData, setChartData] = useState<DailyReport[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
-
-  useEffect(() => {
-    fetchLaporan();
-  }, [startDate, endDate]);
+    if (status === "unauthenticated") router.push("/login");
+    if (status === "authenticated") fetchLaporan();
+  }, [status, startDate, endDate, productFilter, search]);
 
   const fetchLaporan = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/laporan?startDate=${startDate}&endDate=${endDate}`);
-      const result = await res.json();
-      setData(result.data || []);
-      setSummary(result.summary || {
-        totalRevenue: 0,
-        totalCost: 0,
-        totalProfit: 0,
-        totalTransactions: 0,
-        totalItemsSold: 0,
-      });
-      setMonthlyData(result.monthlyData || []);
+      const res = await fetch(
+        `/api/laporan?startDate=${startDate}&endDate=${endDate}&productType=${productFilter}`
+      );
+      const data = await res.json();
+
+      setTransactions(data.transactions || []);
+      setTotalRevenue(data.summary.totalRevenue);
+      setTotalCost(data.summary.totalCost);
+      setTotalProfit(data.summary.totalProfit);
+      setChartData(data.chartData || []);
     } catch (error) {
-      console.error("Error fetching laporan:", error);
+      console.error("Gagal mengambil laporan:", error);
     } finally {
       setLoading(false);
     }
   };
 
-const exportToExcel = () => {
-  // Data transaksi
-  const exportData = data.map((item) => {
-    const profitPerUnit = item.sellPrice - item.buyPrice;
-    const totalModal = item.buyPrice * item.quantity;
-    const totalJual = item.sellPrice * item.quantity;
-    const totalKeuntungan = totalJual - totalModal;
-    
-    return {
-      Tanggal: new Date(item.date).toLocaleDateString("id-ID"),
-      Tipe: item.type === "SALE" ? "Penjualan" : "Pembelian",
-      "Kode Produk": item.productCode,
-      "Nama Produk": item.productName,
-      Qty: item.quantity,
-      "Harga Modal (Rp)": item.buyPrice,
-      "Harga Jual (Rp)": item.sellPrice,
-      "Keuntungan/Unit (Rp)": profitPerUnit,
-      "Total Modal (Rp)": totalModal,
-      "Total Jual (Rp)": totalJual,
-      "Total Keuntungan (Rp)": item.type === "SALE" ? totalKeuntungan : 0,
-    };
-  });
+  const exportToExcel = () => {
+    const exportData = transactions.map((t: any) => ({
+      Tanggal: format(new Date(t.createdAt), "dd/MM/yyyy HH:mm"),
+      "Total Penjualan": t.totalAmount,
+      "Total Modal": t.totalCost,
+      Keuntungan: t.profit,
+      Catatan: t.note || "",
+    }));
 
-  // Hitung total
-  const totalModalAll = data.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0);
-  const totalJualAll = data.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0);
-  const totalKeuntunganAll = data.reduce((sum, item) => {
-    if (item.type === "SALE") {
-      const totalJual = item.sellPrice * item.quantity;
-      const totalModal = item.buyPrice * item.quantity;
-      return sum + (totalJual - totalModal);
-    }
-    return sum;
-  }, 0);
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Keuangan");
 
-  // Tambah baris total - menggunakan 0 untuk field number
-  exportData.push({
-    Tanggal: "",
-    Tipe: "TOTAL",
-    "Kode Produk": "",
-    "Nama Produk": "",
-    Qty: 0,
-    "Harga Modal (Rp)": 0,
-    "Harga Jual (Rp)": 0,
-    "Keuntungan/Unit (Rp)": 0,
-    "Total Modal (Rp)": totalModalAll,
-    "Total Jual (Rp)": totalJualAll,
-    "Total Keuntungan (Rp)": totalKeuntunganAll,
-  });
+    // Tambah total di baris bawah
+    XLSX.utils.sheet_add_aoa(ws, [
+      ["TOTAL", totalRevenue, totalCost, totalProfit, ""],
+    ], { origin: -1 });
 
-  const ws = XLSX.utils.json_to_sheet(exportData);
-  
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 12 }, // Tanggal
-    { wch: 12 }, // Tipe
-    { wch: 15 }, // Kode Produk
-    { wch: 30 }, // Nama Produk
-    { wch: 8 },  // Qty
-    { wch: 18 }, // Harga Modal
-    { wch: 18 }, // Harga Jual
-    { wch: 20 }, // Keuntungan/Unit
-    { wch: 18 }, // Total Modal
-    { wch: 18 }, // Total Jual
-    { wch: 22 }, // Total Keuntungan
-  ];
-  
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Laporan Keuangan");
-  XLSX.writeFile(wb, `laporan_keuangan_${startDate}_to_${endDate}.xlsx`);
-};
-
-  const chartData = {
-    labels: monthlyData.map((d) => d.month),
-    datasets: [
-      {
-        label: "Penjualan (Rp)",
-        data: monthlyData.map((d) => d.total),
-        backgroundColor: "rgba(147, 51, 234, 0.5)",
-        borderColor: "rgb(147, 51, 234)",
-        borderWidth: 1,
-      },
-    ],
+    XLSX.writeFile(wb, `Laporan_Keuangan_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      title: {
-        display: true,
-        text: "Penjualan Bulanan",
-      },
-    },
-  };
-
-  if (status === "loading" || loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-purple-600">Sedang memuat data...</div>
-      </div>
-    );
-  }
 
   return (
-    <div>
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Laporan Keuangan</h1>
-        <p className="text-gray-500 mt-1">Laporan penjualan dan pembelian</p>
+      <div className="flex justify-between items-end border-b pb-6">
+        <div>
+          <h1 className="text-3xl font-semibold text-gray-900">Laporan Keuangan</h1>
+          <p className="text-gray-500 mt-1">Analisis performa penjualan bisnis Anda</p>
+        </div>
+        <button
+          onClick={exportToExcel}
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-medium transition shadow-sm"
+        >
+          📥 Export ke Excel
+        </button>
       </div>
 
-      {/* Filter Tanggal */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-end">
+      {/* Filter */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tanggal Mulai
-            </label>
+            <label className="block text-sm font-medium text-gray-600 mb-2">Tanggal Mulai</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tanggal Akhir
-            </label>
+            <label className="block text-sm font-medium text-gray-600 mb-2">Tanggal Akhir</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
           <div>
-            <button
-              onClick={fetchLaporan}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+            <label className="block text-sm font-medium text-gray-600 mb-2">Jenis Produk</label>
+            <select
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value as any)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             >
-              Filter
-            </button>
+              <option value="all">Semua Produk</option>
+              <option value="phone">HP</option>
+              <option value="accessory">Aksesoris</option>
+              <option value="voucher">Voucher</option>
+              <option value="pulsa">Pulsa</option>
+            </select>
           </div>
           <div>
-            <button
-              onClick={exportToExcel}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export Excel
-            </button>
+            <label className="block text-sm font-medium text-gray-600 mb-2">Cari Barang</label>
+            <input
+              type="text"
+              placeholder="Nama barang atau kode..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+            />
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Pendapatan</p>
-              <p className="text-xl font-bold text-gray-800">
-                Rp {summary.totalRevenue.toLocaleString()}
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <p className="text-sm text-gray-500">Total Pendapatan</p>
+          <p className="text-4xl font-semibold text-emerald-600 mt-4">
+            Rp {totalRevenue.toLocaleString("id-ID")}
+          </p>
         </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Modal</p>
-              <p className="text-xl font-bold text-gray-800">
-                Rp {summary.totalCost.toLocaleString()}
-              </p>
-            </div>
-          </div>
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <p className="text-sm text-gray-500">Total Modal</p>
+          <p className="text-4xl font-semibold text-amber-600 mt-4">
+            Rp {totalCost.toLocaleString("id-ID")}
+          </p>
         </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Keuntungan</p>
-              <p className="text-xl font-bold text-gray-800">
-                Rp {summary.totalProfit.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Transaksi</p>
-              <p className="text-xl font-bold text-gray-800">{summary.totalTransactions}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Item Terjual</p>
-              <p className="text-xl font-bold text-gray-800">{summary.totalItemsSold}</p>
-            </div>
-          </div>
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <p className="text-sm text-gray-500">Total Keuntungan</p>
+          <p className={`text-4xl font-semibold mt-4 ${totalProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            Rp {totalProfit.toLocaleString("id-ID")}
+          </p>
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Grafik Penjualan Bulanan
-        </h2>
-        <div className="h-80">
-          {monthlyData.length > 0 ? (
-            <Bar options={chartOptions} data={chartData} />
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-500">
-              Belum ada data penjualan
-            </div>
-          )}
-        </div>
-      </div>
+{/* Chart */}
+<div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+  <h2 className="text-xl font-semibold mb-6">Perkembangan Keuntungan</h2>
+  <div className="h-96">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
+        <XAxis 
+          dataKey="date" 
+          stroke="#888" 
+          fontSize={12}
+          tickFormatter={(value) => value?.slice(5) || value}
+        />
+        <YAxis stroke="#888" fontSize={12} />
 
-{/* Tabel Laporan */}
-<div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-  <div className="overflow-x-auto">
-    <table className="w-full">
-      <thead className="bg-gray-50 border-b border-gray-200">
-        <tr>
-          <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-          <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-          <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-          <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-          <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Modal</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Jual</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Keuntungan/Unit</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Modal</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Jual</th>
-          <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Keuntungan</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200">
-        {data.length === 0 ? (
-          <tr>
-            <td colSpan={11} className="text-center py-12 text-gray-500">
-              Tidak ada data laporan
-            </td>
-          </tr>
-        ) : (
-          data.map((item, idx) => {
-            const profitPerUnit = item.sellPrice - item.buyPrice;
-            const totalModal = item.buyPrice * item.quantity;
-            const totalJual = item.sellPrice * item.quantity;
-            const totalKeuntungan = totalJual - totalModal;
-            
-            return (
-              <tr key={idx} className="hover:bg-gray-50 transition">
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {new Date(item.date).toLocaleDateString("id-ID")}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    item.type === "SALE" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
-                  }`}>
-                    {item.type === "SALE" ? "Penjualan" : "Pembelian"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm font-mono text-gray-500">{item.productCode}</td>
-                <td className="px-4 py-3 text-sm text-gray-800">{item.productName}</td>
-                <td className="px-4 py-3 text-sm text-center font-medium">{item.quantity}</td>
-                <td className="px-4 py-3 text-sm text-right">Rp {item.buyPrice.toLocaleString()}</td>
-                <td className="px-4 py-3 text-sm text-right">Rp {item.sellPrice.toLocaleString()}</td>
-                <td className={`px-4 py-3 text-sm text-right font-medium ${profitPerUnit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  Rp {profitPerUnit.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm text-right">Rp {totalModal.toLocaleString()}</td>
-                <td className="px-4 py-3 text-sm text-right font-medium">Rp {totalJual.toLocaleString()}</td>
-                <td className={`px-4 py-3 text-sm text-right font-semibold ${totalKeuntungan >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {item.type === "SALE" ? `Rp ${totalKeuntungan.toLocaleString()}` : "-"}
-                </td>
-              </tr>
-            );
-          })
-        )}
-      </tbody>
-      {/* Footer Total */}
-      {data.length > 0 && (
-        <tfoot className="bg-gray-100 border-t-2 border-gray-300">
-          <tr>
-            <td colSpan={5} className="px-4 py-4 text-right font-bold text-gray-800">
-              TOTAL
-            </td>
-            <td className="px-4 py-4 text-right font-bold text-gray-800">
-              {/* Harga Modal - tidak dijumlah karena beda unit */}
-              -
-            </td>
-            <td className="px-4 py-4 text-right font-bold text-gray-800">
-              -
-            </td>
-            <td className="px-4 py-4 text-right font-bold text-gray-800">
-              -
-             </td>
-            <td className="px-4 py-4 text-right font-bold text-purple-700">
-              Rp {data.reduce((sum, item) => sum + (item.buyPrice * item.quantity), 0).toLocaleString()}
-             </td>
-            <td className="px-4 py-4 text-right font-bold text-purple-700">
-              Rp {data.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0).toLocaleString()}
-             </td>
-            <td className="px-4 py-4 text-right font-bold text-green-700">
-              Rp {data.reduce((sum, item) => {
-                if (item.type === "SALE") {
-                  const totalJual = item.sellPrice * item.quantity;
-                  const totalModal = item.buyPrice * item.quantity;
-                  return sum + (totalJual - totalModal);
-                }
-                return sum;
-              }, 0).toLocaleString()}
-             </td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+        <Tooltip 
+          formatter={(value: any, name: string | number | undefined) => [
+            `Rp ${Number(value || 0).toLocaleString("id-ID")}`,
+            name === "profit" ? "Keuntungan" : name === "revenue" ? "Pendapatan" : ""
+          ]}
+          labelFormatter={(label: any) => `Tanggal: ${label}`}
+          contentStyle={{
+            borderRadius: "12px",
+            border: "none",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+            padding: "12px 16px",
+          }}
+        />
+
+        <Legend />
+        
+        <Line 
+          type="natural" 
+          dataKey="profit" 
+          stroke="#10b981" 
+          strokeWidth={4} 
+          dot={{ fill: "#10b981", r: 5 }}
+          name="Keuntungan"
+        />
+        <Line 
+          type="natural" 
+          dataKey="revenue" 
+          stroke="#6366f1" 
+          strokeWidth={3} 
+          strokeOpacity={0.7}
+          name="Pendapatan"
+        />
+      </LineChart>
+    </ResponsiveContainer>
   </div>
 </div>
 
-      {/* Footer Info */}
-      <div className="text-center text-sm text-gray-400 mt-4">
-        Menampilkan {data.length} transaksi dari periode {new Date(startDate).toLocaleDateString("id-ID")} - {new Date(endDate).toLocaleDateString("id-ID")}
+      {/* Detail Table */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-8 py-6 border-b flex justify-between items-center bg-gray-50">
+          <h2 className="text-xl font-semibold text-gray-800">Detail Transaksi</h2>
+          <span className="text-sm text-gray-500">
+            {transactions.length} transaksi
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-600">Tanggal</th>
+                <th className="px-8 py-4 text-left text-sm font-medium text-gray-600">Item</th>
+                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Pendapatan</th>
+                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Modal</th>
+                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Keuntungan</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {transactions.map((t: any) => (
+                <tr key={t.id} className="hover:bg-gray-50 transition">
+                  <td className="px-8 py-5 text-sm text-gray-600">
+                    {new Date(t.createdAt).toLocaleString("id-ID")}
+                  </td>
+                  <td className="px-8 py-5">
+                    {t.items.map((item: any, i: number) => (
+                      <div key={i} className="text-sm text-gray-800">
+                        {item.phone 
+                          ? `${item.phone.brand} ${item.phone.type}` 
+                          : item.accessory 
+                          ? item.accessory.name 
+                          : item.voucher 
+                          ? item.voucher.name 
+                          : item.pulsa 
+                          ? `${item.pulsa.denomination.toLocaleString()} ${item.pulsa.note || ""}` 
+                          : "-"}
+                      </div>
+                    ))}
+                  </td>
+                  <td className="px-8 py-5 text-right font-medium text-emerald-600">
+                    Rp {t.totalAmount.toLocaleString("id-ID")}
+                  </td>
+                  <td className="px-8 py-5 text-right text-amber-600">
+                    Rp {t.totalCost.toLocaleString("id-ID")}
+                  </td>
+                  <td className="px-8 py-5 text-right font-semibold text-emerald-600">
+                    Rp {t.profit.toLocaleString("id-ID")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
