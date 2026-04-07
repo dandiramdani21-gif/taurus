@@ -58,7 +58,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST create HP with image
+// POST create HP
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -67,8 +67,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { code, brand, type, imei, color, purchasePrice, metadata, image } = body;
+    const { code, brand, type, imei, color, purchasePrice, stock, image, metadata, entryDate } = body;
 
+    // Cek code sudah ada
     const existingCode = await prisma.phone.findUnique({
       where: { code },
     });
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Kode barang sudah terdaftar" }, { status: 400 });
     }
 
+    // Cek IMEI sudah ada
     const existingImei = await prisma.phone.findUnique({
       where: { imei },
     });
@@ -92,7 +94,8 @@ export async function POST(request: Request) {
         color: color || null,
         purchasePrice: parseInt(purchasePrice),
         purchaseDate: new Date(),
-        stock: 1,
+        entryDate: entryDate ? new Date(entryDate) : new Date(), // default hari ini
+        stock: parseInt(stock) || 1,
         image: image || null,
         metadata: {
           create: metadata || [],
@@ -110,7 +113,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT update HP with image
+// PUT update HP
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -119,7 +122,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, brand, type, imei, color, purchasePrice, metadata, image } = body;
+    const { id, code, brand, type, imei, color, purchasePrice, stock, image, metadata, entryDate } = body;
 
     await prisma.phone.update({
       where: { id },
@@ -130,6 +133,8 @@ export async function PUT(request: Request) {
         imei,
         color: color || null,
         purchasePrice: parseInt(purchasePrice),
+        entryDate: entryDate ? new Date(entryDate) : undefined,
+        stock: parseInt(stock),
         image: image || null,
       },
     });

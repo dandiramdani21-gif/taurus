@@ -95,6 +95,7 @@ export const PhoneScalarFieldEnum = {
   color: 'color',
   purchasePrice: 'purchasePrice',
   purchaseDate: 'purchaseDate',
+  entryDate: 'entryDate',
   stock: 'stock',
   image: 'image',
   createdAt: 'createdAt'

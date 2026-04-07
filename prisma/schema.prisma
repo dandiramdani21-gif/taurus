@@ -52,10 +52,11 @@ model Phone {
 
   purchasePrice Int
   purchaseDate  DateTime @default(now())
+  entryDate     DateTime @default(now())  // Tanggal barang masuk
 
   stock Int @default(1)
   
-  image String?  // URL atau path gambar
+  image String?
 
   createdAt        DateTime          @default(now())
   transactionItems TransactionItem[]

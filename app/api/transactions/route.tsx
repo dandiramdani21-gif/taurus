@@ -6,8 +6,17 @@ import { authOptions } from "../auth/[...nextauth]/route";
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    
+    // Debug: cek session
+    console.log("Session:", session);
+    
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized - No session" }, { status: 401 });
+    }
+    
+    if (!session.user || !session.user.id) {
+      console.error("Session user ID missing:", session);
+      return NextResponse.json({ error: "Unauthorized - User ID missing" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -21,7 +30,6 @@ export async function POST(request: Request) {
     const transactionItems = [];
     
     for (const item of items) {
-      // Cek apakah produk adalah HP (dari tabel Phone) atau produk biasa
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
       });
@@ -31,13 +39,11 @@ export async function POST(request: Request) {
       });
 
       if (!product && !phone) {
-        console.error(`Product/Phone not found: ${item.productId}`);
         return NextResponse.json({ 
           error: `Produk dengan ID ${item.productId} tidak ditemukan` 
         }, { status: 400 });
       }
 
-      // Cek stok
       if (product && product.stock < item.quantity) {
         return NextResponse.json({ 
           error: `Stok ${product.name} tidak mencukupi` 
@@ -59,7 +65,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create transaction
+    // Create transaction with valid userId
     const transaction = await prisma.transaction.create({
       data: {
         type,
@@ -67,7 +73,7 @@ export async function POST(request: Request) {
         totalCost,
         profit,
         status: "ACTIVE",
-        userId: session.user.id,
+        userId: session.user.id, // Pastikan ini ada
         items: {
           create: transactionItems,
         },
@@ -77,7 +83,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Update stock untuk Product
+    // Update stock
     for (const item of items) {
       const product = await prisma.product.findUnique({
         where: { id: item.productId },

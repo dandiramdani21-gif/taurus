@@ -1,29 +1,20 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Html5QrcodeScanner } from "html5-qrcode";
 import ImageUploader from "@/components/ImageUploader";
 
-interface Metadata {
-  key: string;
-  value: string;
-}
-
-interface Phone {
+interface Aksesoris {
   id: string;
   code: string;
-  brand: string;
-  type: string;
-  imei: string;
-  color: string | null;
-  purchasePrice: number;
-  purchaseDate: string;
+  name: string;
+  category: string;
+  costPrice: number;
+  sellPrice: number;
   stock: number;
   image: string | null;
-  metadata: Metadata[];
-  entryDate: Date
+  entryDate: string;
 }
 
 interface PaginationData {
@@ -33,15 +24,15 @@ interface PaginationData {
   totalPages: number;
 }
 
-export default function HpPage() {
+export default function AksesorisPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [phones, setPhones] = useState<Phone[]>([]);
+  const [aksesorisList, setAksesorisList] = useState<Aksesoris[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showDetail, setShowDetail] = useState<Phone | null>(null);
-  const [showStockModal, setShowStockModal] = useState<Phone | null>(null);
-  const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
+  const [showDetail, setShowDetail] = useState<Aksesoris | null>(null);
+  const [showStockModal, setShowStockModal] = useState<Aksesoris | null>(null);
+  const [editingAksesoris, setEditingAksesoris] = useState<Aksesoris | null>(null);
   const [stockValue, setStockValue] = useState(0);
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
@@ -51,31 +42,16 @@ export default function HpPage() {
   });
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  
-  // Scanner states
-  const [showCodeScanner, setShowCodeScanner] = useState(false);
-  const [showImeiScanner, setShowImeiScanner] = useState(false);
-  const [scanningField, setScanningField] = useState<"code" | "imei">("code");
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const [formData, setFormData] = useState({
     code: "",
-    brand: "",
-    type: "",
-    imei: "",
-    color: "",
-    purchasePrice: "",
-    stock: "1",
+    name: "",
+    costPrice: "",
+    sellPrice: "",
+    stock: "",
     image: "",
-    entryDate: new Date().toISOString().split("T")[0], // default hari ini
+    entryDate: new Date().toISOString().split("T")[0],
   });
-  const [metadata, setMetadata] = useState<Metadata[]>([
-    { key: "RAM", value: "" },
-    { key: "Storage", value: "" },
-    { key: "Processor", value: "" },
-    { key: "Battery", value: "" },
-    { key: "Camera", value: "" },
-  ]);
 
   // Debounce search
   useEffect(() => {
@@ -93,113 +69,23 @@ export default function HpPage() {
   }, [status, router]);
 
   useEffect(() => {
-    fetchPhones();
+    fetchAksesoris();
   }, [pagination.page, debouncedSearch]);
 
-  const fetchPhones = async () => {
+  const fetchAksesoris = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/hp?page=${pagination.page}&limit=${pagination.limit}&search=${debouncedSearch}`);
+      const res = await fetch(
+        `/api/products?page=${pagination.page}&limit=${pagination.limit}&search=${debouncedSearch}&category=ACCESSORY`
+      );
       const data = await res.json();
-      setPhones(data.phones);
-      setPagination(data.pagination);
+      setAksesorisList(data.products || []);
+      setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
     } catch (error) {
-      console.error("Error fetching phones:", error);
+      console.error("Error fetching aksesoris:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Cek apakah kode sudah ada
-  const checkExistingCode = async (code: string) => {
-    try {
-      const res = await fetch(`/api/hp/check?code=${code}`);
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      console.error("Error checking code:", error);
-      return { exists: false };
-    }
-  };
-
-  // Start scanner
-  const startScanner = (field: "code" | "imei") => {
-    setScanningField(field);
-    if (field === "code") {
-      setShowCodeScanner(true);
-    } else {
-      setShowImeiScanner(true);
-    }
-    
-    // Inisialisasi scanner setelah modal terbuka
-    setTimeout(() => {
-      const elementId = field === "code" ? "code-scanner" : "imei-scanner";
-      if (document.getElementById(elementId)) {
-        if (scannerRef.current) {
-          scannerRef.current.clear();
-        }
-        
-        scannerRef.current = new Html5QrcodeScanner(
-          elementId,
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
-          },
-          false
-        );
-        
-        scannerRef.current.render(onScanSuccess, onScanError);
-      }
-    }, 100);
-  };
-
-  const onScanSuccess = async (decodedText: string) => {
-    // Stop scanner
-    if (scannerRef.current) {
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-    
-    // Update form based on field
-    if (scanningField === "code") {
-      setFormData(prev => ({ ...prev, code: decodedText }));
-      
-      // Cek apakah kode sudah ada
-      const result = await checkExistingCode(decodedText);
-      if (result.exists) {
-        setShowCodeScanner(false);
-        alert(`Kode ${decodedText} sudah terdaftar! Silakan update stok jika ingin menambah.`);
-        if (result.phone) {
-          setShowStockModal(result.phone);
-          setStockValue(result.phone.stock + 1);
-        }
-        return;
-      }
-      
-      setShowCodeScanner(false);
-      // Fokus ke field brand
-      setTimeout(() => {
-        const brandInput = document.querySelector("input[name='brand']") as HTMLInputElement;
-        if (brandInput) brandInput.focus();
-      }, 100);
-    } else {
-      setFormData(prev => ({ ...prev, imei: decodedText }));
-      setShowImeiScanner(false);
-    }
-  };
-
-  const onScanError = (error: string) => {
-    console.error("Scan error:", error);
-  };
-
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-    setShowCodeScanner(false);
-    setShowImeiScanner(false);
   };
 
   const updateStock = async (id: string, newStock: number) => {
@@ -209,14 +95,14 @@ export default function HpPage() {
     }
     
     try {
-      const res = await fetch(`/api/hp/stock`, {
+      const res = await fetch(`/api/products/stock`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, stock: newStock }),
       });
 
       if (res.ok) {
-        fetchPhones();
+        fetchAksesoris();
         setShowStockModal(null);
       } else {
         alert("Gagal update stok");
@@ -235,13 +121,11 @@ export default function HpPage() {
       return;
     }
     
-    const filteredMetadata = metadata.filter(m => m.key && m.value);
-    
-    const url = editingPhone ? "/api/hp" : "/api/hp";
-    const method = editingPhone ? "PUT" : "POST";
-    const body = editingPhone
-      ? { ...formData, id: editingPhone.id, metadata: filteredMetadata }
-      : { ...formData, metadata: filteredMetadata };
+    const url = editingAksesoris ? "/api/products" : "/api/products";
+    const method = editingAksesoris ? "PUT" : "POST";
+    const body = editingAksesoris
+      ? { ...formData, id: editingAksesoris.id, category: "ACCESSORY" }
+      : { ...formData, category: "ACCESSORY" };
 
     try {
       const res = await fetch(url, {
@@ -251,7 +135,7 @@ export default function HpPage() {
       });
 
       if (res.ok) {
-        fetchPhones();
+        fetchAksesoris();
         setShowModal(false);
         resetForm();
       } else {
@@ -259,94 +143,55 @@ export default function HpPage() {
         alert(error.error);
       }
     } catch (error) {
-      console.error("Error saving phone:", error);
+      console.error("Error saving aksesoris:", error);
       alert("Gagal menyimpan data");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus HP ini?")) return;
+    if (!confirm("Yakin ingin menghapus aksesoris ini?")) return;
 
     try {
-      const res = await fetch(`/api/hp?id=${id}`, {
+      const res = await fetch(`/api/products?id=${id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        fetchPhones();
+        fetchAksesoris();
       } else {
         alert("Gagal menghapus data");
       }
     } catch (error) {
-      console.error("Error deleting phone:", error);
+      console.error("Error deleting aksesoris:", error);
       alert("Gagal menghapus data");
     }
   };
 
-  const handleEdit = (phone: Phone) => {
-    setEditingPhone(phone);
+  const handleEdit = (aksesoris: Aksesoris) => {
+    setEditingAksesoris(aksesoris);
     setFormData({
-      code: phone.code,
-      brand: phone.brand,
-      type: phone.type,
-      imei: phone.imei,
-      color: phone.color || "",
-      purchasePrice: phone.purchasePrice.toString(),
-      stock: phone.stock.toString(),
-      image: phone.image || "",
-      entryDate: phone.entryDate ? new Date(phone.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      code: aksesoris.code,
+      name: aksesoris.name,
+      costPrice: aksesoris.costPrice?.toString() || "",
+      sellPrice: aksesoris.sellPrice?.toString() || "",
+      stock: aksesoris.stock?.toString() || "",
+      image: aksesoris.image || "",
+      entryDate: aksesoris.entryDate ? new Date(aksesoris.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
-    
-    if (phone.metadata && phone.metadata.length > 0) {
-      setMetadata(phone.metadata);
-    } else {
-      setMetadata([
-        { key: "RAM", value: "" },
-        { key: "Storage", value: "" },
-        { key: "Processor", value: "" },
-        { key: "Battery", value: "" },
-        { key: "Camera", value: "" },
-      ]);
-    }
     setShowModal(true);
   };
 
   const resetForm = () => {
-    setEditingPhone(null);
+    setEditingAksesoris(null);
     setFormData({
       code: "",
-      brand: "",
-      type: "",
-      imei: "",
-      color: "",
-      purchasePrice: "",
-      stock: "1",
+      name: "",
+      costPrice: "",
+      sellPrice: "",
+      stock: "",
       image: "",
       entryDate: new Date().toISOString().split("T")[0],
     });
-    setMetadata([
-      { key: "RAM", value: "" },
-      { key: "Storage", value: "" },
-      { key: "Processor", value: "" },
-      { key: "Battery", value: "" },
-      { key: "Camera", value: "" },
-    ]);
-  };
-
-  const addMetadata = () => {
-    setMetadata([...metadata, { key: "", value: "" }]);
-  };
-
-  const removeMetadata = (index: number) => {
-    const newMetadata = [...metadata];
-    newMetadata.splice(index, 1);
-    setMetadata(newMetadata);
-  };
-
-  const updateMetadata = (index: number, field: "key" | "value", value: string) => {
-    const newMetadata = [...metadata];
-    newMetadata[index][field] = value;
-    setMetadata(newMetadata);
   };
 
   const goToPage = (page: number) => {
@@ -361,16 +206,16 @@ export default function HpPage() {
     );
   }
 
-  const totalStock = phones.reduce((sum, phone) => sum + phone.stock, 0);
-  const lowStockCount = phones.filter(phone => phone.stock > 0 && phone.stock < 3).length;
+  const totalStock = aksesorisList.reduce((sum, item) => sum + (item.stock || 0), 0);
+  const lowStockCount = aksesorisList.filter(item => item.stock > 0 && item.stock < 3).length;
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Daftar HP</h1>
-          <p className="text-gray-500 mt-1">Kelola data HP yang tersedia</p>
+          <h1 className="text-2xl font-bold text-gray-800">Aksesoris</h1>
+          <p className="text-gray-500 mt-1">Kelola data aksesoris</p>
         </div>
         <button
           onClick={() => {
@@ -382,7 +227,7 @@ export default function HpPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Tambah HP
+          Tambah Aksesoris
         </button>
       </div>
 
@@ -394,7 +239,7 @@ export default function HpPage() {
           </svg>
           <input
             type="text"
-            placeholder="Cari berdasarkan kode, brand, type, atau IMEI..."
+            placeholder="Cari aksesoris..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
@@ -412,7 +257,7 @@ export default function HpPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total HP</p>
+              <p className="text-sm text-gray-500">Total Aksesoris</p>
               <p className="text-xl font-bold text-gray-800">{pagination.total}</p>
             </div>
           </div>
@@ -460,29 +305,28 @@ export default function HpPage() {
                   <tr>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Modal</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Jual</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {phones.length === 0 ? (
+                  {aksesorisList.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="text-center py-12 text-gray-500">
-                        Tidak ada data HP
+                        Belum ada data aksesoris
                       </td>
                     </tr>
                   ) : (
-                    phones.map((phone) => (
-                      <tr key={phone.id} className="hover:bg-gray-50 transition">
+                    aksesorisList.map((item) => (
+                      <tr key={item.id} className="hover:bg-gray-50 transition">
                         <td className="px-6 py-4">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
-                            {phone.image ? (
-                              <img src={phone.image} alt={phone.brand} className="w-full h-full object-cover" />
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,55 +336,50 @@ export default function HpPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{phone.code}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{phone.brand}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{phone.type}</td>
-                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{phone.imei}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
-           
-<td className="px-6 py-4 text-sm text-gray-500">
-  {new Date(phone.entryDate).toLocaleDateString("id-ID")}
-</td>
+                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{item.code}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.costPrice?.toLocaleString() || 0}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">Rp {item.sellPrice?.toLocaleString() || 0}</td>
                         <td className="px-6 py-4">
-                          {phone.stock === 0 ? (
+                          {item.stock === 0 ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                               Habis
                             </span>
-                          ) : phone.stock < 3 ? (
+                          ) : item.stock < 3 ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                Stok: {phone.stock}
+                                Stok: {item.stock}
                               </span>
                               <span className="text-xs text-orange-500">⚠️ Segera restok</span>
                             </div>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Stok: {phone.stock}
+                              Stok: {item.stock}
                             </span>
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-  {new Date(phone.entryDate).toLocaleDateString("id-ID")}
-</td>
+                          {item.entryDate ? new Date(item.entryDate).toLocaleDateString("id-ID") : "-"}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => setShowDetail(phone)} className="text-gray-500 hover:text-gray-700">
+                            <button onClick={() => setShowDetail(item)} className="text-gray-500 hover:text-gray-700">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                               </svg>
                             </button>
-                            <button onClick={() => { setShowStockModal(phone); setStockValue(phone.stock); }} className="text-green-600 hover:text-green-800">
+                            <button onClick={() => { setShowStockModal(item); setStockValue(item.stock); }} className="text-green-600 hover:text-green-800">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                               </svg>
                             </button>
-                            <button onClick={() => handleEdit(phone)} className="text-blue-600 hover:text-blue-800">
+                            <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-                            <button onClick={() => handleDelete(phone.id)} className="text-red-600 hover:text-red-800">
+                            <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-800">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
@@ -611,7 +450,7 @@ export default function HpPage() {
 
           {/* Info */}
           <div className="text-center text-sm text-gray-500 mt-3">
-            Menampilkan {phones.length} dari {pagination.total} data
+            Menampilkan {aksesorisList.length} dari {pagination.total} data
           </div>
         </>
       )}
@@ -621,7 +460,7 @@ export default function HpPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Detail HP</h2>
+              <h2 className="text-xl font-semibold text-gray-800">Detail Aksesoris</h2>
               <button onClick={() => setShowDetail(null)} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -630,9 +469,9 @@ export default function HpPage() {
             </div>
             
             <div className="flex justify-center mb-4">
-              <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100">
+              <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-100">
                 {showDetail.image ? (
-                  <img src={showDetail.image} alt={showDetail.brand} className="w-full h-full object-cover" />
+                  <img src={showDetail.image} alt={showDetail.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,26 +484,11 @@ export default function HpPage() {
             
             <div className="space-y-3">
               <div><span className="text-sm text-gray-500">Kode:</span> <p className="font-medium">{showDetail.code}</p></div>
-              <div><span className="text-sm text-gray-500">Brand:</span> <p className="font-medium">{showDetail.brand}</p></div>
-              <div><span className="text-sm text-gray-500">Type:</span> <p className="font-medium">{showDetail.type}</p></div>
-              <div><span className="text-sm text-gray-500">IMEI:</span> <p className="font-medium">{showDetail.imei}</p></div>
-              <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
-              <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.purchasePrice.toLocaleString()}</p></div>
+              <div><span className="text-sm text-gray-500">Nama:</span> <p className="font-medium">{showDetail.name}</p></div>
+              <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.costPrice?.toLocaleString()}</p></div>
+              <div><span className="text-sm text-gray-500">Harga Jual:</span> <p className="font-medium">Rp {showDetail.sellPrice?.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
-              <div>
-  <span className="text-sm text-gray-500">Tanggal Masuk:</span> 
-  <p className="font-medium">{new Date(showDetail.entryDate).toLocaleDateString("id-ID")}</p>
-</div>
-              {showDetail.metadata.length > 0 && (
-                <div>
-                  <span className="text-sm text-gray-500">Spesifikasi:</span>
-                  <div className="mt-1 space-y-1">
-                    {showDetail.metadata.map((m, i) => (
-                      <p key={i} className="text-sm"><span className="font-medium">{m.key}:</span> {m.value}</p>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div><span className="text-sm text-gray-500">Tanggal Masuk:</span> <p className="font-medium">{showDetail.entryDate ? new Date(showDetail.entryDate).toLocaleDateString("id-ID") : "-"}</p></div>
             </div>
           </div>
         </div>
@@ -684,8 +508,8 @@ export default function HpPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">HP</p>
-                <p className="font-medium">{showStockModal.brand} {showStockModal.type}</p>
+                <p className="text-sm text-gray-500">Aksesoris</p>
+                <p className="font-medium">{showStockModal.name}</p>
                 <p className="text-xs text-gray-400">Kode: {showStockModal.code}</p>
               </div>
               <div>
@@ -721,10 +545,10 @@ export default function HpPage() {
       {/* Modal Form */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl w-full max-w-2xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
-                {editingPhone ? "Edit HP" : "Tambah HP"}
+                {editingAksesoris ? "Edit Aksesoris" : "Tambah Aksesoris"}
               </h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -734,98 +558,45 @@ export default function HpPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Kode Barang with Scanner */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kode Barang *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => startScanner("code")}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scan
-                  </button>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kode Aksesoris *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Aksesoris *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
-                  <input
-                    type="text"
-                    name="brand"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-                  <input
-                    type="text"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* IMEI with Scanner */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">IMEI *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.imei}
-                    onChange={(e) => setFormData({ ...formData, imei: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => startScanner("imei")}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scan
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Warna</label>
-                  <input
-                    type="text"
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal</label>
                   <input
                     type="number"
-                    value={formData.purchasePrice}
-                    onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                    value={formData.costPrice}
+                    onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Jual</label>
+                  <input
+                    type="number"
+                    value={formData.sellPrice}
+                    onChange={(e) => setFormData({ ...formData, sellPrice: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
                   />
                 </div>
               </div>
@@ -842,120 +613,35 @@ export default function HpPage() {
                   />
                   <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
                 </div>
-                  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
-    <input
-      type="date"
-      value={formData.entryDate}
-      onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-    />
-    <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
-  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+                  <input
+                    type="date"
+                    value={formData.entryDate}
+                    onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
+                </div>
               </div>
-              
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Foto HP</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Foto Aksesoris</label>
                 <ImageUploader
                   onImageCapture={(imageData) => setFormData({ ...formData, image: imageData })}
                   currentImage={formData.image}
                 />
               </div>
 
-              {/* Dynamic Metadata */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-sm font-medium text-gray-700">Spesifikasi & Metadata</label>
-                  <button type="button" onClick={addMetadata} className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Tambah
-                  </button>
-                </div>
-                
-                <div className="space-y-2">
-                  {metadata.map((item, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Nama (contoh: RAM)"
-                        value={item.key}
-                        onChange={(e) => updateMetadata(idx, "key", e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white text-sm"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Value (contoh: 8GB)"
-                        value={item.value}
-                        onChange={(e) => updateMetadata(idx, "value", e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeMetadata(idx)}
-                        className="p-2 text-red-500 hover:text-red-700"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-400 mt-1">Klik + untuk menambah metadata spesifikasi HP</p>
-              </div>
-
               <div className="flex gap-3 pt-4">
                 <button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition">
-                  {editingPhone ? "Update" : "Simpan"}
+                  {editingAksesoris ? "Update" : "Simpan"}
                 </button>
                 <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg transition">
                   Batal
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Scanner Modal untuk Kode Barang */}
-      {showCodeScanner && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Scan Kode Barang</h2>
-              <button onClick={stopScanner} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div id="code-scanner" className="w-full"></div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Arahkan kamera ke barcode, akan terdeteksi otomatis
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Scanner Modal untuk IMEI */}
-      {showImeiScanner && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Scan IMEI</h2>
-              <button onClick={stopScanner} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div id="imei-scanner" className="w-full"></div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Arahkan kamera ke barcode IMEI, akan terdeteksi otomatis
-            </p>
           </div>
         </div>
       )}

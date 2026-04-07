@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
-/* Reset input styles */
-input, textarea, select {
-  @apply bg-white text-gray-900 border-gray-300;
+/* Responsive Table - horizontal scroll */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-input:focus, textarea:focus, select:focus {
-  @apply outline-none ring-2 ring-purple-500 border-transparent;
+.table-responsive table {
+  min-width: 800px;
+  width: 100%;
 }
 
-/* Placeholder color */
-input::placeholder, textarea::placeholder {
-  @apply text-gray-400;
+/* Untuk mobile, tabel bisa di-scroll horizontal */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Card grid untuk mobile */
+  .grid-cols-1 {
+    gap: 1rem;
+  }
+  
+  /* Padding lebih kecil di mobile */
+  .p-6 {
+    padding: 1rem;
+  }
 }
 
-/* Remove number input spinners */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+/* Touch-friendly buttons */
+button, 
+a, 
+[role="button"] {
+  touch-action: manipulation;
 }
 
-input[type=number] {
-  -moz-appearance: textfield;
+/* Better input on mobile */
+input, 
+select, 
+textarea {
+  font-size: 16px; /* Prevent zoom on focus in iOS */
+}
+
+/* Mobile menu transition */
+@media (max-width: 1023px) {
+  .sidebar-open {
+    overflow: hidden;
+  }
 }

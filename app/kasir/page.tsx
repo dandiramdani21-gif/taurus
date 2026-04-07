@@ -326,6 +326,7 @@ const handleCheckout = async () => {
                         <div className="text-base font-semibold text-purple-600 mt-2">
                           Rp {(product.sellPrice || product.costPrice)?.toLocaleString()}
                         </div>
+                        
                         <div className={`text-xs mt-1 ${product.stock < 3 ? "text-orange-500" : "text-gray-400"}`}>
                           Stok: {product.stock}
                         </div>
@@ -424,6 +425,7 @@ const handleCheckout = async () => {
                       <span className="text-gray-500">Modal:</span>
                       <span>Rp {item.costPrice.toLocaleString()}</span>
                     </div>
+
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Subtotal:</span>
                       <span className="font-semibold">Rp {item.subtotal.toLocaleString()}</span>
@@ -487,7 +489,7 @@ const handleCheckout = async () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                {/* <h2 className="text-xl font-bold text-gray-800">Taurus Store</h2>
+                {/* <h2 className="text-xl font-bold text-gray-800">Taurus Cellular</h2>
                 <p className="text-sm text-gray-500 mt-1">Jl. Contoh No. 123, Kota</p>
                 <p className="text-sm text-gray-500">Telp: 0812-3456-7890</p> */}
               </div>

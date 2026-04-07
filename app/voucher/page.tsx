@@ -11,8 +11,10 @@ interface Voucher {
   name: string;
   category: string;
   costPrice: number;
+  sellPrice: number;
   stock: number;
   image: string | null;
+  entryDate: string;
   createdAt: string;
 }
 
@@ -46,8 +48,10 @@ export default function VoucherPage() {
     code: "",
     name: "",
     costPrice: "",
+    sellPrice: "",
     stock: "",
     image: "",
+    entryDate: new Date().toISOString().split("T")[0],
   });
 
   // Debounce search
@@ -86,6 +90,11 @@ export default function VoucherPage() {
   };
 
   const updateStock = async (id: string, newStock: number) => {
+    if (newStock < 0) {
+      alert("Stok tidak boleh minus!");
+      return;
+    }
+    
     try {
       const res = await fetch(`/api/products/stock`, {
         method: "PATCH",
@@ -107,6 +116,11 @@ export default function VoucherPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (parseInt(formData.stock) < 0) {
+      alert("Stok tidak boleh minus!");
+      return;
+    }
     
     const url = editingVoucher ? "/api/products" : "/api/products";
     const method = editingVoucher ? "PUT" : "POST";
@@ -160,8 +174,10 @@ export default function VoucherPage() {
       code: voucher.code,
       name: voucher.name,
       costPrice: voucher.costPrice?.toString() || "",
+      sellPrice: voucher.sellPrice?.toString() || "",
       stock: voucher.stock?.toString() || "",
       image: voucher.image || "",
+      entryDate: voucher.entryDate ? new Date(voucher.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
     setShowModal(true);
   };
@@ -172,8 +188,10 @@ export default function VoucherPage() {
       code: "",
       name: "",
       costPrice: "",
+      sellPrice: "",
       stock: "",
       image: "",
+      entryDate: new Date().toISOString().split("T")[0],
     });
   };
 
@@ -266,7 +284,7 @@ export default function VoucherPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Stok Menipis</p>
+              <p className="text-sm text-gray-500">Stok Menipis (&lt;3)</p>
               <p className="text-xl font-bold text-orange-600">{lowStockCount}</p>
             </div>
           </div>
@@ -291,7 +309,7 @@ export default function VoucherPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Modal</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Masuk</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
@@ -340,7 +358,7 @@ export default function VoucherPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(voucher.createdAt).toLocaleDateString("id-ID")}
+                          {voucher.entryDate ? new Date(voucher.entryDate).toLocaleDateString("id-ID") : "-"}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -468,7 +486,7 @@ export default function VoucherPage() {
               <div><span className="text-sm text-gray-500">Nama:</span> <p className="font-medium">{showDetail.name}</p></div>
               <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.costPrice?.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
-              <div><span className="text-sm text-gray-500">Tanggal Masuk:</span> <p className="font-medium">{new Date(showDetail.createdAt).toLocaleDateString("id-ID")}</p></div>
+              <div><span className="text-sm text-gray-500">Tanggal Masuk:</span> <p className="font-medium">{showDetail.entryDate ? new Date(showDetail.entryDate).toLocaleDateString("id-ID") : "-"}</p></div>
             </div>
           </div>
         </div>
@@ -490,6 +508,7 @@ export default function VoucherPage() {
               <div>
                 <p className="text-sm text-gray-500">Voucher</p>
                 <p className="font-medium">{showStockModal.name}</p>
+                <p className="text-xs text-gray-400">Kode: {showStockModal.code}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
@@ -500,6 +519,7 @@ export default function VoucherPage() {
                   onChange={(e) => setStockValue(parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
                 />
+                <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
               </div>
               <div className="flex gap-3 pt-4">
                 <button
@@ -522,7 +542,7 @@ export default function VoucherPage() {
 
       {/* Modal Form */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
@@ -558,24 +578,39 @@ export default function VoucherPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal</label>
-                <input
-                  type="number"
-                  value={formData.costPrice}
-                  onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Harga Modal</label>
+                  <input
+                    type="number"
+                    value={formData.costPrice}
+                    onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Stok Awal</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stok Awal</label>
-                <input
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                />
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+                  <input
+                    type="date"
+                    value={formData.entryDate}
+                    onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
+                </div>
               </div>
 
               <div>

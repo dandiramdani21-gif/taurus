@@ -45,8 +45,10 @@ export default function ClientLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 bg-gray-50 p-4">
-        {children}
+      <main className="flex-1 bg-gray-50 w-full overflow-x-hidden">
+        <div className="p-4 sm:p-6">
+          {children}
+        </div>
       </main>
     </div>
   );
