@@ -244,7 +244,7 @@ export default function KasirPulsaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cart.map((item) => ({
-            pulsaId: item.productId,
+            productId: item.productId,
             quantity: item.quantity,
             sellPrice: item.sellPrice,
             costPrice: item.costPrice,

@@ -18,8 +18,8 @@ export async function POST(request: Request) {
 
     // Validasi setiap item punya productId
     for (const item of items) {
-      if (!item.pulsaId) {
-        return NextResponse.json({ error: "pulsaId is required for each item" }, { status: 400 });
+      if (!item.productId) {
+        return NextResponse.json({ error: "productId is required for each item" }, { status: 400 });
       }
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         await tx.transactionItem.create({
           data: {
             transactionId: newTransaction.id,
-            pulsaId: item.pulsaId,        // ← ini yang paling penting
+            pulsaId: item.productId,        // ← ini yang paling penting
             quantity: Number(item.quantity),
             sellPrice: Number(item.sellPrice),
             costPrice: Number(item.costPrice),

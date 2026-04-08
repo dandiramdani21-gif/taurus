@@ -248,7 +248,7 @@ export default function KasirVoucherPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cart.map((item) => ({
-            voucherId: item.productId,
+            productId: item.productId,
             quantity: item.quantity,
             sellPrice: item.sellPrice,
             costPrice: item.costPrice,
