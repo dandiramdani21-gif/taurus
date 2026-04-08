@@ -29,6 +29,14 @@ interface CartItem {
   tempCostPrice?: number;
 }
 
+interface CheckoutModalData {
+  isOpen: boolean;
+  success: boolean;
+  message: string;
+  totalAmount?: number;
+  profit?: number;
+}
+
 export default function KasirVoucherPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -37,6 +45,11 @@ export default function KasirVoucherPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [checkoutModal, setCheckoutModal] = useState<CheckoutModalData>({
+    isOpen: false,
+    success: false,
+    message: "",
+  });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 15,
@@ -230,6 +243,10 @@ export default function KasirVoucherPage() {
   const calculateTotalProfit = () => cart.reduce((sum, item) => sum + item.profit, 0);
   const calculateTotalCost = () => cart.reduce((sum, item) => sum + item.costPrice * item.quantity, 0);
 
+  const closeModal = () => {
+    setCheckoutModal({ isOpen: false, success: false, message: "" });
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) {
       alert("Keranjang kosong!");
@@ -262,14 +279,35 @@ export default function KasirVoucherPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // Show success modal
+        setCheckoutModal({
+          isOpen: true,
+          success: true,
+          message: "Payment successful",
+          totalAmount: calculateTotal(),
+          profit: calculateTotalProfit(),
+        });
         setCart([]);
         fetchProducts();
       } else {
-        alert(data.error || "Gagal checkout");
+        // Show error modal
+        setCheckoutModal({
+          isOpen: true,
+          success: false,
+          message: data.error || "Payment failed",
+          totalAmount: undefined,
+          profit: undefined,
+        });
       }
     } catch (error) {
       console.error("Error checkout:", error);
-      alert("Gagal melakukan checkout");
+      setCheckoutModal({
+        isOpen: true,
+        success: false,
+        message: "Network error. Please try again.",
+        totalAmount: undefined,
+        profit: undefined,
+      });
     }
   };
 
@@ -486,6 +524,62 @@ export default function KasirVoucherPage() {
           </button>
         </div>
       </div>
+
+      {/* CHECKOUT MODAL - SEDERHANA DENGAN TOMBOL CLOSE */}
+      {checkoutModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full mx-4 overflow-hidden shadow-2xl transform transition-all">
+            {/* Success Icon / Error Icon */}
+            <div className="pt-8 pb-4 flex justify-center">
+              {checkoutModal.success ? (
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div className="text-center px-6">
+              <h2 className={`text-2xl font-bold ${checkoutModal.success ? 'text-green-600' : 'text-red-600'}`}>
+                {checkoutModal.success ? 'Payment Successful!' : 'Payment Failed'}
+              </h2>
+              
+
+              {/* Transaction Details (only for success) */}
+              {checkoutModal.success && checkoutModal.totalAmount && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-2xl">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-600">Total Amount</span>
+                    <span className="font-semibold">Rp {checkoutModal.totalAmount.toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Profit</span>
+                    <span className="font-semibold text-green-600">+Rp {checkoutModal.profit?.toLocaleString("id-ID")}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Button Close Saja */}
+            <div className="p-6 mt-4">
+              <button
+                onClick={closeModal}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition duration-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
