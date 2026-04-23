@@ -57,3 +57,8 @@ export type Transaction = Prisma.TransactionModel
  * 
  */
 export type TransactionItem = Prisma.TransactionItemModel
+/**
+ * Model RestockNote
+ * 
+ */
+export type RestockNote = Prisma.RestockNoteModel

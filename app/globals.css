@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(168, 85, 247, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 24%),
+    linear-gradient(180deg, #f8fafc 0%, #f8fafc 48%, #eef2ff 100%);
+  color: #0f172a;
+}
+
+::selection {
+  background: rgba(124, 58, 237, 0.18);
+  color: #111827;
+}
+
 /* Responsive Table - horizontal scroll */
 .table-responsive {
   overflow-x: auto;
@@ -46,5 +67,16 @@ textarea {
 @media (max-width: 1023px) {
   .sidebar-open {
     overflow: hidden;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

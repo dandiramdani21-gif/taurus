@@ -2,6 +2,41 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { logRestock } from "@/lib/restock";
+
+const parseDateInput = (value: unknown) => {
+  if (value === null || value === undefined || value === "") {
+    return new Date();
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const excelEpoch = Date.UTC(1899, 11, 30);
+    return new Date(excelEpoch + value * 24 * 60 * 60 * 1000);
+  }
+
+  const text = String(value).trim();
+  if (!text) return new Date();
+
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+    const [year, month, day] = text.slice(0, 10).split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const parts = text.split("/");
+  if (parts.length === 3) {
+    const [day, month, year] = parts.map((part) => Number(part));
+    if (day && month && year) {
+      return new Date(year, month - 1, day);
+    }
+  }
+
+  const fallback = new Date(text);
+  return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
+};
 
 // GET all HP with metadata
 export async function GET(request: Request) {
@@ -22,7 +57,6 @@ export async function GET(request: Request) {
     const where = search
       ? {
           OR: [
-            { code: { contains: search, mode: "insensitive" as const } },
             { brand: { contains: search, mode: "insensitive" as const } },
             { type: { contains: search, mode: "insensitive" as const } },
             { imei: { contains: search, mode: "insensitive" as const } },
@@ -67,15 +101,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { code, brand, type, imei, color, purchasePrice, stock, image, metadata, entryDate } = body;
-
-    // Cek code sudah ada
-    const existingCode = await prisma.phone.findUnique({
-      where: { code },
-    });
-    if (existingCode) {
-      return NextResponse.json({ error: "Kode barang sudah terdaftar" }, { status: 400 });
-    }
+    const { brand, type, imei, color, purchasePrice, purchaseDate, stock, image, metadata, entryDate } = body;
 
     // Cek IMEI sudah ada
     const existingImei = await prisma.phone.findUnique({
@@ -87,14 +113,13 @@ export async function POST(request: Request) {
 
     const phone = await prisma.phone.create({
       data: {
-        code,
         brand,
         type,
         imei,
         color: color || null,
         purchasePrice: parseInt(purchasePrice),
-        purchaseDate: new Date(),
-        entryDate: entryDate ? new Date(entryDate) : new Date(), // default hari ini
+        purchaseDate: parseDateInput(purchaseDate),
+        entryDate: parseDateInput(entryDate), // default hari ini
         stock: parseInt(stock) || 1,
         image: image || null,
         metadata: {
@@ -105,6 +130,21 @@ export async function POST(request: Request) {
         metadata: true,
       },
     });
+
+    if ((parseInt(stock) || 1) > 0) {
+      await logRestock({
+        category: "HANDPHONE",
+        productType: "PHONE",
+        productId: phone.id,
+        productName: `${phone.brand} ${phone.type}`,
+        quantity: parseInt(stock) || 1,
+        previousStock: 0,
+        newStock: phone.stock,
+        costPrice: phone.purchasePrice,
+        note: "Input awal inventory handphone",
+        userId: session.user.id,
+      });
+    }
 
     return NextResponse.json(phone, { status: 201 });
   } catch (error) {
@@ -122,22 +162,26 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, brand, type, imei, color, purchasePrice, stock, image, metadata, entryDate } = body;
+    const { id, brand, type, imei, color, purchasePrice, purchaseDate, stock, image, metadata, entryDate } = body;
+    const existingPhone = await prisma.phone.findUnique({
+      where: { id },
+      select: { stock: true, brand: true, type: true, purchasePrice: true },
+    });
 
     // Build data object hanya dengan field yang dikirim
     const updateData: any = {};
     
-    if (code !== undefined) updateData.code = code;
     if (brand !== undefined) updateData.brand = brand;
     if (type !== undefined) updateData.type = type;
     if (imei !== undefined) updateData.imei = imei;
     if (color !== undefined) updateData.color = color;
     if (purchasePrice !== undefined) updateData.purchasePrice = parseInt(purchasePrice);
+    if (purchaseDate !== undefined) updateData.purchaseDate = parseDateInput(purchaseDate);
     if (stock !== undefined) updateData.stock = parseInt(stock);
     if (image !== undefined) updateData.image = image;
-    if (entryDate !== undefined) updateData.entryDate = entryDate ? new Date(entryDate) : undefined;
+    if (entryDate !== undefined) updateData.entryDate = parseDateInput(entryDate);
 
-    await prisma.phone.update({
+    const updatedPhone = await prisma.phone.update({
       where: { id },
       data: updateData,
     });
@@ -156,12 +200,29 @@ export async function PUT(request: Request) {
       });
     }
 
-    const updatedPhone = await prisma.phone.findUnique({
+    const refreshedPhone = await prisma.phone.findUnique({
       where: { id },
       include: { metadata: true },
     });
 
-    return NextResponse.json(updatedPhone);
+    const nextStock = typeof stock !== "undefined" ? parseInt(stock) : updatedPhone.stock;
+    if (existingPhone && typeof stock !== "undefined" && nextStock !== existingPhone.stock) {
+      await logRestock({
+        category: "HANDPHONE",
+        productType: "PHONE",
+        productId: id,
+        productName: `${brand ?? existingPhone.brand} ${type ?? existingPhone.type}`,
+        quantity: Math.abs(nextStock - existingPhone.stock),
+        previousStock: existingPhone.stock,
+        newStock: nextStock,
+        costPrice: purchasePrice ? parseInt(purchasePrice) : existingPhone.purchasePrice,
+        source: "ADJUSTMENT",
+        note: "Penyesuaian stok handphone",
+        userId: session.user.id,
+      });
+    }
+
+    return NextResponse.json(refreshedPhone);
   } catch (error) {
     console.error("Error updating phone:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

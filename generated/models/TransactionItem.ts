@@ -27,12 +27,14 @@ export type AggregateTransactionItem = {
 }
 
 export type TransactionItemAvgAggregateOutputType = {
+  pulsaBalance: number | null
   quantity: number | null
   sellPrice: number | null
   costPrice: number | null
 }
 
 export type TransactionItemSumAggregateOutputType = {
+  pulsaBalance: number | null
   quantity: number | null
   sellPrice: number | null
   costPrice: number | null
@@ -44,6 +46,9 @@ export type TransactionItemMinAggregateOutputType = {
   accessoryId: string | null
   voucherId: string | null
   pulsaId: string | null
+  pulsaDestinationNumber: string | null
+  pulsaDescription: string | null
+  pulsaBalance: number | null
   phoneId: string | null
   quantity: number | null
   sellPrice: number | null
@@ -56,6 +61,9 @@ export type TransactionItemMaxAggregateOutputType = {
   accessoryId: string | null
   voucherId: string | null
   pulsaId: string | null
+  pulsaDestinationNumber: string | null
+  pulsaDescription: string | null
+  pulsaBalance: number | null
   phoneId: string | null
   quantity: number | null
   sellPrice: number | null
@@ -68,6 +76,9 @@ export type TransactionItemCountAggregateOutputType = {
   accessoryId: number
   voucherId: number
   pulsaId: number
+  pulsaDestinationNumber: number
+  pulsaDescription: number
+  pulsaBalance: number
   phoneId: number
   quantity: number
   sellPrice: number
@@ -77,12 +88,14 @@ export type TransactionItemCountAggregateOutputType = {
 
 
 export type TransactionItemAvgAggregateInputType = {
+  pulsaBalance?: true
   quantity?: true
   sellPrice?: true
   costPrice?: true
 }
 
 export type TransactionItemSumAggregateInputType = {
+  pulsaBalance?: true
   quantity?: true
   sellPrice?: true
   costPrice?: true
@@ -94,6 +107,9 @@ export type TransactionItemMinAggregateInputType = {
   accessoryId?: true
   voucherId?: true
   pulsaId?: true
+  pulsaDestinationNumber?: true
+  pulsaDescription?: true
+  pulsaBalance?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -106,6 +122,9 @@ export type TransactionItemMaxAggregateInputType = {
   accessoryId?: true
   voucherId?: true
   pulsaId?: true
+  pulsaDestinationNumber?: true
+  pulsaDescription?: true
+  pulsaBalance?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -118,6 +137,9 @@ export type TransactionItemCountAggregateInputType = {
   accessoryId?: true
   voucherId?: true
   pulsaId?: true
+  pulsaDestinationNumber?: true
+  pulsaDescription?: true
+  pulsaBalance?: true
   phoneId?: true
   quantity?: true
   sellPrice?: true
@@ -217,6 +239,9 @@ export type TransactionItemGroupByOutputType = {
   accessoryId: string | null
   voucherId: string | null
   pulsaId: string | null
+  pulsaDestinationNumber: string | null
+  pulsaDescription: string | null
+  pulsaBalance: number | null
   phoneId: string | null
   quantity: number
   sellPrice: number
@@ -252,6 +277,9 @@ export type TransactionItemWhereInput = {
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDestinationNumber?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDescription?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaBalance?: Prisma.IntNullableFilter<"TransactionItem"> | number | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
@@ -269,6 +297,9 @@ export type TransactionItemOrderByWithRelationInput = {
   accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
   pulsaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaDestinationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaBalance?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -289,6 +320,9 @@ export type TransactionItemWhereUniqueInput = Prisma.AtLeast<{
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDestinationNumber?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDescription?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaBalance?: Prisma.IntNullableFilter<"TransactionItem"> | number | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
@@ -306,6 +340,9 @@ export type TransactionItemOrderByWithAggregationInput = {
   accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
   pulsaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaDestinationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  pulsaBalance?: Prisma.SortOrderInput | Prisma.SortOrder
   phoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -326,6 +363,9 @@ export type TransactionItemScalarWhereWithAggregatesInput = {
   accessoryId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   pulsaId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  pulsaDestinationNumber?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  pulsaDescription?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
+  pulsaBalance?: Prisma.IntNullableWithAggregatesFilter<"TransactionItem"> | number | null
   phoneId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntWithAggregatesFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntWithAggregatesFilter<"TransactionItem"> | number
@@ -334,6 +374,9 @@ export type TransactionItemScalarWhereWithAggregatesInput = {
 
 export type TransactionItemCreateInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -350,6 +393,9 @@ export type TransactionItemUncheckedCreateInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -358,6 +404,9 @@ export type TransactionItemUncheckedCreateInput = {
 
 export type TransactionItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -374,6 +423,9 @@ export type TransactionItemUncheckedUpdateInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -386,6 +438,9 @@ export type TransactionItemCreateManyInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -394,6 +449,9 @@ export type TransactionItemCreateManyInput = {
 
 export type TransactionItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -405,6 +463,9 @@ export type TransactionItemUncheckedUpdateManyInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -427,6 +488,9 @@ export type TransactionItemCountOrderByAggregateInput = {
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
   pulsaId?: Prisma.SortOrder
+  pulsaDestinationNumber?: Prisma.SortOrder
+  pulsaDescription?: Prisma.SortOrder
+  pulsaBalance?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -434,6 +498,7 @@ export type TransactionItemCountOrderByAggregateInput = {
 }
 
 export type TransactionItemAvgOrderByAggregateInput = {
+  pulsaBalance?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
@@ -445,6 +510,9 @@ export type TransactionItemMaxOrderByAggregateInput = {
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
   pulsaId?: Prisma.SortOrder
+  pulsaDestinationNumber?: Prisma.SortOrder
+  pulsaDescription?: Prisma.SortOrder
+  pulsaBalance?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -457,6 +525,9 @@ export type TransactionItemMinOrderByAggregateInput = {
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
   pulsaId?: Prisma.SortOrder
+  pulsaDestinationNumber?: Prisma.SortOrder
+  pulsaDescription?: Prisma.SortOrder
+  pulsaBalance?: Prisma.SortOrder
   phoneId?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
@@ -464,6 +535,7 @@ export type TransactionItemMinOrderByAggregateInput = {
 }
 
 export type TransactionItemSumOrderByAggregateInput = {
+  pulsaBalance?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
@@ -681,6 +753,9 @@ export type TransactionItemUncheckedUpdateManyWithoutTransactionNestedInput = {
 
 export type TransactionItemCreateWithoutPhoneInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -696,6 +771,9 @@ export type TransactionItemUncheckedCreateWithoutPhoneInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -736,6 +814,9 @@ export type TransactionItemScalarWhereInput = {
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   pulsaId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDestinationNumber?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaDescription?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
+  pulsaBalance?: Prisma.IntNullableFilter<"TransactionItem"> | number | null
   phoneId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   quantity?: Prisma.IntFilter<"TransactionItem"> | number
   sellPrice?: Prisma.IntFilter<"TransactionItem"> | number
@@ -744,6 +825,9 @@ export type TransactionItemScalarWhereInput = {
 
 export type TransactionItemCreateWithoutAccessoryInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -758,6 +842,9 @@ export type TransactionItemUncheckedCreateWithoutAccessoryInput = {
   transactionId: string
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -792,6 +879,9 @@ export type TransactionItemUpdateManyWithWhereWithoutAccessoryInput = {
 
 export type TransactionItemCreateWithoutVoucherInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -806,6 +896,9 @@ export type TransactionItemUncheckedCreateWithoutVoucherInput = {
   transactionId: string
   accessoryId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -840,6 +933,9 @@ export type TransactionItemUpdateManyWithWhereWithoutVoucherInput = {
 
 export type TransactionItemCreateWithoutPulsaInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -854,6 +950,9 @@ export type TransactionItemUncheckedCreateWithoutPulsaInput = {
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -888,6 +987,9 @@ export type TransactionItemUpdateManyWithWhereWithoutPulsaInput = {
 
 export type TransactionItemCreateWithoutTransactionInput = {
   id?: string
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -902,6 +1004,9 @@ export type TransactionItemUncheckedCreateWithoutTransactionInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -940,6 +1045,9 @@ export type TransactionItemCreateManyPhoneInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   quantity?: number
   sellPrice: number
   costPrice: number
@@ -947,6 +1055,9 @@ export type TransactionItemCreateManyPhoneInput = {
 
 export type TransactionItemUpdateWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -962,6 +1073,9 @@ export type TransactionItemUncheckedUpdateWithoutPhoneInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -973,6 +1087,9 @@ export type TransactionItemUncheckedUpdateManyWithoutPhoneInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -983,6 +1100,9 @@ export type TransactionItemCreateManyAccessoryInput = {
   transactionId: string
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -991,6 +1111,9 @@ export type TransactionItemCreateManyAccessoryInput = {
 
 export type TransactionItemUpdateWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1005,6 +1128,9 @@ export type TransactionItemUncheckedUpdateWithoutAccessoryInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1016,6 +1142,9 @@ export type TransactionItemUncheckedUpdateManyWithoutAccessoryInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1027,6 +1156,9 @@ export type TransactionItemCreateManyVoucherInput = {
   transactionId: string
   accessoryId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -1035,6 +1167,9 @@ export type TransactionItemCreateManyVoucherInput = {
 
 export type TransactionItemUpdateWithoutVoucherInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1049,6 +1184,9 @@ export type TransactionItemUncheckedUpdateWithoutVoucherInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1060,6 +1198,9 @@ export type TransactionItemUncheckedUpdateManyWithoutVoucherInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1071,6 +1212,9 @@ export type TransactionItemCreateManyPulsaInput = {
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -1079,6 +1223,9 @@ export type TransactionItemCreateManyPulsaInput = {
 
 export type TransactionItemUpdateWithoutPulsaInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1093,6 +1240,9 @@ export type TransactionItemUncheckedUpdateWithoutPulsaInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1104,6 +1254,9 @@ export type TransactionItemUncheckedUpdateManyWithoutPulsaInput = {
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1115,6 +1268,9 @@ export type TransactionItemCreateManyTransactionInput = {
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
+  pulsaDestinationNumber?: string | null
+  pulsaDescription?: string | null
+  pulsaBalance?: number | null
   phoneId?: string | null
   quantity?: number
   sellPrice: number
@@ -1123,6 +1279,9 @@ export type TransactionItemCreateManyTransactionInput = {
 
 export type TransactionItemUpdateWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1137,6 +1296,9 @@ export type TransactionItemUncheckedUpdateWithoutTransactionInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1148,6 +1310,9 @@ export type TransactionItemUncheckedUpdateManyWithoutTransactionInput = {
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1162,6 +1327,9 @@ export type TransactionItemSelect<ExtArgs extends runtime.Types.Extensions.Inter
   accessoryId?: boolean
   voucherId?: boolean
   pulsaId?: boolean
+  pulsaDestinationNumber?: boolean
+  pulsaDescription?: boolean
+  pulsaBalance?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
@@ -1179,6 +1347,9 @@ export type TransactionItemSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   accessoryId?: boolean
   voucherId?: boolean
   pulsaId?: boolean
+  pulsaDestinationNumber?: boolean
+  pulsaDescription?: boolean
+  pulsaBalance?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
@@ -1196,6 +1367,9 @@ export type TransactionItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   accessoryId?: boolean
   voucherId?: boolean
   pulsaId?: boolean
+  pulsaDestinationNumber?: boolean
+  pulsaDescription?: boolean
+  pulsaBalance?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
@@ -1213,13 +1387,16 @@ export type TransactionItemSelectScalar = {
   accessoryId?: boolean
   voucherId?: boolean
   pulsaId?: boolean
+  pulsaDestinationNumber?: boolean
+  pulsaDescription?: boolean
+  pulsaBalance?: boolean
   phoneId?: boolean
   quantity?: boolean
   sellPrice?: boolean
   costPrice?: boolean
 }
 
-export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "accessoryId" | "voucherId" | "pulsaId" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
+export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "accessoryId" | "voucherId" | "pulsaId" | "pulsaDestinationNumber" | "pulsaDescription" | "pulsaBalance" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
 export type TransactionItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
   accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
@@ -1257,6 +1434,9 @@ export type $TransactionItemPayload<ExtArgs extends runtime.Types.Extensions.Int
     accessoryId: string | null
     voucherId: string | null
     pulsaId: string | null
+    pulsaDestinationNumber: string | null
+    pulsaDescription: string | null
+    pulsaBalance: number | null
     phoneId: string | null
     quantity: number
     sellPrice: number
@@ -1694,6 +1874,9 @@ export interface TransactionItemFieldRefs {
   readonly accessoryId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly voucherId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly pulsaId: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly pulsaDestinationNumber: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly pulsaDescription: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly pulsaBalance: Prisma.FieldRef<"TransactionItem", 'Int'>
   readonly phoneId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly quantity: Prisma.FieldRef<"TransactionItem", 'Int'>
   readonly sellPrice: Prisma.FieldRef<"TransactionItem", 'Int'>

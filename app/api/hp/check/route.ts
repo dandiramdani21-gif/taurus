@@ -11,20 +11,20 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const code = searchParams.get("code");
+    const imei = searchParams.get("imei");
 
-    if (!code) {
-      return NextResponse.json({ error: "Code required" }, { status: 400 });
+    if (!imei) {
+      return NextResponse.json({ error: "IMEI required" }, { status: 400 });
     }
 
     const phone = await prisma.phone.findUnique({
-      where: { code },
-      select: { id: true, code: true, brand: true, type: true, stock: true },
+      where: { imei },
+      select: { id: true, imei: true, brand: true, type: true, stock: true },
     });
 
     return NextResponse.json({ exists: !!phone, phone });
   } catch (error) {
-    console.error("Error checking code:", error);
+    console.error("Error checking IMEI:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

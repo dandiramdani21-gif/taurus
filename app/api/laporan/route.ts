@@ -15,7 +15,8 @@ export async function GET(request: Request) {
 
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const productType = searchParams.get("productType"); // all, phone, accessory, voucher, pulsa
+    const productType = searchParams.get("productType");
+    const category = searchParams.get("category");
 
     if (!startDate || !endDate) {
       return NextResponse.json({ error: "Tanggal mulai dan akhir diperlukan" }, { status: 400 });
@@ -34,16 +35,18 @@ export async function GET(request: Request) {
       },
     };
 
-    // Filter berdasarkan tipe produk
-    if (productType && productType !== "all") {
-      whereClause.items = {
-        some: {},
-      };
+    const selectedCategory =
+      category ||
+      (productType === "phone"
+        ? "HANDPHONE"
+        : productType === "pulsa"
+          ? "PULSA"
+          : productType && productType !== "all"
+            ? "PRODUK_LAIN"
+            : null);
 
-      if (productType === "phone") whereClause.items.some.phoneId = { not: null };
-      if (productType === "accessory") whereClause.items.some.accessoryId = { not: null };
-      if (productType === "voucher") whereClause.items.some.voucherId = { not: null };
-      if (productType === "pulsa") whereClause.items.some.pulsaId = { not: null };
+    if (selectedCategory) {
+      whereClause.category = selectedCategory;
     }
 
     const transactions = await prisma.transaction.findMany({

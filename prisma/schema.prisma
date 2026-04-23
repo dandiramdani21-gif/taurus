@@ -23,6 +23,19 @@ enum TransactionStatus {
   CANCELLED
 }
 
+enum ProductCategory {
+  HANDPHONE
+  PRODUK_LAIN
+  PULSA
+}
+
+enum RestockSource {
+  MANUAL
+  SCAN
+  IMPORT
+  ADJUSTMENT
+}
+
 // ================= USER =================
 model User {
   id       String @id @default(cuid())
@@ -33,16 +46,17 @@ model User {
   createdAt DateTime @default(now())
 
   transactions Transaction[]
+  restockNotes RestockNote[]
 }
 
 // ================= PHONE (HP) =================
 model Phone {
   id        String  @id @default(cuid())
-  code      String  @unique
   brand     String
   type      String
   imei      String  @unique
   color     String?
+  category  ProductCategory @default(HANDPHONE)
 
   purchasePrice Int
   purchaseDate  DateTime @default(now())
@@ -81,6 +95,7 @@ model Accessory {
   stock     Int      @default(0)
   image     String?
   entryDate DateTime @default(now())
+  category  ProductCategory @default(PRODUK_LAIN)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,6 +114,7 @@ model Voucher {
   image     String?
   entryDate DateTime @default(now())
   expiredAt DateTime? // tanggal expired (opsional)
+  category  ProductCategory @default(PRODUK_LAIN)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -113,8 +129,12 @@ model Pulsa {
   denomination Int      // nominal pulsa: 5,10,15,20,25,30,40,50,70,100
   costPrice   Int      // harga modal
   sellPrice   Int      // harga jual
+  balance     Int?     // saldo transaksi / sisa saldo operator
+  destinationNumber String? // no tujuan
+  description String?  // keterangan tambahan
   note        String?  // TAGOG, DIGIPOS, PROMO, REGULER
   image       String?
+  category    ProductCategory @default(PULSA)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,6 +147,7 @@ model Transaction {
   id     String            @id @default(cuid())
   type   TransactionType
   status TransactionStatus @default(ACTIVE)
+  category ProductCategory @default(HANDPHONE)
 
   totalAmount Int
   totalCost   Int
@@ -160,11 +181,40 @@ model TransactionItem {
   
   pulsaId String?
   pulsa   Pulsa? @relation(fields: [pulsaId], references: [id])
-  
+  pulsaDestinationNumber String?
+  pulsaDescription String?
+  pulsaBalance Int?
+
   phoneId String?
   phone   Phone? @relation(fields: [phoneId], references: [id])
 
   quantity Int @default(1)
   sellPrice Int
   costPrice Int
+}
+
+// ================= RESTOCK NOTE =================
+model RestockNote {
+  id String @id @default(cuid())
+
+  category ProductCategory
+  productType String
+  productId String
+  productName String
+
+  source RestockSource @default(MANUAL)
+  quantity Int
+  previousStock Int
+  newStock Int
+  costPrice Int?
+  note String?
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([category, productType])
+  @@index([productId])
+  @@index([createdAt])
 }

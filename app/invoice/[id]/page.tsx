@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
 interface TransactionItem {
@@ -11,10 +11,13 @@ interface TransactionItem {
   sellPrice: number;
   costPrice: number;
 
-  phone?: { brand: string; type: string; code: string; image?: string };
+  phone?: { brand: string; type: string; imei: string; image?: string };
   accessory?: { name: string; code: string; image?: string };
   voucher?: { name: string; code: string; image?: string };
   pulsa?: { denomination: number; code: string; note?: string; image?: string };
+  pulsaDestinationNumber?: string | null;
+  pulsaDescription?: string | null;
+  pulsaBalance?: number | null;
 }
 
 interface Transaction {
@@ -30,7 +33,9 @@ interface Transaction {
 export default function InvoicePage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
+  const searchParams = useSearchParams();
+  const isPrintMode = searchParams.get("print") === "1";
 
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +43,8 @@ export default function InvoicePage() {
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
-  const [notes, setNotes] = useState("Terima kasih telah berbelanja di Taurus Cellular.");
-  const [paymentDetails, setPaymentDetails] = useState("Pembayaran dapat dilakukan secara tunai atau transfer bank.");
+  const notes = "Terima kasih telah berbelanja di Taurus Cellular.";
+  const paymentDetails = "Pembayaran dapat dilakukan secara tunai atau transfer bank.";
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -49,6 +54,18 @@ export default function InvoicePage() {
     const id = params.id as string;
     if (id) fetchTransaction(id);
   }, [params.id]);
+
+  useEffect(() => {
+    if (transaction && isPrintMode) {
+      const timer = window.setTimeout(() => {
+        window.print();
+      }, 300);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    return undefined;
+  }, [transaction, isPrintMode]);
 
   const fetchTransaction = async (id: string) => {
     try {
@@ -66,8 +83,9 @@ export default function InvoicePage() {
           year: "numeric",
         }).toUpperCase()
       );
-    } catch (err: any) {
-      setError(err.message || "Gagal memuat invoice");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal memuat invoice";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -78,18 +96,23 @@ export default function InvoicePage() {
     if (item.accessory) return item.accessory.name;
     if (item.voucher) return item.voucher.name;
     if (item.pulsa) return `${item.pulsa.denomination.toLocaleString()} - ${item.pulsa.note || "Pulsa"}`;
+    if (item.pulsaDestinationNumber) return `Pulsa ${item.pulsaDestinationNumber}`;
     return "Item Tidak Dikenal";
   };
 
   const getItemCode = (item: TransactionItem) => {
-    if (item.phone) return item.phone.code;
+    if (item.phone) return item.phone.imei;
     if (item.accessory) return item.accessory.code;
     if (item.voucher) return item.voucher.code;
     if (item.pulsa) return item.pulsa.code;
+    if (item.pulsaDestinationNumber) return item.pulsaDestinationNumber;
     return "-";
   };
 
   const handlePrint = () => window.print();
+  const handleDownload = () => {
+    window.open(`/invoice/${params.id}?print=1`, "_blank", "noopener,noreferrer");
+  };
 
   if (loading) return <div className="text-center py-20">Memuat invoice...</div>;
   if (error || !transaction) {
@@ -196,11 +219,17 @@ export default function InvoicePage() {
             onClick={handlePrint}
             className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold transition"
           >
-            🖨️ Print
+            Print
+          </button>
+          <button
+            onClick={handleDownload}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
+          >
+            Download
           </button>
           <button
             onClick={() => router.push("/bukti")}
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
+            className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-lg font-semibold transition"
           >
             Kembali ke Daftar Invoice
           </button>

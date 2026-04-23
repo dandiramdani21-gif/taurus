@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 interface Accessory {
   id: string;
-  code: string;
   name: string;
   costPrice: number;
   sellPrice: number;
@@ -17,7 +16,6 @@ interface Accessory {
 interface CartItem {
   id: string;
   productId: string;
-  code: string;
   name: string;
   costPrice: number;
   sellPrice: number;
@@ -49,6 +47,7 @@ export default function KasirAksesorisPage() {
     success: false,
     message: "",
   });
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 15,
@@ -112,7 +111,6 @@ export default function KasirAksesorisPage() {
         {
           id: Date.now().toString(),
           productId: product.id,
-          code: product.code,
           name: product.name,
           costPrice: product.costPrice,
           sellPrice: product.sellPrice,
@@ -243,6 +241,8 @@ export default function KasirAksesorisPage() {
   const calculateTotalCost = () => cart.reduce((sum, item) => sum + item.costPrice * item.quantity, 0);
 
   const handleCheckout = async () => {
+    if (isCheckingOut) return;
+
     if (cart.length === 0) {
       alert("Keranjang kosong!");
       return;
@@ -254,6 +254,7 @@ export default function KasirAksesorisPage() {
       return;
     }
 
+    setIsCheckingOut(true);
     try {
       const res = await fetch("/api/checkout/accessories", {
         method: "POST",
@@ -303,6 +304,8 @@ export default function KasirAksesorisPage() {
         totalAmount: undefined,
         profit: undefined,
       });
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -313,41 +316,52 @@ export default function KasirAksesorisPage() {
   if (status === "loading") return <div className="text-center py-8">Loading...</div>;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* LEFT - TABEL PRODUK */}
-      <div className="flex-1">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-3xl font-semibold text-gray-900">Kasir Aksesoris</h1>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-slate-950 text-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
+        <div className="flex flex-col gap-5 px-6 py-8 lg:flex-row lg:items-end lg:justify-between lg:px-10 lg:py-10">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+              Kasir Produk Lain
+            </div>
+            <h1 className="text-3xl font-semibold sm:text-4xl">Kasir Aksesoris</h1>
+            <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
+              Layout kasir yang lebih modern untuk aksesoris, dengan search cepat dan panel keranjang yang lebih rapi.
+            </p>
+          </div>
+
           <input
             type="text"
-            placeholder="Cari nama atau kode aksesoris..."
+            placeholder="Cari nama aksesoris..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-80 px-5 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none backdrop-blur-xl focus:border-white/20 focus:ring-2 focus:ring-white/20 lg:w-96"
           />
         </div>
+      </section>
 
+      <div className="flex flex-col gap-6 xl:flex-row">
+      {/* LEFT - TABEL PRODUK */}
+      <div className="flex-1">
         {loading ? (
           <div className="text-center py-12">Memuat data...</div>
         ) : (
-          <div className="bg-white rounded-2xl shadow overflow-hidden">
+          <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
-                <thead className="bg-gray-50 sticky top-0">
+                <thead className="sticky top-0 bg-slate-50/90">
                   <tr>
-                    <th className="px-4 py-4 text-left w-20">Gambar</th>
-                    <th className="px-4 py-4 text-left">Kode</th>
-                    <th className="px-4 py-4 text-left">Nama Aksesoris</th>
-                    <th className="px-4 py-4 text-right">Harga Jual</th>
-                    <th className="px-4 py-4 text-center">Stok</th>
-                    <th className="px-4 py-4 text-center w-32">Aksi</th>
+                    <th className="px-4 py-4 text-left w-20 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Gambar</th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Nama Aksesoris</th>
+                    <th className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Harga Jual</th>
+                    <th className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Stok</th>
+                    <th className="px-4 py-4 text-center w-32 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-100">
                   {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                    <tr key={product.id} className="hover:bg-violet-50/50">
                       <td className="px-4 py-4">
-                        <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                        <div className="w-14 h-14 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0">
                           {product.image ? (
                             <img
                               src={product.image}
@@ -359,9 +373,8 @@ export default function KasirAksesorisPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-mono text-sm text-gray-600">{product.code}</td>
-                      <td className="px-4 py-4 font-medium">{product.name}</td>
-                      <td className="px-4 py-4 text-right font-semibold text-purple-600">
+                      <td className="px-4 py-4 font-medium text-slate-900">{product.name}</td>
+                      <td className="px-4 py-4 text-right font-semibold text-violet-600">
                         Rp {product.sellPrice.toLocaleString("id-ID")}
                       </td>
                       <td className="px-4 py-4 text-center">
@@ -377,7 +390,7 @@ export default function KasirAksesorisPage() {
                         <button
                           onClick={() => addToCart(product)}
                           disabled={product.stock === 0}
-                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap"
+                          className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:bg-slate-300 whitespace-nowrap"
                         >
                           Tambah
                         </button>
@@ -395,17 +408,17 @@ export default function KasirAksesorisPage() {
             <button
               onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
               disabled={pagination.page === 1}
-              className="px-6 py-3 border border-gray-300 rounded-2xl disabled:opacity-50 hover:bg-gray-50"
+              className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
             >
               Previous
             </button>
-            <span className="px-6 py-3 text-gray-600">
+            <span className="px-6 py-3 text-slate-600">
               Halaman {pagination.page} dari {pagination.totalPages}
             </span>
             <button
               onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
-              className="px-6 py-3 border border-gray-300 rounded-2xl disabled:opacity-50 hover:bg-gray-50"
+              className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
             >
               Next
             </button>
@@ -414,82 +427,81 @@ export default function KasirAksesorisPage() {
       </div>
 
       {/* RIGHT - KERANJANG */}
-      <div className="lg:w-96 bg-white rounded-3xl shadow-xl flex flex-col h-fit sticky top-6">
-        <div className="p-6 border-b">
-          <h2 className="font-bold text-2xl">Keranjang</h2>
-          <p className="text-gray-500 mt-1">{cart.length} item</p>
+      <div className="lg:w-96 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl flex flex-col h-fit sticky top-6">
+        <div className="p-6 border-b border-slate-100">
+          <h2 className="font-bold text-2xl text-slate-900">Keranjang</h2>
+          <p className="text-slate-500 mt-1">{cart.length} item</p>
         </div>
 
         <div className="flex-1 max-h-[520px] overflow-y-auto p-6 space-y-4">
           {cart.length === 0 ? (
-            <div className="text-center text-gray-400 py-12">
-              Keranjang kosong<br />Klik tombol "Tambah" di tabel
+            <div className="text-center text-slate-400 py-12">
+              Keranjang kosong<br />Klik tombol &quot;Tambah&quot; di tabel
             </div>
           ) : (
             cart.map((item) => (
-              <div key={item.id} className="border border-gray-200 rounded-2xl p-4">
-                <div className="font-medium">{item.name}</div>
-                <div className="text-xs text-gray-500">{item.code}</div>
+              <div key={item.id} className="border border-slate-200 rounded-3xl p-4">
+                <div className="font-medium text-slate-900">{item.name}</div>
 
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 border rounded-xl">-</button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 border rounded-xl">+</button>
+                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 border rounded-xl border-slate-200">-</button>
+                    <span className="w-8 text-center font-medium text-slate-900">{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 border rounded-xl border-slate-200">+</button>
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-500">Harga Modal</label>
+                    <label className="text-xs text-slate-500">Harga Modal</label>
                     {item.isEditingCost ? (
                       <div className="flex gap-2 mt-1">
                         <input
                           type="number"
                           value={item.tempCostPrice}
                           onChange={(e) => updateTempCost(item.id, parseInt(e.target.value) || 0)}
-                          className="flex-1 p-2 border rounded-xl text-sm"
+                          className="flex-1 rounded-xl border border-slate-200 p-2 text-sm"
                           autoFocus
                         />
                         <button
                           onClick={() => saveCostPrice(item.id, item.productId, item.tempCostPrice || 0)}
                           disabled={updating === item.id}
-                          className="px-4 bg-green-600 text-white rounded-xl"
+                          className="px-4 rounded-xl bg-emerald-600 text-white"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => cancelEditCost(item.id)}
-                          className="px-4 bg-gray-200 rounded-xl"
+                          className="px-4 rounded-xl bg-slate-200 text-slate-700"
                         >
                           Batal
                         </button>
                       </div>
                     ) : (
                       <div className="flex justify-between mt-1">
-                        <span>Rp {item.costPrice.toLocaleString()}</span>
-                        <button onClick={() => startEditCost(item.id, item.costPrice)} className="text-blue-600 text-xs">Edit</button>
+                        <span className="text-slate-900">Rp {item.costPrice.toLocaleString()}</span>
+                        <button onClick={() => startEditCost(item.id, item.costPrice)} className="text-xs text-violet-600">Edit</button>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-500">Harga Jual</label>
+                    <label className="text-xs text-slate-500">Harga Jual</label>
                     <input
                       type="number"
                       value={item.sellPrice}
                       onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
-                      className="w-full mt-1 p-2 border rounded-xl text-sm"
+                      className="w-full mt-1 rounded-xl border border-slate-200 p-2 text-sm"
                     />
                   </div>
 
-                  <div className="flex justify-between font-medium pt-3 border-t">
+                  <div className="flex justify-between border-t border-slate-100 pt-3 font-medium">
                     <span>Subtotal</span>
-                    <span>Rp {item.subtotal.toLocaleString()}</span>
+                    <span className="text-slate-900">Rp {item.subtotal.toLocaleString()}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => removeFromCart(item.id)}
-                  className="text-red-500 text-xs mt-4 hover:text-red-700"
+                  className="mt-4 text-xs text-rose-500 hover:text-rose-700"
                 >
                   Hapus
                 </button>
@@ -498,7 +510,7 @@ export default function KasirAksesorisPage() {
           )}
         </div>
 
-        <div className="p-6 border-t bg-gray-50 rounded-b-3xl">
+        <div className="rounded-b-[2rem] border-t border-slate-100 bg-slate-50/80 p-6">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Total Modal</span>
@@ -516,13 +528,24 @@ export default function KasirAksesorisPage() {
 
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0}
-            className="w-full mt-6 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white py-4 rounded-2xl font-semibold text-lg transition"
+            disabled={cart.length === 0 || isCheckingOut}
+            className="w-full mt-6 rounded-2xl bg-slate-950 py-4 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            Bayar Sekarang
+            {isCheckingOut ? "Memproses..." : "Bayar Sekarang"}
           </button>
         </div>
       </div>
+      </div>
+
+      {isCheckingOut && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
+          <div className="rounded-3xl border border-white/20 bg-white/95 px-6 py-5 text-center shadow-2xl">
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
+            <p className="text-sm font-semibold text-slate-900">Memproses checkout...</p>
+            <p className="mt-1 text-xs text-slate-500">Mohon tunggu, jangan klik dua kali.</p>
+          </div>
+        </div>
+      )}
 
       {/* CHECKOUT MODAL - SEDERHANA DENGAN TOMBOL CLOSE */}
       {checkoutModal.isOpen && (

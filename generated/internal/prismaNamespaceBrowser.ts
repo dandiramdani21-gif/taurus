@@ -58,7 +58,8 @@ export const ModelName = {
   Voucher: 'Voucher',
   Pulsa: 'Pulsa',
   Transaction: 'Transaction',
-  TransactionItem: 'TransactionItem'
+  TransactionItem: 'TransactionItem',
+  RestockNote: 'RestockNote'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -90,11 +91,11 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 
 export const PhoneScalarFieldEnum = {
   id: 'id',
-  code: 'code',
   brand: 'brand',
   type: 'type',
   imei: 'imei',
   color: 'color',
+  category: 'category',
   purchasePrice: 'purchasePrice',
   purchaseDate: 'purchaseDate',
   entryDate: 'entryDate',
@@ -126,6 +127,7 @@ export const AccessoryScalarFieldEnum = {
   stock: 'stock',
   image: 'image',
   entryDate: 'entryDate',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -143,6 +145,7 @@ export const VoucherScalarFieldEnum = {
   image: 'image',
   entryDate: 'entryDate',
   expiredAt: 'expiredAt',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -156,8 +159,12 @@ export const PulsaScalarFieldEnum = {
   denomination: 'denomination',
   costPrice: 'costPrice',
   sellPrice: 'sellPrice',
+  balance: 'balance',
+  destinationNumber: 'destinationNumber',
+  description: 'description',
   note: 'note',
   image: 'image',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -169,6 +176,7 @@ export const TransactionScalarFieldEnum = {
   id: 'id',
   type: 'type',
   status: 'status',
+  category: 'category',
   totalAmount: 'totalAmount',
   totalCost: 'totalCost',
   profit: 'profit',
@@ -186,6 +194,9 @@ export const TransactionItemScalarFieldEnum = {
   accessoryId: 'accessoryId',
   voucherId: 'voucherId',
   pulsaId: 'pulsaId',
+  pulsaDestinationNumber: 'pulsaDestinationNumber',
+  pulsaDescription: 'pulsaDescription',
+  pulsaBalance: 'pulsaBalance',
   phoneId: 'phoneId',
   quantity: 'quantity',
   sellPrice: 'sellPrice',
@@ -193,6 +204,25 @@ export const TransactionItemScalarFieldEnum = {
 } as const
 
 export type TransactionItemScalarFieldEnum = (typeof TransactionItemScalarFieldEnum)[keyof typeof TransactionItemScalarFieldEnum]
+
+
+export const RestockNoteScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  productType: 'productType',
+  productId: 'productId',
+  productName: 'productName',
+  source: 'source',
+  quantity: 'quantity',
+  previousStock: 'previousStock',
+  newStock: 'newStock',
+  costPrice: 'costPrice',
+  note: 'note',
+  userId: 'userId',
+  createdAt: 'createdAt'
+} as const
+
+export type RestockNoteScalarFieldEnum = (typeof RestockNoteScalarFieldEnum)[keyof typeof RestockNoteScalarFieldEnum]
 
 
 export const SortOrder = {

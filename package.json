@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "daily-report:listen": "tsx scripts/daily-report-listener.ts",
+    "telegram-command:listen": "tsx scripts/telegram-command-listener.ts"
   },
   "dependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",

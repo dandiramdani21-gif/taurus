@@ -2,6 +2,28 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { logRestock } from "@/lib/restock";
+
+function buildAccessoryCode(name: string) {
+  const base = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const suffix = Date.now().toString(36).toUpperCase();
+  return `ACC-${base || "ACCESSORY"}-${suffix}`;
+}
+
+function isPrismaNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2025"
+  );
+}
 
 export async function GET(request: Request) {
   try {
@@ -61,17 +83,21 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { code, name, costPrice, sellPrice, stock, image, entryDate } = body;
+    const accessoryCode = typeof code === "string" && code.trim() ? code.trim() : buildAccessoryCode(name);
 
-    // Cek kode unik
-    const existing = await prisma.accessory.findUnique({ where: { code } });
+    if (!name?.trim()) {
+      return NextResponse.json({ error: "Nama aksesoris diperlukan" }, { status: 400 });
+    }
+
+    const existing = await prisma.accessory.findUnique({ where: { code: accessoryCode } });
     if (existing) {
       return NextResponse.json({ error: "Kode sudah terdaftar" }, { status: 400 });
     }
 
     const accessory = await prisma.accessory.create({
       data: {
-        code,
-        name,
+        code: accessoryCode,
+        name: name.trim(),
         costPrice: parseInt(costPrice),
         sellPrice: parseInt(sellPrice),
         stock: parseInt(stock) || 0,
@@ -79,6 +105,21 @@ export async function POST(request: Request) {
         entryDate: entryDate ? new Date(entryDate) : new Date(),
       },
     });
+
+    if (parseInt(stock) > 0) {
+      await logRestock({
+        category: "PRODUK_LAIN",
+        productType: "ACCESSORY",
+        productId: accessory.id,
+        productName: accessory.name,
+        quantity: parseInt(stock),
+        previousStock: 0,
+        newStock: accessory.stock,
+        costPrice: accessory.costPrice,
+        note: "Input awal inventory aksesoris",
+        userId: session.user.id,
+      });
+    }
 
     return NextResponse.json(accessory, { status: 201 });
   } catch (error) {
@@ -96,25 +137,18 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, name, costPrice, sellPrice, stock, image, entryDate } = body;
+    const { id, name, costPrice, sellPrice, stock, image, entryDate } = body;
+    const existingAccessory = await prisma.accessory.findUnique({
+      where: { id },
+      select: { stock: true, name: true, costPrice: true },
+    });
 
     if (!id) {
       return NextResponse.json({ error: "ID diperlukan" }, { status: 400 });
     }
 
-    // Cek kode unik jika code diubah
-    if (code) {
-      const existing = await prisma.accessory.findUnique({
-        where: { code },
-      });
-      if (existing && existing.id !== id) {
-        return NextResponse.json({ error: "Kode sudah terdaftar" }, { status: 400 });
-      }
-    }
-
-    const updateData: any = {};
-    if (code !== undefined) updateData.code = code;
-    if (name !== undefined) updateData.name = name;
+    const updateData: Parameters<typeof prisma.accessory.update>[0]["data"] = {};
+    if (name !== undefined) updateData.name = name.trim();
     if (costPrice !== undefined) updateData.costPrice = parseInt(costPrice);
     if (sellPrice !== undefined) updateData.sellPrice = parseInt(sellPrice);
     if (stock !== undefined) updateData.stock = parseInt(stock);
@@ -126,10 +160,26 @@ export async function PUT(request: Request) {
       data: updateData,
     });
 
+    if (existingAccessory && typeof stock !== "undefined" && parseInt(stock) !== existingAccessory.stock) {
+      await logRestock({
+        category: "PRODUK_LAIN",
+        productType: "ACCESSORY",
+        productId: id,
+        productName: name ?? existingAccessory.name,
+        quantity: Math.abs(parseInt(stock) - existingAccessory.stock),
+        previousStock: existingAccessory.stock,
+        newStock: parseInt(stock),
+        costPrice: costPrice ? parseInt(costPrice) : existingAccessory.costPrice,
+        source: "ADJUSTMENT",
+        note: "Penyesuaian stok aksesoris",
+        userId: session.user.id,
+      });
+    }
+
     return NextResponse.json(accessory);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating accessory:", error);
-    if (error.code === "P2025") {
+    if (isPrismaNotFoundError(error)) {
       return NextResponse.json({ error: "Data tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -165,9 +215,9 @@ export async function DELETE(request: Request) {
     await prisma.accessory.delete({ where: { id } });
 
     return NextResponse.json({ message: "Aksesoris berhasil dihapus" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting accessory:", error);
-    if (error.code === "P2025") {
+    if (isPrismaNotFoundError(error)) {
       return NextResponse.json({ error: "Data tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

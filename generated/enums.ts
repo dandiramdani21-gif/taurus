@@ -23,3 +23,22 @@ export const TransactionStatus = {
 } as const
 
 export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus]
+
+
+export const ProductCategory = {
+  HANDPHONE: 'HANDPHONE',
+  PRODUK_LAIN: 'PRODUK_LAIN',
+  PULSA: 'PULSA'
+} as const
+
+export type ProductCategory = (typeof ProductCategory)[keyof typeof ProductCategory]
+
+
+export const RestockSource = {
+  MANUAL: 'MANUAL',
+  SCAN: 'SCAN',
+  IMPORT: 'IMPORT',
+  ADJUSTMENT: 'ADJUSTMENT'
+} as const
+
+export type RestockSource = (typeof RestockSource)[keyof typeof RestockSource]

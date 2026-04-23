@@ -1,180 +1,261 @@
-// app/invoices/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+
+type InvoiceCategory = "ALL" | "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
 
 interface Transaction {
   id: string;
   createdAt: string;
   totalAmount: number;
+  totalCost: number;
   profit: number;
-  note?: string;
+  category: "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
+  note?: string | null;
+  items?: Array<{
+    phone?: { brand: string; type: string; imei: string } | null;
+    accessory?: { name: string; code: string } | null;
+    voucher?: { name: string; code: string } | null;
+    pulsa?: { denomination: number; code: string } | null;
+  }>;
 }
 
+const categoryOptions: Array<{ value: InvoiceCategory; label: string }> = [
+  { value: "ALL", label: "Semua" },
+  { value: "HANDPHONE", label: "Handphone" },
+  { value: "PRODUK_LAIN", label: "Produk Lain" },
+  { value: "PULSA", label: "Pulsa" },
+];
+
+const categoryLabelMap: Record<Exclude<InvoiceCategory, "ALL">, string> = {
+  HANDPHONE: "Handphone",
+  PRODUK_LAIN: "Produk Lain",
+  PULSA: "Pulsa",
+};
+
 export default function InvoicesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Pagination
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-
-  // Search
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<InvoiceCategory>(() => {
+    const initialCategory = searchParams.get("category") as InvoiceCategory | null;
+    return initialCategory && categoryOptions.some((option) => option.value === initialCategory)
+      ? initialCategory
+      : "ALL";
+  });
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated") fetchInvoices();
-  }, [status, page, search]);
-
-  const fetchInvoices = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/transactions?page=${page}&limit=${limit}&search=${search}&type=SALE`
-      );
-      const data = await res.json();
-
-      setTransactions(data.transactions || []);
-      setTotalPages(data.pagination?.totalPages || 1);
-      setTotalItems(data.pagination?.total || 0);
-    } catch (error) {
-      console.error("Gagal mengambil invoice:", error);
-    } finally {
-      setLoading(false);
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const fetchInvoices = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(limit),
+          search,
+          type: "SALE",
+        });
+
+        if (category !== "ALL") {
+          params.set("category", category);
+        }
+
+        const res = await fetch(`/api/transactions?${params.toString()}`);
+        const data = await res.json();
+
+        setTransactions(data.transactions || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setTotalItems(data.pagination?.total || 0);
+      } catch (error) {
+        console.error("Gagal mengambil invoice:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
+  }, [status, page, limit, search, category]);
+
+  const handleDownload = (id: string) => {
+    window.open(`/invoice/${id}?print=1`, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="container">
-      <div className="py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold leading-tight">Daftar Invoice</h2>
-          
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-slate-950 text-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
+        <div className="flex flex-col gap-5 px-6 py-8 lg:flex-row lg:items-end lg:justify-between lg:px-10 lg:py-10">
+          <div className="max-w-3xl space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+              Invoice Center
+            </div>
+            <h2 className="text-3xl font-semibold sm:text-4xl">Daftar Invoice</h2>
+            <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
+              Filter per kategori produk, lalu buka atau download invoice satu per satu dengan tampilan yang lebih rapi.
+            </p>
+          </div>
+
           <input
             type="text"
             placeholder="Cari nomor invoice atau catatan..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full lg:w-96 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none backdrop-blur-xl focus:border-white/20 focus:ring-2 focus:ring-white/20"
           />
         </div>
+      </section>
 
-        <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
-          <div className="inline-block min-w-full shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full leading-normal">
-              <thead>
-                <tr>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Nomor Invoice
-                  </th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Tanggal
-                  </th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Total Penjualan
-                  </th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Keuntungan
-                  </th>
-                  <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-gray-500">
-                      Memuat data invoice...
-                    </td>
-                  </tr>
-                ) : transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-gray-500">
-                      Belum ada transaksi invoice
-                    </td>
-                  </tr>
-                ) : (
-                  transactions.map((t) => (
-                    <tr key={t.id} className="hover:bg-gray-50 transition">
-                      <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <div className="font-mono font-medium text-gray-900">
-                          INV-{t.id.slice(-8).toUpperCase()}
-                        </div>
-                      </td>
-                      <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <p className="text-gray-900 whitespace-nowrap">
-                          {new Date(t.createdAt).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {new Date(t.createdAt).toLocaleTimeString("id-ID", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </td>
-                      <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
-                        <p className="font-semibold text-gray-900">
-                          Rp {t.totalAmount.toLocaleString()}
-                        </p>
-                      </td>
-                      <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
-                        <p className={`font-semibold ${t.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          Rp {t.profit.toLocaleString()}
-                        </p>
-                      </td>
-                      <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
-                        <Link
-                          href={`/invoice/${t.id}`}
-                          className="inline-block px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition"
-                        >
-                          Lihat Invoice
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-8">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-6 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition"
-            >
-              Previous
-            </button>
-
-            <span className="text-sm text-gray-600 px-4">
-              Halaman {page} dari {totalPages} ({totalItems} invoice)
-            </span>
-
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-6 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition"
-            >
-              Next
-            </button>
-          </div>
-        )}
+      <div className="flex flex-wrap gap-2">
+        {categoryOptions.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => {
+              setCategory(option.value);
+              setPage(1);
+            }}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              category === option.value
+                ? "bg-slate-950 text-white shadow-lg shadow-slate-950/20"
+                : "border border-white/70 bg-white/80 text-slate-700 hover:border-violet-300 hover:bg-violet-50"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
+
+      <div className="overflow-x-auto rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <table className="min-w-full">
+          <thead className="bg-slate-50/90">
+            <tr>
+              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Nomor Invoice</th>
+              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Tanggal</th>
+              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Kategori</th>
+              <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Total Penjualan</th>
+              <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Keuntungan</th>
+              <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">
+                  Memuat data invoice...
+                </td>
+              </tr>
+            ) : transactions.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">
+                  Belum ada transaksi invoice
+                </td>
+              </tr>
+            ) : (
+              transactions.map((transaction) => (
+                <tr key={transaction.id} className="border-t border-slate-100/80 hover:bg-violet-50/50 transition">
+                  <td className="px-5 py-5 text-sm">
+                    <div className="font-mono font-medium text-slate-900">
+                      INV-{transaction.id.slice(-8).toUpperCase()}
+                    </div>
+                    {transaction.note && <div className="mt-1 text-xs text-slate-500">{transaction.note}</div>}
+                  </td>
+                  <td className="px-5 py-5 text-sm">
+                    <p className="whitespace-nowrap text-slate-900">
+                      {new Date(transaction.createdAt).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(transaction.createdAt).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 text-sm">
+                    <span className="inline-flex items-center rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
+                      {categoryLabelMap[transaction.category]}
+                    </span>
+                  </td>
+                  <td className="px-5 py-5 text-sm text-right">
+                    <p className="font-semibold text-slate-900">
+                      Rp {transaction.totalAmount.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 text-sm text-right">
+                    <p className={`font-semibold ${transaction.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      Rp {transaction.profit.toLocaleString("id-ID")}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 text-sm">
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Link
+                        href={`/invoice/${transaction.id}`}
+                        className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50"
+                      >
+                        View
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(transaction.id)}
+                        className="inline-flex items-center rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <button
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="rounded-xl border border-white/70 bg-white/80 px-6 py-2.5 transition hover:bg-violet-50 disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="px-4 text-sm text-slate-600">
+            Halaman {page} dari {totalPages} ({totalItems} invoice)
+          </span>
+
+          <button
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+            className="rounded-xl border border-white/70 bg-white/80 px-6 py-2.5 transition hover:bg-violet-50 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

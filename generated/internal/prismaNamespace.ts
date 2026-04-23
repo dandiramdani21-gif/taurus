@@ -391,7 +391,8 @@ export const ModelName = {
   Voucher: 'Voucher',
   Pulsa: 'Pulsa',
   Transaction: 'Transaction',
-  TransactionItem: 'TransactionItem'
+  TransactionItem: 'TransactionItem',
+  RestockNote: 'RestockNote'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "phone" | "phoneMetadata" | "accessory" | "voucher" | "pulsa" | "transaction" | "transactionItem"
+    modelProps: "user" | "phone" | "phoneMetadata" | "accessory" | "voucher" | "pulsa" | "transaction" | "transactionItem" | "restockNote"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1003,6 +1004,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    RestockNote: {
+      payload: Prisma.$RestockNotePayload<ExtArgs>
+      fields: Prisma.RestockNoteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RestockNoteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RestockNoteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        findFirst: {
+          args: Prisma.RestockNoteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RestockNoteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        findMany: {
+          args: Prisma.RestockNoteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>[]
+        }
+        create: {
+          args: Prisma.RestockNoteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        createMany: {
+          args: Prisma.RestockNoteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RestockNoteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>[]
+        }
+        delete: {
+          args: Prisma.RestockNoteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        update: {
+          args: Prisma.RestockNoteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        deleteMany: {
+          args: Prisma.RestockNoteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RestockNoteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RestockNoteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>[]
+        }
+        upsert: {
+          args: Prisma.RestockNoteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RestockNotePayload>
+        }
+        aggregate: {
+          args: Prisma.RestockNoteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRestockNote>
+        }
+        groupBy: {
+          args: Prisma.RestockNoteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RestockNoteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RestockNoteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RestockNoteCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1055,11 +1130,11 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 
 export const PhoneScalarFieldEnum = {
   id: 'id',
-  code: 'code',
   brand: 'brand',
   type: 'type',
   imei: 'imei',
   color: 'color',
+  category: 'category',
   purchasePrice: 'purchasePrice',
   purchaseDate: 'purchaseDate',
   entryDate: 'entryDate',
@@ -1091,6 +1166,7 @@ export const AccessoryScalarFieldEnum = {
   stock: 'stock',
   image: 'image',
   entryDate: 'entryDate',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1108,6 +1184,7 @@ export const VoucherScalarFieldEnum = {
   image: 'image',
   entryDate: 'entryDate',
   expiredAt: 'expiredAt',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1121,8 +1198,12 @@ export const PulsaScalarFieldEnum = {
   denomination: 'denomination',
   costPrice: 'costPrice',
   sellPrice: 'sellPrice',
+  balance: 'balance',
+  destinationNumber: 'destinationNumber',
+  description: 'description',
   note: 'note',
   image: 'image',
+  category: 'category',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1134,6 +1215,7 @@ export const TransactionScalarFieldEnum = {
   id: 'id',
   type: 'type',
   status: 'status',
+  category: 'category',
   totalAmount: 'totalAmount',
   totalCost: 'totalCost',
   profit: 'profit',
@@ -1151,6 +1233,9 @@ export const TransactionItemScalarFieldEnum = {
   accessoryId: 'accessoryId',
   voucherId: 'voucherId',
   pulsaId: 'pulsaId',
+  pulsaDestinationNumber: 'pulsaDestinationNumber',
+  pulsaDescription: 'pulsaDescription',
+  pulsaBalance: 'pulsaBalance',
   phoneId: 'phoneId',
   quantity: 'quantity',
   sellPrice: 'sellPrice',
@@ -1158,6 +1243,25 @@ export const TransactionItemScalarFieldEnum = {
 } as const
 
 export type TransactionItemScalarFieldEnum = (typeof TransactionItemScalarFieldEnum)[keyof typeof TransactionItemScalarFieldEnum]
+
+
+export const RestockNoteScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  productType: 'productType',
+  productId: 'productId',
+  productName: 'productName',
+  source: 'source',
+  quantity: 'quantity',
+  previousStock: 'previousStock',
+  newStock: 'newStock',
+  costPrice: 'costPrice',
+  note: 'note',
+  userId: 'userId',
+  createdAt: 'createdAt'
+} as const
+
+export type RestockNoteScalarFieldEnum = (typeof RestockNoteScalarFieldEnum)[keyof typeof RestockNoteScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1219,6 +1323,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'ProductCategory'
+ */
+export type EnumProductCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'ProductCategory[]'
+ */
+export type ListEnumProductCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductCategory[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -1257,6 +1375,20 @@ export type EnumTransactionStatusFieldRefInput<$PrismaModel> = FieldRefInputType
  * Reference to a field of type 'TransactionStatus[]'
  */
 export type ListEnumTransactionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransactionStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RestockSource'
+ */
+export type EnumRestockSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RestockSource'>
+    
+
+
+/**
+ * Reference to a field of type 'RestockSource[]'
+ */
+export type ListEnumRestockSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RestockSource[]'>
     
 
 
@@ -1376,6 +1508,7 @@ export type GlobalOmitConfig = {
   pulsa?: Prisma.PulsaOmit
   transaction?: Prisma.TransactionOmit
   transactionItem?: Prisma.TransactionItemOmit
+  restockNote?: Prisma.RestockNoteOmit
 }
 
 /* Types for Logging */

@@ -38,11 +38,11 @@ export type PhoneSumAggregateOutputType = {
 
 export type PhoneMinAggregateOutputType = {
   id: string | null
-  code: string | null
   brand: string | null
   type: string | null
   imei: string | null
   color: string | null
+  category: $Enums.ProductCategory | null
   purchasePrice: number | null
   purchaseDate: Date | null
   entryDate: Date | null
@@ -53,11 +53,11 @@ export type PhoneMinAggregateOutputType = {
 
 export type PhoneMaxAggregateOutputType = {
   id: string | null
-  code: string | null
   brand: string | null
   type: string | null
   imei: string | null
   color: string | null
+  category: $Enums.ProductCategory | null
   purchasePrice: number | null
   purchaseDate: Date | null
   entryDate: Date | null
@@ -68,11 +68,11 @@ export type PhoneMaxAggregateOutputType = {
 
 export type PhoneCountAggregateOutputType = {
   id: number
-  code: number
   brand: number
   type: number
   imei: number
   color: number
+  category: number
   purchasePrice: number
   purchaseDate: number
   entryDate: number
@@ -95,11 +95,11 @@ export type PhoneSumAggregateInputType = {
 
 export type PhoneMinAggregateInputType = {
   id?: true
-  code?: true
   brand?: true
   type?: true
   imei?: true
   color?: true
+  category?: true
   purchasePrice?: true
   purchaseDate?: true
   entryDate?: true
@@ -110,11 +110,11 @@ export type PhoneMinAggregateInputType = {
 
 export type PhoneMaxAggregateInputType = {
   id?: true
-  code?: true
   brand?: true
   type?: true
   imei?: true
   color?: true
+  category?: true
   purchasePrice?: true
   purchaseDate?: true
   entryDate?: true
@@ -125,11 +125,11 @@ export type PhoneMaxAggregateInputType = {
 
 export type PhoneCountAggregateInputType = {
   id?: true
-  code?: true
   brand?: true
   type?: true
   imei?: true
   color?: true
+  category?: true
   purchasePrice?: true
   purchaseDate?: true
   entryDate?: true
@@ -227,11 +227,11 @@ export type PhoneGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 
 export type PhoneGroupByOutputType = {
   id: string
-  code: string
   brand: string
   type: string
   imei: string
   color: string | null
+  category: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate: Date
   entryDate: Date
@@ -265,11 +265,11 @@ export type PhoneWhereInput = {
   OR?: Prisma.PhoneWhereInput[]
   NOT?: Prisma.PhoneWhereInput | Prisma.PhoneWhereInput[]
   id?: Prisma.StringFilter<"Phone"> | string
-  code?: Prisma.StringFilter<"Phone"> | string
   brand?: Prisma.StringFilter<"Phone"> | string
   type?: Prisma.StringFilter<"Phone"> | string
   imei?: Prisma.StringFilter<"Phone"> | string
   color?: Prisma.StringNullableFilter<"Phone"> | string | null
+  category?: Prisma.EnumProductCategoryFilter<"Phone"> | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFilter<"Phone"> | number
   purchaseDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
   entryDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
@@ -282,11 +282,11 @@ export type PhoneWhereInput = {
 
 export type PhoneOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  code?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   type?: Prisma.SortOrder
   imei?: Prisma.SortOrder
   color?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrder
   purchasePrice?: Prisma.SortOrder
   purchaseDate?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
@@ -299,7 +299,6 @@ export type PhoneOrderByWithRelationInput = {
 
 export type PhoneWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  code?: string
   imei?: string
   AND?: Prisma.PhoneWhereInput | Prisma.PhoneWhereInput[]
   OR?: Prisma.PhoneWhereInput[]
@@ -307,6 +306,7 @@ export type PhoneWhereUniqueInput = Prisma.AtLeast<{
   brand?: Prisma.StringFilter<"Phone"> | string
   type?: Prisma.StringFilter<"Phone"> | string
   color?: Prisma.StringNullableFilter<"Phone"> | string | null
+  category?: Prisma.EnumProductCategoryFilter<"Phone"> | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFilter<"Phone"> | number
   purchaseDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
   entryDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
@@ -315,15 +315,15 @@ export type PhoneWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Phone"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
   metadata?: Prisma.PhoneMetadataListRelationFilter
-}, "id" | "code" | "imei">
+}, "id" | "imei">
 
 export type PhoneOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  code?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   type?: Prisma.SortOrder
   imei?: Prisma.SortOrder
   color?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrder
   purchasePrice?: Prisma.SortOrder
   purchaseDate?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
@@ -342,11 +342,11 @@ export type PhoneScalarWhereWithAggregatesInput = {
   OR?: Prisma.PhoneScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PhoneScalarWhereWithAggregatesInput | Prisma.PhoneScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Phone"> | string
-  code?: Prisma.StringWithAggregatesFilter<"Phone"> | string
   brand?: Prisma.StringWithAggregatesFilter<"Phone"> | string
   type?: Prisma.StringWithAggregatesFilter<"Phone"> | string
   imei?: Prisma.StringWithAggregatesFilter<"Phone"> | string
   color?: Prisma.StringNullableWithAggregatesFilter<"Phone"> | string | null
+  category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Phone"> | $Enums.ProductCategory
   purchasePrice?: Prisma.IntWithAggregatesFilter<"Phone"> | number
   purchaseDate?: Prisma.DateTimeWithAggregatesFilter<"Phone"> | Date | string
   entryDate?: Prisma.DateTimeWithAggregatesFilter<"Phone"> | Date | string
@@ -357,11 +357,11 @@ export type PhoneScalarWhereWithAggregatesInput = {
 
 export type PhoneCreateInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -374,11 +374,11 @@ export type PhoneCreateInput = {
 
 export type PhoneUncheckedCreateInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -391,11 +391,11 @@ export type PhoneUncheckedCreateInput = {
 
 export type PhoneUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -408,11 +408,11 @@ export type PhoneUpdateInput = {
 
 export type PhoneUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -425,11 +425,11 @@ export type PhoneUncheckedUpdateInput = {
 
 export type PhoneCreateManyInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -440,11 +440,11 @@ export type PhoneCreateManyInput = {
 
 export type PhoneUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -455,11 +455,11 @@ export type PhoneUpdateManyMutationInput = {
 
 export type PhoneUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -470,11 +470,11 @@ export type PhoneUncheckedUpdateManyInput = {
 
 export type PhoneCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  code?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   type?: Prisma.SortOrder
   imei?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   purchasePrice?: Prisma.SortOrder
   purchaseDate?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
@@ -490,11 +490,11 @@ export type PhoneAvgOrderByAggregateInput = {
 
 export type PhoneMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  code?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   type?: Prisma.SortOrder
   imei?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   purchasePrice?: Prisma.SortOrder
   purchaseDate?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
@@ -505,11 +505,11 @@ export type PhoneMaxOrderByAggregateInput = {
 
 export type PhoneMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  code?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   type?: Prisma.SortOrder
   imei?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   purchasePrice?: Prisma.SortOrder
   purchaseDate?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
@@ -535,6 +535,10 @@ export type PhoneNullableScalarRelationFilter = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type EnumProductCategoryFieldUpdateOperationsInput = {
+  set?: $Enums.ProductCategory
 }
 
 export type IntFieldUpdateOperationsInput = {
@@ -577,11 +581,11 @@ export type PhoneUpdateOneWithoutTransactionItemsNestedInput = {
 
 export type PhoneCreateWithoutMetadataInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -593,11 +597,11 @@ export type PhoneCreateWithoutMetadataInput = {
 
 export type PhoneUncheckedCreateWithoutMetadataInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -625,11 +629,11 @@ export type PhoneUpdateToOneWithWhereWithoutMetadataInput = {
 
 export type PhoneUpdateWithoutMetadataInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -641,11 +645,11 @@ export type PhoneUpdateWithoutMetadataInput = {
 
 export type PhoneUncheckedUpdateWithoutMetadataInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -657,11 +661,11 @@ export type PhoneUncheckedUpdateWithoutMetadataInput = {
 
 export type PhoneCreateWithoutTransactionItemsInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -673,11 +677,11 @@ export type PhoneCreateWithoutTransactionItemsInput = {
 
 export type PhoneUncheckedCreateWithoutTransactionItemsInput = {
   id?: string
-  code: string
   brand: string
   type: string
   imei: string
   color?: string | null
+  category?: $Enums.ProductCategory
   purchasePrice: number
   purchaseDate?: Date | string
   entryDate?: Date | string
@@ -705,11 +709,11 @@ export type PhoneUpdateToOneWithWhereWithoutTransactionItemsInput = {
 
 export type PhoneUpdateWithoutTransactionItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -721,11 +725,11 @@ export type PhoneUpdateWithoutTransactionItemsInput = {
 
 export type PhoneUncheckedUpdateWithoutTransactionItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.StringFieldUpdateOperationsInput | string
   imei?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   purchasePrice?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -777,11 +781,11 @@ export type PhoneCountOutputTypeCountMetadataArgs<ExtArgs extends runtime.Types.
 
 export type PhoneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  code?: boolean
   brand?: boolean
   type?: boolean
   imei?: boolean
   color?: boolean
+  category?: boolean
   purchasePrice?: boolean
   purchaseDate?: boolean
   entryDate?: boolean
@@ -795,11 +799,11 @@ export type PhoneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 
 export type PhoneSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  code?: boolean
   brand?: boolean
   type?: boolean
   imei?: boolean
   color?: boolean
+  category?: boolean
   purchasePrice?: boolean
   purchaseDate?: boolean
   entryDate?: boolean
@@ -810,11 +814,11 @@ export type PhoneSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 
 export type PhoneSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  code?: boolean
   brand?: boolean
   type?: boolean
   imei?: boolean
   color?: boolean
+  category?: boolean
   purchasePrice?: boolean
   purchaseDate?: boolean
   entryDate?: boolean
@@ -825,11 +829,11 @@ export type PhoneSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 
 export type PhoneSelectScalar = {
   id?: boolean
-  code?: boolean
   brand?: boolean
   type?: boolean
   imei?: boolean
   color?: boolean
+  category?: boolean
   purchasePrice?: boolean
   purchaseDate?: boolean
   entryDate?: boolean
@@ -838,7 +842,7 @@ export type PhoneSelectScalar = {
   createdAt?: boolean
 }
 
-export type PhoneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "brand" | "type" | "imei" | "color" | "purchasePrice" | "purchaseDate" | "entryDate" | "stock" | "image" | "createdAt", ExtArgs["result"]["phone"]>
+export type PhoneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "brand" | "type" | "imei" | "color" | "category" | "purchasePrice" | "purchaseDate" | "entryDate" | "stock" | "image" | "createdAt", ExtArgs["result"]["phone"]>
 export type PhoneInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Phone$transactionItemsArgs<ExtArgs>
   metadata?: boolean | Prisma.Phone$metadataArgs<ExtArgs>
@@ -855,11 +859,11 @@ export type $PhonePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    code: string
     brand: string
     type: string
     imei: string
     color: string | null
+    category: $Enums.ProductCategory
     purchasePrice: number
     purchaseDate: Date
     entryDate: Date
@@ -1292,11 +1296,11 @@ export interface Prisma__PhoneClient<T, Null = never, ExtArgs extends runtime.Ty
  */
 export interface PhoneFieldRefs {
   readonly id: Prisma.FieldRef<"Phone", 'String'>
-  readonly code: Prisma.FieldRef<"Phone", 'String'>
   readonly brand: Prisma.FieldRef<"Phone", 'String'>
   readonly type: Prisma.FieldRef<"Phone", 'String'>
   readonly imei: Prisma.FieldRef<"Phone", 'String'>
   readonly color: Prisma.FieldRef<"Phone", 'String'>
+  readonly category: Prisma.FieldRef<"Phone", 'ProductCategory'>
   readonly purchasePrice: Prisma.FieldRef<"Phone", 'Int'>
   readonly purchaseDate: Prisma.FieldRef<"Phone", 'DateTime'>
   readonly entryDate: Prisma.FieldRef<"Phone", 'DateTime'>

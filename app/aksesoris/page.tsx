@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
+import SpreadsheetActions from "@/components/SpreadsheetActions";
+import * as XLSX from "xlsx";
 
 interface Accessory {
   id: string;
-  code: string;
   name: string;
   costPrice: number;
   sellPrice: number;
@@ -46,7 +47,6 @@ export default function AksesorisPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [formData, setFormData] = useState({
-    code: "",
     name: "",
     costPrice: "",
     sellPrice: "",
@@ -90,6 +90,58 @@ export default function AksesorisPage() {
     }
   };
 
+  const exportAccessories = () => {
+    const exportData = accessories.map((item) => ({
+      Name: item.name,
+      "Harga Modal": item.costPrice,
+      "Harga Jual": item.sellPrice,
+      Stok: item.stock,
+      Image: item.image || "",
+      "Tgl Masuk": item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Aksesoris");
+    XLSX.writeFile(wb, `Aksesoris_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  const importAccessories = async (rows: Record<string, string | number | null | undefined>[]) => {
+    for (const row of rows) {
+      const name = String(row.Name || row.name || "").trim();
+      if (!name) continue;
+
+      const payload = {
+        name,
+        costPrice: Number(row["Harga Modal"] ?? row.costPrice ?? 0),
+        sellPrice: Number(row["Harga Jual"] ?? row.sellPrice ?? 0),
+        stock: Number(row.Stok ?? row.stock ?? 0),
+        image: String(row.Image || row.image || ""),
+        entryDate: row["Tgl Masuk"] || row.entryDate || new Date().toISOString().split("T")[0],
+      };
+
+      const existingRes = await fetch(`/api/accessories?page=1&limit=1000&search=${encodeURIComponent(name)}`);
+      const existingData = await existingRes.json();
+      const existing = existingData.accessories?.find(
+        (item: Accessory) => item.name?.trim().toLowerCase() === name.toLowerCase()
+      );
+
+      const res = await fetch("/api/accessories", {
+        method: existing ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(existing ? { ...payload, id: existing.id } : payload),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || `Gagal import data ${name}`);
+      }
+    }
+
+    await fetchAccessories();
+    alert("Import inventory aksesoris selesai");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -130,7 +182,6 @@ export default function AksesorisPage() {
   const handleEdit = (item: Accessory) => {
     setEditingAccessory(item);
     setFormData({
-      code: item.code,
       name: item.name,
       costPrice: item.costPrice.toString(),
       sellPrice: item.sellPrice.toString(),
@@ -146,7 +197,6 @@ export default function AksesorisPage() {
   const resetForm = () => {
     setEditingAccessory(null);
     setFormData({
-      code: "",
       name: "",
       costPrice: "",
       sellPrice: "",
@@ -242,6 +292,15 @@ export default function AksesorisPage() {
         </button>
       </div>
 
+      <div className="mb-6">
+        <SpreadsheetActions
+          exportLabel="Export Aksesoris"
+          importLabel="Import Aksesoris"
+          onExport={exportAccessories}
+          onImportRows={importAccessories}
+        />
+      </div>
+
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -320,7 +379,6 @@ export default function AksesorisPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Modal</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Jual</th>
@@ -332,7 +390,7 @@ export default function AksesorisPage() {
                 <tbody className="divide-y divide-gray-200">
                   {accessories.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-12 text-gray-500">
+                      <td colSpan={7} className="text-center py-12 text-gray-500">
                         Belum ada data aksesoris
                       </td>
                     </tr>
@@ -352,7 +410,6 @@ export default function AksesorisPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{item.code}</td>
                         <td className="px-6 py-4 text-sm text-gray-900 font-medium">{item.name}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">Rp {item.costPrice.toLocaleString()}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">Rp {item.sellPrice.toLocaleString()}</td>
@@ -491,7 +548,6 @@ export default function AksesorisPage() {
               </div>
             </div>
             <div className="space-y-3">
-              <div><span className="text-sm text-gray-500">Kode:</span> <p className="font-medium">{showDetail.code}</p></div>
               <div><span className="text-sm text-gray-500">Nama:</span> <p className="font-medium">{showDetail.name}</p></div>
               <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.costPrice.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Harga Jual:</span> <p className="font-medium">Rp {showDetail.sellPrice.toLocaleString()}</p></div>
@@ -516,7 +572,6 @@ export default function AksesorisPage() {
               <div>
                 <p className="text-sm text-gray-500">Aksesoris</p>
                 <p className="font-medium">{showStockModal.name}</p>
-                <p className="text-xs text-gray-400">Kode: {showStockModal.code}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
@@ -567,17 +622,6 @@ export default function AksesorisPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kode Aksesoris *</label>
-                <input
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  required
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nama Aksesoris *</label>
                 <input

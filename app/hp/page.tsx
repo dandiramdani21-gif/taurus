@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import ImageUploader from "@/components/ImageUploader";
+import SpreadsheetActions from "@/components/SpreadsheetActions";
+import * as XLSX from "xlsx";
 
 interface Metadata {
   key: string;
@@ -13,7 +15,6 @@ interface Metadata {
 
 interface Phone {
   id: string;
-  code: string;
   brand: string;
   type: string;
   imei: string;
@@ -53,13 +54,10 @@ export default function HpPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
   // Scanner states
-  const [showCodeScanner, setShowCodeScanner] = useState(false);
   const [showImeiScanner, setShowImeiScanner] = useState(false);
-  const [scanningField, setScanningField] = useState<"code" | "imei">("code");
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const [formData, setFormData] = useState({
-    code: "",
     brand: "",
     type: "",
     imei: "",
@@ -110,30 +108,140 @@ export default function HpPage() {
     }
   };
 
+  const parseImportDate = (value: any) => {
+    if (!value) return "";
+
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, "0");
+      const day = String(value.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      const parsed = XLSX.SSF.parse_date_code(value);
+      if (parsed) {
+        const month = String(parsed.m).padStart(2, "0");
+        const day = String(parsed.d).padStart(2, "0");
+        return `${parsed.y}-${month}-${day}`;
+      }
+    }
+
+    const text = String(value).trim();
+    if (!text) return "";
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(text)) {
+      return text.slice(0, 10);
+    }
+
+    const parts = text.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map((part) => part.trim());
+      if (day && month && year) {
+        return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      }
+    }
+
+    const fallback = new Date(text);
+    if (!Number.isNaN(fallback.getTime())) {
+      const year = fallback.getFullYear();
+      const month = String(fallback.getMonth() + 1).padStart(2, "0");
+      const day = String(fallback.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    return "";
+  };
+
+  const exportPhones = () => {
+    const exportData = phones.map((phone) => ({
+      MERK: phone.brand,
+      TIPE: phone.type,
+      IMEI: phone.imei,
+      WARNA: phone.color || "",
+      TGL_BELI: phone.purchaseDate
+        ? new Date(phone.purchaseDate).toISOString().split("T")[0]
+        : phone.entryDate
+          ? new Date(phone.entryDate).toISOString().split("T")[0]
+          : "",
+      HARGA: phone.purchasePrice,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "HP");
+    XLSX.writeFile(wb, `HP_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  const importPhones = async (rows: Record<string, any>[]) => {
+    if (!rows.length) {
+      alert("File import kosong");
+      return;
+    }
+
+    for (const row of rows) {
+      const merk = String(row.MERK || row.merk || "").trim();
+      const tipe = String(row.TIPE || row.tipe || "").trim();
+      const imei = String(row.IMEI || row.imei || "").trim();
+      const warna = String(row.WARNA || row.warna || "").trim();
+      const tglBeli = parseImportDate(row.TGL_BELI || row.tgl_beli || row["TGL BELI"]);
+      const harga = Number(String(row.HARGA ?? row.harga ?? "0").replace(/[^\d-]/g, ""));
+
+      if (!imei) continue;
+
+      const payload = {
+        brand: merk,
+        type: tipe,
+        imei,
+        color: warna,
+        purchasePrice: harga,
+        stock: 1,
+        image: "",
+        metadata: [],
+        purchaseDate: tglBeli || new Date().toISOString().split("T")[0],
+        entryDate: tglBeli || new Date().toISOString().split("T")[0],
+      };
+
+      const existing = await checkExistingImei(imei);
+      if (existing.exists) {
+        continue;
+      }
+
+      const res = await fetch("/api/hp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || `Gagal import data ${imei}`);
+      }
+    }
+
+    await fetchPhones();
+    alert("Import inventory HP selesai");
+  };
+
   // Cek apakah kode sudah ada
-  const checkExistingCode = async (code: string) => {
+  const checkExistingImei = async (imei: string) => {
     try {
-      const res = await fetch(`/api/hp/check?code=${code}`);
+      const res = await fetch(`/api/hp/check?imei=${imei}`);
       const data = await res.json();
       return data;
     } catch (error) {
-      console.error("Error checking code:", error);
+      console.error("Error checking IMEI:", error);
       return { exists: false };
     }
   };
 
   // Start scanner
-  const startScanner = (field: "code" | "imei") => {
-    setScanningField(field);
-    if (field === "code") {
-      setShowCodeScanner(true);
-    } else {
-      setShowImeiScanner(true);
-    }
-    
+  const startScanner = () => {
+    setShowImeiScanner(true);
+
     // Inisialisasi scanner setelah modal terbuka
     setTimeout(() => {
-      const elementId = field === "code" ? "code-scanner" : "imei-scanner";
+      const elementId = "imei-scanner";
       if (document.getElementById(elementId)) {
         if (scannerRef.current) {
           scannerRef.current.clear();
@@ -161,32 +269,24 @@ export default function HpPage() {
       scannerRef.current = null;
     }
     
-    // Update form based on field
-    if (scanningField === "code") {
-      setFormData(prev => ({ ...prev, code: decodedText }));
-      
-      // Cek apakah kode sudah ada
-      const result = await checkExistingCode(decodedText);
-      if (result.exists) {
-        setShowCodeScanner(false);
-        alert(`Kode ${decodedText} sudah terdaftar! Silakan update stok jika ingin menambah.`);
-        if (result.phone) {
-          setShowStockModal(result.phone);
-          setStockValue(result.phone.stock + 1);
-        }
-        return;
-      }
-      
-      setShowCodeScanner(false);
-      // Fokus ke field brand
-      setTimeout(() => {
-        const brandInput = document.querySelector("input[name='brand']") as HTMLInputElement;
-        if (brandInput) brandInput.focus();
-      }, 100);
-    } else {
-      setFormData(prev => ({ ...prev, imei: decodedText }));
+    setFormData(prev => ({ ...prev, imei: decodedText }));
+
+    const result = await checkExistingImei(decodedText);
+    if (result.exists) {
       setShowImeiScanner(false);
+      alert(`IMEI ${decodedText} sudah terdaftar! Silakan update stok jika ingin menambah.`);
+      if (result.phone) {
+        setShowStockModal(result.phone);
+        setStockValue(result.phone.stock + 1);
+      }
+      return;
     }
+
+    setShowImeiScanner(false);
+    setTimeout(() => {
+      const brandInput = document.querySelector("input[name='brand']") as HTMLInputElement;
+      if (brandInput) brandInput.focus();
+    }, 100);
   };
 
   const onScanError = (error: string) => {
@@ -198,7 +298,6 @@ export default function HpPage() {
       scannerRef.current.clear();
       scannerRef.current = null;
     }
-    setShowCodeScanner(false);
     setShowImeiScanner(false);
   };
 
@@ -286,7 +385,6 @@ export default function HpPage() {
   const handleEdit = (phone: Phone) => {
     setEditingPhone(phone);
     setFormData({
-      code: phone.code,
       brand: phone.brand,
       type: phone.type,
       imei: phone.imei,
@@ -314,7 +412,6 @@ export default function HpPage() {
   const resetForm = () => {
     setEditingPhone(null);
     setFormData({
-      code: "",
       brand: "",
       type: "",
       imei: "",
@@ -384,6 +481,15 @@ export default function HpPage() {
           </svg>
           Tambah HP
         </button>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <SpreadsheetActions
+          exportLabel="Export HP"
+          importLabel="Import HP"
+          onExport={exportPhones}
+          onImportRows={importPhones}
+        />
       </div>
 
       {/* Search Bar */}
@@ -459,7 +565,6 @@ export default function HpPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
@@ -492,7 +597,6 @@ export default function HpPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{phone.code}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.brand}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.type}</td>
                         <td className="px-6 py-4 text-sm font-mono text-gray-600">{phone.imei}</td>
@@ -519,9 +623,6 @@ export default function HpPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-  {new Date(phone.entryDate).toLocaleDateString("id-ID")}
-</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => setShowDetail(phone)} className="text-gray-500 hover:text-gray-700">
@@ -644,7 +745,6 @@ export default function HpPage() {
             </div>
             
             <div className="space-y-3">
-              <div><span className="text-sm text-gray-500">Kode:</span> <p className="font-medium">{showDetail.code}</p></div>
               <div><span className="text-sm text-gray-500">Brand:</span> <p className="font-medium">{showDetail.brand}</p></div>
               <div><span className="text-sm text-gray-500">Type:</span> <p className="font-medium">{showDetail.type}</p></div>
               <div><span className="text-sm text-gray-500">IMEI:</span> <p className="font-medium">{showDetail.imei}</p></div>
@@ -686,7 +786,7 @@ export default function HpPage() {
               <div>
                 <p className="text-sm text-gray-500">HP</p>
                 <p className="font-medium">{showStockModal.brand} {showStockModal.type}</p>
-                <p className="text-xs text-gray-400">Kode: {showStockModal.code}</p>
+                <p className="text-xs text-gray-400">IMEI: {showStockModal.imei}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
@@ -734,31 +834,6 @@ export default function HpPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Kode Barang with Scanner */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kode Barang *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => startScanner("code")}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scan
-                  </button>
-                </div>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Brand *</label>
@@ -796,7 +871,7 @@ export default function HpPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => startScanner("imei")}
+                    onClick={() => startScanner()}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -916,26 +991,6 @@ export default function HpPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Scanner Modal untuk Kode Barang */}
-      {showCodeScanner && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Scan Kode Barang</h2>
-              <button onClick={stopScanner} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div id="code-scanner" className="w-full"></div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Arahkan kamera ke barcode, akan terdeteksi otomatis
-            </p>
           </div>
         </div>
       )}

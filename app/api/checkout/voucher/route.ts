@@ -3,11 +3,25 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { notifyLowStockTelegram, notifyTelegram, sendTelegramDocument } from "@/lib/notifications";
+import { getValidatedSessionUser } from "@/lib/session-user";
+import { buildInvoicePdfBuffer, type InvoicePdfItem } from "@/lib/invoice-pdf";
+
+const LOW_STOCK_THRESHOLD = 3;
+
+function formatInvoiceNumber(transactionId: string) {
+  return `INV-${transactionId.slice(-8).toUpperCase()}`;
+}
+
+function formatMoney(value: number) {
+  return `Rp ${Math.round(value || 0).toLocaleString("id-ID")}`;
+}
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const user = await getValidatedSessionUser(session);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,21 +34,29 @@ export async function POST(request: Request) {
 
     // Gunakan Prisma Transaction agar semuanya atomic
     const transaction = await prisma.$transaction(async (tx) => {
+      const invoiceItems: InvoicePdfItem[] = [];
+
       // 1. Buat Transaction record
       const newTransaction = await tx.transaction.create({
         data: {
           type: "SALE",
+          category: "PRODUK_LAIN",
           status: "ACTIVE",
           totalAmount: Number(totalAmount),
           totalCost: Number(totalCost),
           profit: Number(profit),
-          userId: session.user.id,
+          userId: user.id,
           note: "Penjualan Voucher",
         },
       });
 
       // 2. Buat TransactionItem untuk setiap voucher
       for (const item of items) {
+        const voucher = await tx.voucher.findUnique({
+          where: { id: item.productId },
+          select: { name: true, code: true, stock: true },
+        });
+
         await tx.transactionItem.create({
           data: {
             transactionId: newTransaction.id,
@@ -54,26 +76,91 @@ export async function POST(request: Request) {
             },
           },
         });
+
+        if (voucher) {
+          invoiceItems.push({
+            name: voucher.name,
+            code: voucher.code,
+            quantity: Number(item.quantity || 1),
+            unitPrice: Number(item.sellPrice || 0),
+            total: Number(item.sellPrice || 0) * Number(item.quantity || 1),
+          });
+        }
       }
 
-      return newTransaction;
+      return { transaction: newTransaction, invoiceItems, lowStockAlertItems };
     });
+
+    const invoiceNumber = formatInvoiceNumber(transaction.transaction.id);
+    const invoicePdf = buildInvoicePdfBuffer({
+      invoiceNumber,
+      invoiceDate: new Date(transaction.transaction.createdAt).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      storeName: "Taurus Cellular",
+      storeAddressLines: [
+        "Jl. Raya Tanjungsari No.129",
+        "Kec. Tanjungsari, Kabupaten Sumedang",
+        "Jawa Barat, 45362",
+        "0857-5902-5901",
+      ],
+      categoryLabel: "Voucher",
+      items: transaction.invoiceItems,
+      totalAmount: Number(totalAmount),
+      totalCost: Number(totalCost),
+      profit: Number(profit),
+      notes: [`Kasir: ${user.name || "-"}`],
+      footer: "Terima kasih telah berbelanja di Taurus Cellular.",
+    });
+
+    const lowStockVouchers = await prisma.voucher.findMany({
+      where: { stock: { lte: LOW_STOCK_THRESHOLD } },
+      select: { name: true, code: true, stock: true },
+      orderBy: { stock: "asc" },
+    });
+
+    await Promise.allSettled([
+      sendTelegramDocument({
+        title: "Invoice Checkout Voucher",
+        message: [
+          `Invoice: ${invoiceNumber}`,
+          `Total: ${formatMoney(Number(totalAmount))}`,
+          `Item: ${items.length}`,
+        ].join("\n"),
+        filename: `${invoiceNumber}.pdf`,
+        document: invoicePdf,
+      }),
+      notifyTelegram({
+      title: "Checkout Voucher",
+      message: `Invoice: ${transaction.transaction.id}\nTotal: Rp ${Number(totalAmount).toLocaleString("id-ID")}`,
+      }),
+      notifyLowStockTelegram({
+        title: "Stok Menipis - Voucher",
+        items: lowStockVouchers.map((item) => ({
+          name: item.name,
+          code: item.code,
+          stock: item.stock,
+        })),
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      id: transaction.id,
+      id: transaction.transaction.id,
       message: "Checkout voucher berhasil",
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Checkout voucher error:", error);
 
-    if (error.code === "P2025") {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2025") {
       return NextResponse.json({ error: "Salah satu voucher tidak ditemukan" }, { status: 404 });
     }
 
     return NextResponse.json({ 
-      error: error.message || "Gagal melakukan checkout voucher" 
+      error: error instanceof Error ? error.message : "Gagal melakukan checkout voucher" 
     }, { status: 500 });
   }
 }

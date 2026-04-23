@@ -25,7 +25,7 @@ export async function GET(
         items: {
           include: {
             phone: {
-              select: { brand: true, type: true, code: true, image: true }
+              select: { brand: true, type: true, imei: true, image: true }
             },
             accessory: {
               select: { name: true, code: true, image: true }
@@ -34,7 +34,7 @@ export async function GET(
               select: { name: true, code: true, image: true }
             },
             pulsa: {
-              select: { denomination: true, code: true, note: true, image: true }
+              select: { denomination: true, code: true, note: true, image: true, destinationNumber: true, description: true, balance: true }
             },
           },
         },

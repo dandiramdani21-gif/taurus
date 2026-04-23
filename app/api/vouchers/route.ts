@@ -3,6 +3,28 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { logRestock } from "@/lib/restock";
+
+function buildVoucherCode(name: string) {
+  const base = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const suffix = Date.now().toString(36).toUpperCase();
+  return `VCH-${base || "VOUCHER"}-${suffix}`;
+}
+
+function isPrismaNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2025"
+  );
+}
 
 export async function GET(request: Request) {
   try {
@@ -62,16 +84,21 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { code, name, costPrice, sellPrice, stock, image, entryDate, expiredAt } = body;
+    const voucherCode = typeof code === "string" && code.trim() ? code.trim() : buildVoucherCode(name);
 
-    const existing = await prisma.voucher.findUnique({ where: { code } });
+    if (!name?.trim()) {
+      return NextResponse.json({ error: "Nama voucher diperlukan" }, { status: 400 });
+    }
+
+    const existing = await prisma.voucher.findUnique({ where: { code: voucherCode } });
     if (existing) {
       return NextResponse.json({ error: "Kode voucher sudah terdaftar" }, { status: 400 });
     }
 
     const voucher = await prisma.voucher.create({
       data: {
-        code,
-        name,
+        code: voucherCode,
+        name: name.trim(),
         costPrice: parseInt(costPrice),
         sellPrice: parseInt(sellPrice),
         stock: parseInt(stock) || 0,
@@ -80,6 +107,21 @@ export async function POST(request: Request) {
         expiredAt: expiredAt ? new Date(expiredAt) : null,
       },
     });
+
+    if (parseInt(stock) > 0) {
+      await logRestock({
+        category: "PRODUK_LAIN",
+        productType: "VOUCHER",
+        productId: voucher.id,
+        productName: voucher.name,
+        quantity: parseInt(stock),
+        previousStock: 0,
+        newStock: voucher.stock,
+        costPrice: voucher.costPrice,
+        note: "Input awal inventory voucher",
+        userId: session.user.id,
+      });
+    }
 
     return NextResponse.json(voucher, { status: 201 });
   } catch (error) {
@@ -97,23 +139,18 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, name, costPrice, sellPrice, stock, image, entryDate, expiredAt } = body;
+    const { id, name, costPrice, sellPrice, stock, image, entryDate, expiredAt } = body;
+    const existingVoucher = await prisma.voucher.findUnique({
+      where: { id },
+      select: { stock: true, name: true, costPrice: true },
+    });
 
     if (!id) {
       return NextResponse.json({ error: "ID diperlukan" }, { status: 400 });
     }
 
-    // Cek unique code jika diubah
-    if (code) {
-      const existing = await prisma.voucher.findUnique({ where: { code } });
-      if (existing && existing.id !== id) {
-        return NextResponse.json({ error: "Kode voucher sudah terdaftar" }, { status: 400 });
-      }
-    }
-
-    const updateData: any = {};
-    if (code !== undefined) updateData.code = code;
-    if (name !== undefined) updateData.name = name;
+    const updateData: Parameters<typeof prisma.voucher.update>[0]["data"] = {};
+    if (name !== undefined) updateData.name = name.trim();
     if (costPrice !== undefined) updateData.costPrice = parseInt(costPrice);
     if (sellPrice !== undefined) updateData.sellPrice = parseInt(sellPrice);
     if (stock !== undefined) updateData.stock = parseInt(stock);
@@ -126,10 +163,26 @@ export async function PUT(request: Request) {
       data: updateData,
     });
 
+    if (existingVoucher && typeof stock !== "undefined" && parseInt(stock) !== existingVoucher.stock) {
+      await logRestock({
+        category: "PRODUK_LAIN",
+        productType: "VOUCHER",
+        productId: id,
+        productName: name ?? existingVoucher.name,
+        quantity: Math.abs(parseInt(stock) - existingVoucher.stock),
+        previousStock: existingVoucher.stock,
+        newStock: parseInt(stock),
+        costPrice: costPrice ? parseInt(costPrice) : existingVoucher.costPrice,
+        source: "ADJUSTMENT",
+        note: "Penyesuaian stok voucher",
+        userId: session.user.id,
+      });
+    }
+
     return NextResponse.json(voucher);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating voucher:", error);
-    if (error.code === "P2025") {
+    if (isPrismaNotFoundError(error)) {
       return NextResponse.json({ error: "Voucher tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -161,9 +214,9 @@ export async function DELETE(request: Request) {
     await prisma.voucher.delete({ where: { id } });
 
     return NextResponse.json({ message: "Voucher berhasil dihapus" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting voucher:", error);
-    if (error.code === "P2025") {
+    if (isPrismaNotFoundError(error)) {
       return NextResponse.json({ error: "Voucher tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

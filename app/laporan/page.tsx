@@ -1,139 +1,721 @@
-// app/laporan/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { format, subDays } from "date-fns";
+import { useRouter, useSearchParams } from "next/navigation";
+import { format, subDays, startOfMonth } from "date-fns";
 import * as XLSX from "xlsx";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
 
-interface DailyReport {
-  date: string;
-  revenue: number;
-  cost: number;
+type ReportProductFilter = "all" | "phone" | "accessory" | "voucher" | "pulsa";
+type ReportCategory = "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
+
+type ReportTransaction = {
+  id: string;
+  createdAt: string;
+  category?: ReportCategory;
+  totalAmount: number;
+  totalCost: number;
   profit: number;
+  note?: string | null;
+  items: Array<{
+    id?: string;
+    quantity: number;
+    sellPrice: number;
+    costPrice: number;
+    pulsaDestinationNumber?: string | null;
+    pulsaDescription?: string | null;
+    pulsaBalance?: number | null;
+    phone?: {
+      brand: string;
+      type: string;
+      imei: string;
+      color?: string | null;
+      purchaseDate?: string | Date | null;
+      purchasePrice: number;
+      metadata?: Array<{ key: string; value: string }>;
+    } | null;
+    accessory?: {
+      name: string;
+      code: string;
+    } | null;
+    voucher?: {
+      name: string;
+      code: string;
+    } | null;
+    pulsa?: {
+      denomination: number;
+      note?: string | null;
+      destinationNumber?: string | null;
+      description?: string | null;
+    } | null;
+  }>;
+};
+
+type ReportRow = {
+  key: string;
+  dateKey: string;
+  dateLabel: string;
+  category: string;
+  product: string;
+  quantity: number;
+  cost: number;
+  revenue: number;
+  profit: number;
+  detail: string;
+  sourceItem: ReportTransaction["items"][number];
+};
+
+type GroupedRows = {
+  dateKey: string;
+  dateLabel: string;
+  rows: ReportRow[];
+  subtotalCost: number;
+  subtotalRevenue: number;
+  subtotalProfit: number;
+};
+
+type PulsaRow = {
+  key: string;
+  dateKey: string;
+  dateLabel: string;
+  destinationNumber: string;
+  description: string;
+  modal: number;
+  price: number;
+  total: number;
+  profit: number;
+  balance: number | null;
+};
+
+type PulsaGroup = {
+  dateKey: string;
+  dateLabel: string;
+  rows: PulsaRow[];
+  subtotalModal: number;
+  subtotalTotal: number;
+  subtotalProfit: number;
+};
+
+const categoryEndpointMap: Record<ReportCategory, string> = {
+  HANDPHONE: "/api/laporan/hp",
+  PRODUK_LAIN: "/api/laporan/produk-lain",
+  PULSA: "/api/laporan/pulsa",
+};
+
+const filterToCategory: Record<Exclude<ReportProductFilter, "all">, ReportCategory> = {
+  phone: "HANDPHONE",
+  accessory: "PRODUK_LAIN",
+  voucher: "PRODUK_LAIN",
+  pulsa: "PULSA",
+};
+
+const groupThemes = [
+  {
+    header: "bg-sky-100 text-sky-900",
+    row: "bg-sky-50",
+    subtotal: "bg-sky-200 text-sky-900",
+  },
+  {
+    header: "bg-emerald-100 text-emerald-900",
+    row: "bg-emerald-50",
+    subtotal: "bg-emerald-200 text-emerald-900",
+  },
+  {
+    header: "bg-amber-100 text-amber-900",
+    row: "bg-amber-50",
+    subtotal: "bg-amber-200 text-amber-900",
+  },
+  {
+    header: "bg-rose-100 text-rose-900",
+    row: "bg-rose-50",
+    subtotal: "bg-rose-200 text-rose-900",
+  },
+];
+
+const rupiah = (value: number) => `Rp ${Math.round(value || 0).toLocaleString("id-ID")}`;
+
+const toDateLabel = (value: string | Date | null | undefined) => {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : format(date, "dd/MM/yyyy");
+};
+
+const toDateKey = (value: string | Date | null | undefined) => {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0];
+};
+
+const normalizeFilterLabel = (filter: ReportProductFilter) => {
+  if (filter === "phone") return "Handphone";
+  if (filter === "pulsa") return "Pulsa";
+  if (filter === "accessory") return "Produk Lain";
+  if (filter === "voucher") return "Voucher";
+  return "Semua Produk";
+};
+
+const normalizeCategoryTitle = (filter: ReportProductFilter) => {
+  if (filter === "phone") return "Laporan HP";
+  if (filter === "pulsa") return "Laporan Pulsa";
+  if (filter === "accessory") return "Laporan Aksesoris";
+  if (filter === "voucher") return "Laporan Voucher";
+  return "Laporan Semua Produk";
+};
+
+const getMetadataValue = (metadata: Array<{ key: string; value: string }> | undefined, patterns: RegExp[]) => {
+  if (!metadata?.length) return "";
+  const found = metadata.find((item) => patterns.some((pattern) => pattern.test(String(item.key || ""))));
+  return found?.value || "";
+};
+
+const buildRowDetail = (item: ReportTransaction["items"][number]) => {
+  if (item.phone) {
+    return `IMEI: ${item.phone.imei}`;
+  }
+  if (item.accessory) {
+    return `Kode: ${item.accessory.code}`;
+  }
+  if (item.voucher) {
+    return `Kode: ${item.voucher.code}`;
+  }
+  if (item.pulsa) {
+    return item.pulsa.destinationNumber || item.pulsa.description || item.pulsa.note || "-";
+  }
+  return "-";
+};
+
+const buildProductLabel = (item: ReportTransaction["items"][number]) => {
+  if (item.phone) return `${item.phone.brand} ${item.phone.type}`;
+  if (item.accessory) return item.accessory.name;
+  if (item.voucher) return item.voucher.name;
+  if (item.pulsa) return `${item.pulsa.denomination.toLocaleString("id-ID")} Pulsa`;
+  return "-";
+};
+
+const buildCategoryLabel = (item: ReportTransaction["items"][number]) => {
+  if (item.phone) return "HP";
+  if (item.accessory) return "Aksesoris";
+  if (item.voucher) return "Voucher";
+  if (item.pulsa) return "Pulsa";
+  return "-";
+};
+
+const buildGroupedRows = (transactions: ReportTransaction[]) => {
+  const map = new Map<
+    string,
+    {
+      dateKey: string;
+      dateLabel: string;
+      rows: ReportRow[];
+      subtotalCost: number;
+      subtotalRevenue: number;
+      subtotalProfit: number;
+    }
+  >();
+
+  const sortedTransactions = [...transactions].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  sortedTransactions.forEach((transaction) => {
+    const dateKey = toDateKey(transaction.createdAt);
+    const dateLabel = toDateLabel(transaction.createdAt);
+    if (!dateKey) return;
+
+    if (!map.has(dateKey)) {
+      map.set(dateKey, {
+        dateKey,
+        dateLabel,
+        rows: [],
+        subtotalCost: 0,
+        subtotalRevenue: 0,
+        subtotalProfit: 0,
+      });
+    }
+
+    const group = map.get(dateKey)!;
+
+    transaction.items.forEach((item, index) => {
+      const quantity = Number(item.quantity || 1);
+      const revenue = Number(item.sellPrice || 0) * quantity;
+      const cost = Number(item.costPrice || 0) * quantity;
+      const profit = revenue - cost;
+      const product = buildProductLabel(item);
+      const category = buildCategoryLabel(item);
+      const detail = buildRowDetail(item);
+
+      group.rows.push({
+        key: `${transaction.id}-${index}`,
+        dateKey,
+        dateLabel,
+        category,
+        product,
+        quantity,
+        cost,
+        revenue,
+        profit,
+        detail,
+        sourceItem: item,
+      });
+
+      group.subtotalCost += cost;
+      group.subtotalRevenue += revenue;
+      group.subtotalProfit += profit;
+    });
+  });
+
+  return Array.from(map.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+};
+
+const buildPulsaRows = (transactions: ReportTransaction[]) => {
+  const rows: PulsaRow[] = [];
+
+  const sortedTransactions = [...transactions].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  sortedTransactions.forEach((transaction) => {
+    const dateKey = toDateKey(transaction.createdAt);
+    const dateLabel = toDateLabel(transaction.createdAt);
+    if (!dateKey) return;
+
+    transaction.items.forEach((item, index) => {
+      const isPulsaRow = Boolean(item.pulsa || item.pulsaDestinationNumber || transaction.category === "PULSA");
+      if (!isPulsaRow) return;
+
+      const quantity = Number(item.quantity || 1);
+      const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0);
+      const modal = Number(transaction.totalCost ?? item.costPrice ?? 0);
+      const profit = Number(transaction.profit ?? total - modal);
+
+      rows.push({
+        key: `${transaction.id}-${index}`,
+        dateKey,
+        dateLabel,
+        destinationNumber: item.pulsaDestinationNumber || item.pulsa?.destinationNumber || "-",
+        description: item.pulsaDescription || item.pulsa?.description || item.pulsa?.note || "-",
+        modal,
+        price: Number(item.sellPrice ?? transaction.totalAmount ?? 0),
+        total: quantity > 1 ? total * quantity : total,
+        profit,
+        balance: item.pulsaBalance ?? null,
+      });
+    });
+  });
+
+  return rows.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+};
+
+const buildPulsaRowsForExport = (rows: PulsaRow[]) => {
+  return [
+    ["Tanggal Jual", "No Tujuan", "Keterangan", "Modal", "Harga Jual", "Total", "Keuntungan", "Saldo"],
+    ...rows.map((row) => [
+      row.dateLabel,
+      row.destinationNumber,
+      row.description,
+      row.modal,
+      row.price,
+      row.total,
+      row.profit,
+      row.balance ?? "",
+    ]),
+  ];
+};
+
+const buildPulsaGroups = (rows: PulsaRow[]) => {
+  const map = new Map<string, PulsaGroup>();
+
+  rows.forEach((row) => {
+    if (!map.has(row.dateKey)) {
+      map.set(row.dateKey, {
+        dateKey: row.dateKey,
+        dateLabel: row.dateLabel,
+        rows: [],
+        subtotalModal: 0,
+        subtotalTotal: 0,
+        subtotalProfit: 0,
+      });
+    }
+
+    const group = map.get(row.dateKey)!;
+    group.rows.push(row);
+    group.subtotalModal += row.modal;
+    group.subtotalTotal += row.total;
+    group.subtotalProfit += row.profit;
+  });
+
+  return Array.from(map.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+};
+
+const buildPhoneRowsForExport = (groupedRows: GroupedRows[]) => {
+  const rows: (string | number)[][] = [
+    [
+      "MERK",
+      "TYPE",
+      "IMEI",
+      "WARNA",
+      "TGL_BELI",
+      "BELI_DARI",
+      "HARGA_BELI",
+      "Ket_Serv",
+      "BIAYA_SERVICE",
+      "TGL_JUAL",
+      "HARGA_JUAL",
+      "RL",
+      "",
+      "HPP",
+    ],
+  ];
+
+  groupedRows.forEach((group) => {
+    rows.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+
+    group.rows.forEach((row) => {
+      const phone = row.sourceItem.phone;
+      if (!phone) return;
+
+      const hargaBeli = Number(phone.purchasePrice || row.cost || 0);
+      const biayaService = 0;
+      const hargaJual = Number(row.revenue || 0);
+      const hpp = hargaBeli + biayaService;
+      const rl = hargaJual - hpp;
+      const beliDari = getMetadataValue(phone.metadata, [/beli\s*dari/i, /supplier/i, /asal/i]);
+      const ketServ = getMetadataValue(phone.metadata, [/ket\s*serv/i, /service/i, /catatan/i]);
+
+      rows.push([
+        phone.brand || "",
+        phone.type || "",
+        phone.imei || "",
+        phone.color || "",
+        toDateLabel(phone.purchaseDate),
+        beliDari,
+        hargaBeli,
+        ketServ,
+        biayaService,
+        group.dateLabel,
+        hargaJual,
+        rl,
+        "",
+        hpp,
+      ]);
+    });
+
+    rows.push([
+      `Subtotal ${group.dateLabel}`,
+      "",
+      "",
+      "",
+      "",
+      "",
+      group.subtotalCost,
+      "",
+      "",
+      "",
+      group.subtotalRevenue,
+      group.subtotalProfit,
+      "",
+      group.subtotalCost,
+    ]);
+  });
+
+  return rows;
+};
+
+const applyBestEffortFill = (worksheet: XLSX.WorkSheet, rowIndex: number, colCount: number, color: string) => {
+  for (let col = 0; col < colCount; col += 1) {
+    const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: col });
+    const cell = worksheet[cellAddress];
+    if (!cell) continue;
+    cell.s = {
+      ...(cell.s || {}),
+      fill: {
+        fgColor: { rgb: color },
+      },
+      font: {
+        ...(cell.s?.font || {}),
+        bold: rowIndex === 0,
+      },
+    };
+  }
+};
+
+async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[]) {
+  const responses = await Promise.all(
+    categories.map(async (category) => {
+      const url = new URL(categoryEndpointMap[category], window.location.origin);
+      url.searchParams.set("startDate", startDate);
+      url.searchParams.set("endDate", endDate);
+
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || `Gagal mengambil laporan ${category}`);
+      }
+
+      return res.json();
+    })
+  );
+
+  return responses.reduce(
+    (acc, report) => {
+      const transactions = [...acc.transactions, ...(report.transactions || [])];
+      const summary = {
+        totalRevenue: acc.summary.totalRevenue + (report.summary?.totalRevenue || 0),
+        totalCost: acc.summary.totalCost + (report.summary?.totalCost || 0),
+        totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
+        transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
+      };
+
+      return { transactions, summary };
+    },
+    {
+      transactions: [] as ReportTransaction[],
+      summary: {
+        totalRevenue: 0,
+        totalCost: 0,
+        totalProfit: 0,
+        transactionCount: 0,
+      },
+    }
+  );
 }
 
 export default function LaporanKeuanganPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<ReportTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Filter
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [productFilter, setProductFilter] = useState<"all" | "phone" | "accessory" | "voucher" | "pulsa">("all");
-  const [search, setSearch] = useState("");
-
-  // Ringkasan
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [totalCost, setTotalCost] = useState(0);
-  const [totalProfit, setTotalProfit] = useState(0);
-
-  // Chart Data
-  const [chartData, setChartData] = useState<DailyReport[]>([]);
+  const [productFilter, setProductFilter] = useState<ReportProductFilter>("all");
+  const [monthlyProfit, setMonthlyProfit] = useState(0);
+  const [monthlyCost, setMonthlyCost] = useState(0);
+  const [todayProfit, setTodayProfit] = useState(0);
+  const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated") fetchLaporan();
-  }, [status, startDate, endDate, productFilter, search]);
+    const category = searchParams.get("category");
+    if (category === "HANDPHONE") setProductFilter("phone");
+    if (category === "PRODUK_LAIN") setProductFilter("accessory");
+    if (category === "PULSA") setProductFilter("pulsa");
+  }, [searchParams]);
 
-  const fetchLaporan = async () => {
+  const fetchLaporan = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/laporan?startDate=${startDate}&endDate=${endDate}&productType=${productFilter}`
-      );
-      const data = await res.json();
+      const categories: ReportCategory[] =
+        productFilter === "all"
+          ? ["HANDPHONE", "PRODUK_LAIN", "PULSA"]
+          : [filterToCategory[productFilter]];
 
-      setTransactions(data.transactions || []);
-      setTotalRevenue(data.summary.totalRevenue);
-      setTotalCost(data.summary.totalCost);
-      setTotalProfit(data.summary.totalProfit);
-      setChartData(data.chartData || []);
+      const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const today = format(new Date(), "yyyy-MM-dd");
+
+      const [tableReport, monthReport, todayReport] = await Promise.all([
+        fetchCategoryReport(startDate, endDate, categories),
+        fetchCategoryReport(monthStart, today, categories),
+        fetchCategoryReport(today, today, categories),
+      ]);
+
+      setTransactions(tableReport.transactions);
+      setPulsaRows(buildPulsaRows(tableReport.transactions));
+      setMonthlyProfit(monthReport.summary.totalProfit);
+      setMonthlyCost(monthReport.summary.totalCost);
+      setTodayProfit(todayReport.summary.totalProfit);
     } catch (error) {
       console.error("Gagal mengambil laporan:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [endDate, productFilter, startDate]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    if (status === "authenticated") {
+      void fetchLaporan();
+    }
+  }, [fetchLaporan, router, status]);
 
   const exportToExcel = () => {
-    const exportData = transactions.map((t: any) => ({
-      Tanggal: format(new Date(t.createdAt), "dd/MM/yyyy HH:mm"),
-      "Total Penjualan": t.totalAmount,
-      "Total Modal": t.totalCost,
-      Keuntungan: t.profit,
-      Catatan: t.note || "",
-    }));
+    const groupedRows = buildGroupedRows(transactions);
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    if (productFilter === "phone") {
+      const aoa = buildPhoneRowsForExport(groupedRows);
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+      worksheet["!cols"] = [
+        { wch: 14 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 18 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 6 },
+        { wch: 14 },
+      ];
+
+      let rowIndex = 1;
+      groupedRows.forEach((group, index) => {
+        applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "E0F2FE" : "F0FDF4");
+        rowIndex += 1;
+        group.rows.forEach(() => {
+          applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
+          rowIndex += 1;
+        });
+        applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
+        rowIndex += 1;
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, worksheet, "Laporan HP");
+      XLSX.writeFile(wb, `Laporan_HP_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      return;
+    }
+
+    if (productFilter === "pulsa") {
+      const aoa = buildPulsaRowsForExport(pulsaRows);
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+      worksheet["!cols"] = [
+        { wch: 14 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+        { wch: 14 },
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, worksheet, "Laporan Pulsa");
+      XLSX.writeFile(wb, `Laporan_Pulsa_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      return;
+    }
+
+    const aoa: (string | number)[][] = [["Tanggal Jual", "Kategori", "Item", "Qty", "Modal", "Jual", "Laba/Rugi"]];
+    groupedRows.forEach((group) => {
+      aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", ""]);
+      group.rows.forEach((row) => {
+        aoa.push([group.dateLabel, row.category, row.product, row.quantity, row.cost, row.revenue, row.profit]);
+      });
+      aoa.push([`Subtotal ${group.dateLabel}`, "", "", "", group.subtotalCost, group.subtotalRevenue, group.subtotalProfit]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+    worksheet["!cols"] = [
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 28 },
+      { wch: 8 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+    ];
+
+    let cursor = 1;
+    groupedRows.forEach((group, index) => {
+      applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "E0F2FE" : "F0FDF4");
+      cursor += 1;
+      group.rows.forEach(() => {
+        applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
+        cursor += 1;
+      });
+      applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
+      cursor += 1;
+    });
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan Keuangan");
-
-    // Tambah total di baris bawah
-    XLSX.utils.sheet_add_aoa(ws, [
-      ["TOTAL", totalRevenue, totalCost, totalProfit, ""],
-    ], { origin: -1 });
-
-    XLSX.writeFile(wb, `Laporan_Keuangan_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, worksheet, "Laporan");
+    XLSX.writeFile(wb, `Laporan_${normalizeFilterLabel(productFilter).replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
+  const groupedRows = buildGroupedRows(transactions);
+  const groupedPulsaRows = buildPulsaGroups(pulsaRows);
+  const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-end border-b pb-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Laporan Keuangan</h1>
-          <p className="text-gray-500 mt-1">Analisis performa penjualan bisnis Anda</p>
+    <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-64 bg-[radial-gradient(circle_at_top_right,_rgba(139,92,246,0.18),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(16,185,129,0.12),_transparent_35%)]" />
+
+      <div className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/75 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex flex-col gap-6 border-b border-slate-200/70 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-6 py-8 text-white sm:px-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/80">
+              Taurus Cellular
+            </div>
+            <div>
+              <h1 className="text-3xl font-semibold sm:text-4xl">Laporan Keuangan</h1>
+              <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
+                Tabel transaksi, ringkasan bulanan, dan laba hari ini dalam tampilan dashboard kasir yang lebih modern.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={exportToExcel}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-emerald-50"
+          >
+            Export ke Spreadsheet
+          </button>
         </div>
-        <button
-          onClick={exportToExcel}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-medium transition shadow-sm"
-        >
-          📥 Export ke Excel
-        </button>
+
+        <div className="grid gap-4 border-b border-slate-200/70 bg-slate-50/80 px-6 py-6 sm:grid-cols-3 sm:px-8">
+          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">Laba Bulan Ini</p>
+            <p className={`mt-4 text-3xl font-semibold ${monthlyProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+              {rupiah(monthlyProfit)}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Modal Bulan Ini</p>
+            <p className="mt-4 text-3xl font-semibold text-amber-600">
+              {rupiah(monthlyCost)}
+            </p>
+          </div>
+          <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-500">Keuntungan Hari Ini</p>
+            <p className={`mt-4 text-3xl font-semibold ${todayProfit >= 0 ? "text-sky-600" : "text-rose-600"}`}>
+              {rupiah(todayProfit)}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Filter */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Tanggal Mulai</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Tanggal Mulai</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Tanggal Akhir</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Tanggal Akhir</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Jenis Produk</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Kategori</label>
             <select
               value={productFilter}
-              onChange={(e) => setProductFilter(e.target.value as any)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              onChange={(e) => setProductFilter(e.target.value as ReportProductFilter)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
             >
               <option value="all">Semua Produk</option>
               <option value="phone">HP</option>
@@ -142,148 +724,142 @@ export default function LaporanKeuanganPage() {
               <option value="pulsa">Pulsa</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex flex-col gap-3 border-b border-slate-200/70 bg-slate-50/80 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">Cari Barang</label>
-            <input
-              type="text"
-              placeholder="Nama barang atau kode..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-            />
+            <h2 className="text-xl font-semibold text-slate-900">Detail Transaksi</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {normalizeCategoryTitle(productFilter)} • {productFilter === "pulsa" ? pulsaRows.length : totalItems} baris item
+            </p>
           </div>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">Total Pendapatan</p>
-          <p className="text-4xl font-semibold text-emerald-600 mt-4">
-            Rp {totalRevenue.toLocaleString("id-ID")}
-          </p>
-        </div>
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">Total Modal</p>
-          <p className="text-4xl font-semibold text-amber-600 mt-4">
-            Rp {totalCost.toLocaleString("id-ID")}
-          </p>
-        </div>
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">Total Keuntungan</p>
-          <p className={`text-4xl font-semibold mt-4 ${totalProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-            Rp {totalProfit.toLocaleString("id-ID")}
-          </p>
-        </div>
-      </div>
-
-{/* Chart */}
-<div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-  <h2 className="text-xl font-semibold mb-6">Perkembangan Keuntungan</h2>
-  <div className="h-96">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
-        <XAxis 
-          dataKey="date" 
-          stroke="#888" 
-          fontSize={12}
-          tickFormatter={(value) => value?.slice(5) || value}
-        />
-        <YAxis stroke="#888" fontSize={12} />
-
-        <Tooltip 
-          formatter={(value: any, name: string | number | undefined) => [
-            `Rp ${Number(value || 0).toLocaleString("id-ID")}`,
-            name === "profit" ? "Keuntungan" : name === "revenue" ? "Pendapatan" : ""
-          ]}
-          labelFormatter={(label: any) => `Tanggal: ${label}`}
-          contentStyle={{
-            borderRadius: "12px",
-            border: "none",
-            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-            padding: "12px 16px",
-          }}
-        />
-
-        <Legend />
-        
-        <Line 
-          type="natural" 
-          dataKey="profit" 
-          stroke="#10b981" 
-          strokeWidth={4} 
-          dot={{ fill: "#10b981", r: 5 }}
-          name="Keuntungan"
-        />
-        <Line 
-          type="natural" 
-          dataKey="revenue" 
-          stroke="#6366f1" 
-          strokeWidth={3} 
-          strokeOpacity={0.7}
-          name="Pendapatan"
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-</div>
-
-      {/* Detail Table */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-8 py-6 border-b flex justify-between items-center bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-800">Detail Transaksi</h2>
-          <span className="text-sm text-gray-500">
-            {transactions.length} transaksi
+          <span className="text-sm font-medium text-slate-500">
+            {groupedRows.length} kelompok tanggal
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-600">Tanggal</th>
-                <th className="px-8 py-4 text-left text-sm font-medium text-gray-600">Item</th>
-                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Pendapatan</th>
-                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Modal</th>
-                <th className="px-8 py-4 text-right text-sm font-medium text-gray-600">Keuntungan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {transactions.map((t: any) => (
-                <tr key={t.id} className="hover:bg-gray-50 transition">
-                  <td className="px-8 py-5 text-sm text-gray-600">
-                    {new Date(t.createdAt).toLocaleString("id-ID")}
-                  </td>
-                  <td className="px-8 py-5">
-                    {t.items.map((item: any, i: number) => (
-                      <div key={i} className="text-sm text-gray-800">
-                        {item.phone 
-                          ? `${item.phone.brand} ${item.phone.type}` 
-                          : item.accessory 
-                          ? item.accessory.name 
-                          : item.voucher 
-                          ? item.voucher.name 
-                          : item.pulsa 
-                          ? `${item.pulsa.denomination.toLocaleString()} ${item.pulsa.note || ""}` 
-                          : "-"}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="px-8 py-5 text-right font-medium text-emerald-600">
-                    Rp {t.totalAmount.toLocaleString("id-ID")}
-                  </td>
-                  <td className="px-8 py-5 text-right text-amber-600">
-                    Rp {t.totalCost.toLocaleString("id-ID")}
-                  </td>
-                  <td className="px-8 py-5 text-right font-semibold text-emerald-600">
-                    Rp {t.profit.toLocaleString("id-ID")}
-                  </td>
+        {loading ? (
+          <div className="px-8 py-12 text-center text-slate-500">Memuat laporan...</div>
+        ) : groupedRows.length === 0 ? (
+          <div className="px-8 py-12 text-center text-slate-500">Belum ada data pada periode ini.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1100px]">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gray-50">
+                  {productFilter === "pulsa" ? (
+                    <>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Tanggal Jual</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">No Tujuan</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Keterangan</th>
+                      <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Modal</th>
+                      <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Harga Jual</th>
+                      <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Total</th>
+                      <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Keuntungan</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Item</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Kategori</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Detail</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Qty</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Modal</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Jual</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Laba/Rugi</th>
+                    </>
+                  )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {productFilter === "pulsa"
+                  ? groupedPulsaRows.map((group, index) => {
+                      const theme = groupThemes[index % groupThemes.length];
+                      return (
+                        <Fragment key={group.dateKey}>
+                          <tr className={theme.header}>
+                            <td colSpan={7} className="px-6 py-3 text-sm font-semibold">
+                              Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                            </td>
+                          </tr>
+                          {group.rows.map((row) => (
+                            <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                              <td className="px-6 py-4 text-sm text-slate-700">{row.dateLabel}</td>
+                              <td className="px-6 py-4">
+                                <div className="font-medium text-slate-900">{row.destinationNumber}</div>
+                                <div className="text-xs text-slate-500">Saldo: {row.balance ?? "-"}</div>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-slate-700">{row.description}</td>
+                              <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.modal)}</td>
+                              <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.price)}</td>
+                              <td className="px-6 py-4 text-right text-sm text-slate-700">{rupiah(row.total)}</td>
+                              <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                                {rupiah(row.profit)}
+                              </td>
+                            </tr>
+                          ))}
+                          <tr className={theme.subtotal}>
+                            <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
+                            <td className="px-6 py-4 text-sm" colSpan={2}>
+                              Laba/Rugi kelompok tanggal ini
+                            </td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalModal)}</td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">-</td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalTotal)}</td>
+                            <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                              {rupiah(group.subtotalProfit)}
+                            </td>
+                          </tr>
+                        </Fragment>
+                      );
+                    })
+                  : groupedRows.map((group, index) => {
+                      const theme = groupThemes[index % groupThemes.length];
+                      return (
+                        <Fragment key={group.dateKey}>
+                          <tr className={theme.header}>
+                            <td colSpan={7} className="px-6 py-3 text-sm font-semibold">
+                              Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                            </td>
+                          </tr>
+                          {group.rows.map((row) => (
+                            <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                              <td className="px-6 py-4">
+                                <div className="font-medium text-slate-900">{row.product}</div>
+                                <div className="text-xs text-slate-500">{row.dateLabel}</div>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-slate-700">{row.category}</td>
+                              <td className="px-6 py-4 text-sm text-slate-700">{row.detail}</td>
+                              <td className="px-6 py-4 text-right text-sm text-slate-700">{row.quantity}</td>
+                              <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.cost)}</td>
+                              <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.revenue)}</td>
+                              <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                                {rupiah(row.profit)}
+                              </td>
+                            </tr>
+                          ))}
+                          <tr className={theme.subtotal}>
+                            <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
+                            <td className="px-6 py-4 text-sm" colSpan={2}>
+                              Laba/Rugi kelompok tanggal ini
+                            </td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">
+                              {group.rows.reduce((sum, row) => sum + row.quantity, 0)}
+                            </td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalCost)}</td>
+                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalRevenue)}</td>
+                            <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                              {rupiah(group.subtotalProfit)}
+                            </td>
+                          </tr>
+                        </Fragment>
+                      );
+                    })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

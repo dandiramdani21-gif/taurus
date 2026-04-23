@@ -30,12 +30,14 @@ export type PulsaAvgAggregateOutputType = {
   denomination: number | null
   costPrice: number | null
   sellPrice: number | null
+  balance: number | null
 }
 
 export type PulsaSumAggregateOutputType = {
   denomination: number | null
   costPrice: number | null
   sellPrice: number | null
+  balance: number | null
 }
 
 export type PulsaMinAggregateOutputType = {
@@ -44,8 +46,12 @@ export type PulsaMinAggregateOutputType = {
   denomination: number | null
   costPrice: number | null
   sellPrice: number | null
+  balance: number | null
+  destinationNumber: string | null
+  description: string | null
   note: string | null
   image: string | null
+  category: $Enums.ProductCategory | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -56,8 +62,12 @@ export type PulsaMaxAggregateOutputType = {
   denomination: number | null
   costPrice: number | null
   sellPrice: number | null
+  balance: number | null
+  destinationNumber: string | null
+  description: string | null
   note: string | null
   image: string | null
+  category: $Enums.ProductCategory | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,8 +78,12 @@ export type PulsaCountAggregateOutputType = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance: number
+  destinationNumber: number
+  description: number
   note: number
   image: number
+  category: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -80,12 +94,14 @@ export type PulsaAvgAggregateInputType = {
   denomination?: true
   costPrice?: true
   sellPrice?: true
+  balance?: true
 }
 
 export type PulsaSumAggregateInputType = {
   denomination?: true
   costPrice?: true
   sellPrice?: true
+  balance?: true
 }
 
 export type PulsaMinAggregateInputType = {
@@ -94,8 +110,12 @@ export type PulsaMinAggregateInputType = {
   denomination?: true
   costPrice?: true
   sellPrice?: true
+  balance?: true
+  destinationNumber?: true
+  description?: true
   note?: true
   image?: true
+  category?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -106,8 +126,12 @@ export type PulsaMaxAggregateInputType = {
   denomination?: true
   costPrice?: true
   sellPrice?: true
+  balance?: true
+  destinationNumber?: true
+  description?: true
   note?: true
   image?: true
+  category?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -118,8 +142,12 @@ export type PulsaCountAggregateInputType = {
   denomination?: true
   costPrice?: true
   sellPrice?: true
+  balance?: true
+  destinationNumber?: true
+  description?: true
   note?: true
   image?: true
+  category?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -217,8 +245,12 @@ export type PulsaGroupByOutputType = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance: number | null
+  destinationNumber: string | null
+  description: string | null
   note: string | null
   image: string | null
+  category: $Enums.ProductCategory
   createdAt: Date
   updatedAt: Date
   _count: PulsaCountAggregateOutputType | null
@@ -252,8 +284,12 @@ export type PulsaWhereInput = {
   denomination?: Prisma.IntFilter<"Pulsa"> | number
   costPrice?: Prisma.IntFilter<"Pulsa"> | number
   sellPrice?: Prisma.IntFilter<"Pulsa"> | number
+  balance?: Prisma.IntNullableFilter<"Pulsa"> | number | null
+  destinationNumber?: Prisma.StringNullableFilter<"Pulsa"> | string | null
+  description?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   note?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableFilter<"Pulsa"> | string | null
+  category?: Prisma.EnumProductCategoryFilter<"Pulsa"> | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -265,8 +301,12 @@ export type PulsaOrderByWithRelationInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrderInput | Prisma.SortOrder
+  destinationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   transactionItems?: Prisma.TransactionItemOrderByRelationAggregateInput
@@ -281,8 +321,12 @@ export type PulsaWhereUniqueInput = Prisma.AtLeast<{
   denomination?: Prisma.IntFilter<"Pulsa"> | number
   costPrice?: Prisma.IntFilter<"Pulsa"> | number
   sellPrice?: Prisma.IntFilter<"Pulsa"> | number
+  balance?: Prisma.IntNullableFilter<"Pulsa"> | number | null
+  destinationNumber?: Prisma.StringNullableFilter<"Pulsa"> | string | null
+  description?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   note?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableFilter<"Pulsa"> | string | null
+  category?: Prisma.EnumProductCategoryFilter<"Pulsa"> | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -294,8 +338,12 @@ export type PulsaOrderByWithAggregationInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrderInput | Prisma.SortOrder
+  destinationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
+  category?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PulsaCountOrderByAggregateInput
@@ -314,8 +362,12 @@ export type PulsaScalarWhereWithAggregatesInput = {
   denomination?: Prisma.IntWithAggregatesFilter<"Pulsa"> | number
   costPrice?: Prisma.IntWithAggregatesFilter<"Pulsa"> | number
   sellPrice?: Prisma.IntWithAggregatesFilter<"Pulsa"> | number
+  balance?: Prisma.IntNullableWithAggregatesFilter<"Pulsa"> | number | null
+  destinationNumber?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
+  description?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
   note?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
+  category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Pulsa"> | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Pulsa"> | Date | string
 }
@@ -326,8 +378,12 @@ export type PulsaCreateInput = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance?: number | null
+  destinationNumber?: string | null
+  description?: string | null
   note?: string | null
   image?: string | null
+  category?: $Enums.ProductCategory
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutPulsaInput
@@ -339,8 +395,12 @@ export type PulsaUncheckedCreateInput = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance?: number | null
+  destinationNumber?: string | null
+  description?: string | null
   note?: string | null
   image?: string | null
+  category?: $Enums.ProductCategory
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutPulsaInput
@@ -352,8 +412,12 @@ export type PulsaUpdateInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutPulsaNestedInput
@@ -365,8 +429,12 @@ export type PulsaUncheckedUpdateInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutPulsaNestedInput
@@ -378,8 +446,12 @@ export type PulsaCreateManyInput = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance?: number | null
+  destinationNumber?: string | null
+  description?: string | null
   note?: string | null
   image?: string | null
+  category?: $Enums.ProductCategory
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -390,8 +462,12 @@ export type PulsaUpdateManyMutationInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -402,8 +478,12 @@ export type PulsaUncheckedUpdateManyInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -414,8 +494,12 @@ export type PulsaCountOrderByAggregateInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrder
+  destinationNumber?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -424,6 +508,7 @@ export type PulsaAvgOrderByAggregateInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrder
 }
 
 export type PulsaMaxOrderByAggregateInput = {
@@ -432,8 +517,12 @@ export type PulsaMaxOrderByAggregateInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrder
+  destinationNumber?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -444,8 +533,12 @@ export type PulsaMinOrderByAggregateInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrder
+  destinationNumber?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -454,11 +547,20 @@ export type PulsaSumOrderByAggregateInput = {
   denomination?: Prisma.SortOrder
   costPrice?: Prisma.SortOrder
   sellPrice?: Prisma.SortOrder
+  balance?: Prisma.SortOrder
 }
 
 export type PulsaNullableScalarRelationFilter = {
   is?: Prisma.PulsaWhereInput | null
   isNot?: Prisma.PulsaWhereInput | null
+}
+
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type PulsaCreateNestedOneWithoutTransactionItemsInput = {
@@ -483,8 +585,12 @@ export type PulsaCreateWithoutTransactionItemsInput = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance?: number | null
+  destinationNumber?: string | null
+  description?: string | null
   note?: string | null
   image?: string | null
+  category?: $Enums.ProductCategory
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -495,8 +601,12 @@ export type PulsaUncheckedCreateWithoutTransactionItemsInput = {
   denomination: number
   costPrice: number
   sellPrice: number
+  balance?: number | null
+  destinationNumber?: string | null
+  description?: string | null
   note?: string | null
   image?: string | null
+  category?: $Enums.ProductCategory
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -523,8 +633,12 @@ export type PulsaUpdateWithoutTransactionItemsInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -535,8 +649,12 @@ export type PulsaUncheckedUpdateWithoutTransactionItemsInput = {
   denomination?: Prisma.IntFieldUpdateOperationsInput | number
   costPrice?: Prisma.IntFieldUpdateOperationsInput | number
   sellPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  balance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  destinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -578,8 +696,12 @@ export type PulsaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   denomination?: boolean
   costPrice?: boolean
   sellPrice?: boolean
+  balance?: boolean
+  destinationNumber?: boolean
+  description?: boolean
   note?: boolean
   image?: boolean
+  category?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   transactionItems?: boolean | Prisma.Pulsa$transactionItemsArgs<ExtArgs>
@@ -592,8 +714,12 @@ export type PulsaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   denomination?: boolean
   costPrice?: boolean
   sellPrice?: boolean
+  balance?: boolean
+  destinationNumber?: boolean
+  description?: boolean
   note?: boolean
   image?: boolean
+  category?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["pulsa"]>
@@ -604,8 +730,12 @@ export type PulsaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   denomination?: boolean
   costPrice?: boolean
   sellPrice?: boolean
+  balance?: boolean
+  destinationNumber?: boolean
+  description?: boolean
   note?: boolean
   image?: boolean
+  category?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["pulsa"]>
@@ -616,13 +746,17 @@ export type PulsaSelectScalar = {
   denomination?: boolean
   costPrice?: boolean
   sellPrice?: boolean
+  balance?: boolean
+  destinationNumber?: boolean
+  description?: boolean
   note?: boolean
   image?: boolean
+  category?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PulsaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "denomination" | "costPrice" | "sellPrice" | "note" | "image" | "createdAt" | "updatedAt", ExtArgs["result"]["pulsa"]>
+export type PulsaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "denomination" | "costPrice" | "sellPrice" | "balance" | "destinationNumber" | "description" | "note" | "image" | "category" | "createdAt" | "updatedAt", ExtArgs["result"]["pulsa"]>
 export type PulsaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Pulsa$transactionItemsArgs<ExtArgs>
   _count?: boolean | Prisma.PulsaCountOutputTypeDefaultArgs<ExtArgs>
@@ -641,8 +775,12 @@ export type $PulsaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     denomination: number
     costPrice: number
     sellPrice: number
+    balance: number | null
+    destinationNumber: string | null
+    description: string | null
     note: string | null
     image: string | null
+    category: $Enums.ProductCategory
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["pulsa"]>
@@ -1074,8 +1212,12 @@ export interface PulsaFieldRefs {
   readonly denomination: Prisma.FieldRef<"Pulsa", 'Int'>
   readonly costPrice: Prisma.FieldRef<"Pulsa", 'Int'>
   readonly sellPrice: Prisma.FieldRef<"Pulsa", 'Int'>
+  readonly balance: Prisma.FieldRef<"Pulsa", 'Int'>
+  readonly destinationNumber: Prisma.FieldRef<"Pulsa", 'String'>
+  readonly description: Prisma.FieldRef<"Pulsa", 'String'>
   readonly note: Prisma.FieldRef<"Pulsa", 'String'>
   readonly image: Prisma.FieldRef<"Pulsa", 'String'>
+  readonly category: Prisma.FieldRef<"Pulsa", 'ProductCategory'>
   readonly createdAt: Prisma.FieldRef<"Pulsa", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Pulsa", 'DateTime'>
 }

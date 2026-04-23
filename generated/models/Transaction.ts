@@ -42,6 +42,7 @@ export type TransactionMinAggregateOutputType = {
   id: string | null
   type: $Enums.TransactionType | null
   status: $Enums.TransactionStatus | null
+  category: $Enums.ProductCategory | null
   totalAmount: number | null
   totalCost: number | null
   profit: number | null
@@ -54,6 +55,7 @@ export type TransactionMaxAggregateOutputType = {
   id: string | null
   type: $Enums.TransactionType | null
   status: $Enums.TransactionStatus | null
+  category: $Enums.ProductCategory | null
   totalAmount: number | null
   totalCost: number | null
   profit: number | null
@@ -66,6 +68,7 @@ export type TransactionCountAggregateOutputType = {
   id: number
   type: number
   status: number
+  category: number
   totalAmount: number
   totalCost: number
   profit: number
@@ -92,6 +95,7 @@ export type TransactionMinAggregateInputType = {
   id?: true
   type?: true
   status?: true
+  category?: true
   totalAmount?: true
   totalCost?: true
   profit?: true
@@ -104,6 +108,7 @@ export type TransactionMaxAggregateInputType = {
   id?: true
   type?: true
   status?: true
+  category?: true
   totalAmount?: true
   totalCost?: true
   profit?: true
@@ -116,6 +121,7 @@ export type TransactionCountAggregateInputType = {
   id?: true
   type?: true
   status?: true
+  category?: true
   totalAmount?: true
   totalCost?: true
   profit?: true
@@ -215,6 +221,7 @@ export type TransactionGroupByOutputType = {
   id: string
   type: $Enums.TransactionType
   status: $Enums.TransactionStatus
+  category: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -250,6 +257,7 @@ export type TransactionWhereInput = {
   id?: Prisma.StringFilter<"Transaction"> | string
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
   totalCost?: Prisma.IntFilter<"Transaction"> | number
   profit?: Prisma.IntFilter<"Transaction"> | number
@@ -264,6 +272,7 @@ export type TransactionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   totalCost?: Prisma.SortOrder
   profit?: Prisma.SortOrder
@@ -281,6 +290,7 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.TransactionWhereInput | Prisma.TransactionWhereInput[]
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
   totalCost?: Prisma.IntFilter<"Transaction"> | number
   profit?: Prisma.IntFilter<"Transaction"> | number
@@ -295,6 +305,7 @@ export type TransactionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   totalCost?: Prisma.SortOrder
   profit?: Prisma.SortOrder
@@ -315,6 +326,7 @@ export type TransactionScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   type?: Prisma.EnumTransactionTypeWithAggregatesFilter<"Transaction"> | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusWithAggregatesFilter<"Transaction"> | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Transaction"> | $Enums.ProductCategory
   totalAmount?: Prisma.IntWithAggregatesFilter<"Transaction"> | number
   totalCost?: Prisma.IntWithAggregatesFilter<"Transaction"> | number
   profit?: Prisma.IntWithAggregatesFilter<"Transaction"> | number
@@ -327,6 +339,7 @@ export type TransactionCreateInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -340,6 +353,7 @@ export type TransactionUncheckedCreateInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -353,6 +367,7 @@ export type TransactionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -366,6 +381,7 @@ export type TransactionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -379,6 +395,7 @@ export type TransactionCreateManyInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -391,6 +408,7 @@ export type TransactionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -402,6 +420,7 @@ export type TransactionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -424,6 +443,7 @@ export type TransactionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   totalCost?: Prisma.SortOrder
   profit?: Prisma.SortOrder
@@ -442,6 +462,7 @@ export type TransactionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   totalCost?: Prisma.SortOrder
   profit?: Prisma.SortOrder
@@ -454,6 +475,7 @@ export type TransactionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   totalCost?: Prisma.SortOrder
   profit?: Prisma.SortOrder
@@ -541,6 +563,7 @@ export type TransactionCreateWithoutUserInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -553,6 +576,7 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -594,6 +618,7 @@ export type TransactionScalarWhereInput = {
   id?: Prisma.StringFilter<"Transaction"> | string
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
   totalCost?: Prisma.IntFilter<"Transaction"> | number
   profit?: Prisma.IntFilter<"Transaction"> | number
@@ -606,6 +631,7 @@ export type TransactionCreateWithoutItemsInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -618,6 +644,7 @@ export type TransactionUncheckedCreateWithoutItemsInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -646,6 +673,7 @@ export type TransactionUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -658,6 +686,7 @@ export type TransactionUncheckedUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -670,6 +699,7 @@ export type TransactionCreateManyUserInput = {
   id?: string
   type: $Enums.TransactionType
   status?: $Enums.TransactionStatus
+  category?: $Enums.ProductCategory
   totalAmount: number
   totalCost: number
   profit: number
@@ -681,6 +711,7 @@ export type TransactionUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -693,6 +724,7 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -705,6 +737,7 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
   status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
+  category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   totalCost?: Prisma.IntFieldUpdateOperationsInput | number
   profit?: Prisma.IntFieldUpdateOperationsInput | number
@@ -747,6 +780,7 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   id?: boolean
   type?: boolean
   status?: boolean
+  category?: boolean
   totalAmount?: boolean
   totalCost?: boolean
   profit?: boolean
@@ -762,6 +796,7 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   type?: boolean
   status?: boolean
+  category?: boolean
   totalAmount?: boolean
   totalCost?: boolean
   profit?: boolean
@@ -775,6 +810,7 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   type?: boolean
   status?: boolean
+  category?: boolean
   totalAmount?: boolean
   totalCost?: boolean
   profit?: boolean
@@ -788,6 +824,7 @@ export type TransactionSelectScalar = {
   id?: boolean
   type?: boolean
   status?: boolean
+  category?: boolean
   totalAmount?: boolean
   totalCost?: boolean
   profit?: boolean
@@ -796,7 +833,7 @@ export type TransactionSelectScalar = {
   userId?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "status" | "totalAmount" | "totalCost" | "profit" | "note" | "createdAt" | "userId", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "type" | "status" | "category" | "totalAmount" | "totalCost" | "profit" | "note" | "createdAt" | "userId", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   items?: boolean | Prisma.Transaction$itemsArgs<ExtArgs>
@@ -819,6 +856,7 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     id: string
     type: $Enums.TransactionType
     status: $Enums.TransactionStatus
+    category: $Enums.ProductCategory
     totalAmount: number
     totalCost: number
     profit: number
@@ -1253,6 +1291,7 @@ export interface TransactionFieldRefs {
   readonly id: Prisma.FieldRef<"Transaction", 'String'>
   readonly type: Prisma.FieldRef<"Transaction", 'TransactionType'>
   readonly status: Prisma.FieldRef<"Transaction", 'TransactionStatus'>
+  readonly category: Prisma.FieldRef<"Transaction", 'ProductCategory'>
   readonly totalAmount: Prisma.FieldRef<"Transaction", 'Int'>
   readonly totalCost: Prisma.FieldRef<"Transaction", 'Int'>
   readonly profit: Prisma.FieldRef<"Transaction", 'Int'>
