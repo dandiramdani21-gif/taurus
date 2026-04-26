@@ -50,7 +50,7 @@ export default function KasirAksesorisPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 15,
+    limit: 6,
     total: 0,
     totalPages: 0,
   });
@@ -321,7 +321,7 @@ export default function KasirAksesorisPage() {
         <div className="flex flex-col gap-5 px-6 py-8 lg:flex-row lg:items-end lg:justify-between lg:px-10 lg:py-10">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-              Kasir Produk Lain
+              Kasir Aksesoris
             </div>
             <h1 className="text-3xl font-semibold sm:text-4xl">Kasir Aksesoris</h1>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">

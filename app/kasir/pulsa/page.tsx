@@ -120,12 +120,9 @@ export default function KasirPulsaPage() {
       <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-slate-950 text-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
         <div className="px-6 py-8 lg:px-10 lg:py-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-            Quick Sell
+            Kasir Pulsa
           </div>
           <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Kasir Pulsa</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-            Form transaksi langsung tanpa master data inventory, dibuat lebih ringkas dan nyaman dipakai di meja kasir.
-          </p>
         </div>
       </section>
 

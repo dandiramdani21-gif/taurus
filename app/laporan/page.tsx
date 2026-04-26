@@ -771,7 +771,7 @@ export default function LaporanKeuanganPage() {
             <div>
               <h1 className="text-3xl font-semibold sm:text-4xl">Laporan Keuangan</h1>
               <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
-                Tabel transaksi, ringkasan bulanan, dan laba hari ini dalam tampilan dashboard kasir yang lebih modern.
+                Tabel transaksi, ringkasan bulanan, dan laba hari ini.
               </p>
             </div>
           </div>
