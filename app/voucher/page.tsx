@@ -295,15 +295,6 @@ export default function VoucherPage() {
         </button>
       </div>
 
-      <div className="mb-6">
-        <SpreadsheetActions
-          exportLabel="Export Voucher"
-          importLabel="Import Voucher"
-          onExport={exportVouchers}
-          onImportRows={importVouchers}
-        />
-      </div>
-
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">

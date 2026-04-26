@@ -291,16 +291,6 @@ export default function AksesorisPage() {
           Tambah Aksesoris
         </button>
       </div>
-
-      <div className="mb-6">
-        <SpreadsheetActions
-          exportLabel="Export Aksesoris"
-          importLabel="Import Aksesoris"
-          onExport={exportAccessories}
-          onImportRows={importAccessories}
-        />
-      </div>
-
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
