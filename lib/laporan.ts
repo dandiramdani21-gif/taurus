@@ -73,15 +73,15 @@ const transactions = await prisma.transaction.findMany({
 });
 
   const totalRevenue = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? -transaction.totalAmount : transaction.totalAmount),
+    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.totalAmount),
     0
   );
   const totalCost = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? -transaction.totalCost : transaction.totalCost),
+    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.totalCost),
     0
   );
   const totalProfit = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? -transaction.profit : transaction.profit),
+    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.profit),
     0
   );
 
@@ -94,10 +94,10 @@ const transactions = await prisma.transaction.findMany({
     }
 
     const day = dailyMap.get(dateStr)!;
-    const sign = transaction.status === "REFUND" ? -1 : 1;
-    day.revenue += transaction.totalAmount * sign;
-    day.cost += transaction.totalCost * sign;
-    day.profit += transaction.profit * sign;
+    const multiplier = transaction.status === "REFUND" ? 0 : 1;
+    day.revenue += transaction.totalAmount * multiplier;
+    day.cost += transaction.totalCost * multiplier;
+    day.profit += transaction.profit * multiplier;
   });
 
   const chartData = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));

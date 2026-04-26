@@ -260,10 +260,10 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
       const quantity = Number(item.quantity || 1);
       const baseRevenue = Number(item.sellPrice || 0) * quantity;
       const baseCost = Number(item.costPrice || 0) * quantity;
-      const sign = transaction.status === "REFUND" ? -1 : 1;
-      const revenue = baseRevenue * sign;
-      const cost = baseCost * sign;
-      const profit = (baseRevenue - baseCost) * sign;
+      const multiplier = transaction.status === "REFUND" ? 0 : 1;
+      const revenue = baseRevenue * multiplier;
+      const cost = baseCost * multiplier;
+      const profit = (baseRevenue - baseCost) * multiplier;
       const product = buildProductLabel(item);
       const category = buildCategoryLabel(item);
       const detail = buildRowDetail(item);
@@ -311,10 +311,10 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
       if (!isPulsaRow) return;
 
       const quantity = Number(item.quantity || 1);
-      const sign = transaction.status === "REFUND" ? -1 : 1;
-      const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0) * sign;
-      const modal = Number(transaction.totalCost ?? item.costPrice ?? 0) * sign;
-      const profit = Number(transaction.profit ?? total - modal) * sign;
+      const multiplier = transaction.status === "REFUND" ? 0 : 1;
+      const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0) * multiplier;
+      const modal = Number(transaction.totalCost ?? item.costPrice ?? 0) * multiplier;
+      const profit = Number(transaction.profit ?? total - modal) * multiplier;
 
       rows.push({
         key: `${transaction.id}-${index}`,
@@ -324,7 +324,7 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
         destinationNumber: item.pulsaDestinationNumber || item.pulsa?.destinationNumber || "-",
         description: item.pulsaDescription || item.pulsa?.description || item.pulsa?.note || "-",
         modal,
-        price: Number(item.sellPrice ?? transaction.totalAmount ?? 0) * sign,
+        price: Number(item.sellPrice ?? transaction.totalAmount ?? 0) * multiplier,
         total: quantity > 1 ? total * quantity : total,
         profit,
         balance: item.pulsaBalance ?? null,
@@ -530,10 +530,10 @@ const filterTransactionsByDateRange = (
 const summarizeTransactions = (transactions: ReportTransaction[]) => {
   return transactions.reduce(
     (acc, transaction) => {
-      const sign = transaction.status === "REFUND" ? -1 : 1;
-      acc.totalRevenue += Number(transaction.totalAmount || 0) * sign;
-      acc.totalCost += Number(transaction.totalCost || 0) * sign;
-      acc.totalProfit += Number(transaction.profit || 0) * sign;
+      const multiplier = transaction.status === "REFUND" ? 0 : 1;
+      acc.totalRevenue += Number(transaction.totalAmount || 0) * multiplier;
+      acc.totalCost += Number(transaction.totalCost || 0) * multiplier;
+      acc.totalProfit += Number(transaction.profit || 0) * multiplier;
       acc.transactionCount += 1;
       return acc;
     },
