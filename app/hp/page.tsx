@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Html5QrcodeScanner } from "html5-qrcode";
 import ImageUploader from "@/components/ImageUploader";
 import SpreadsheetActions from "@/components/SpreadsheetActions";
 import * as XLSX from "xlsx";
@@ -40,7 +39,6 @@ export default function HpPage() {
   const [phones, setPhones] = useState<Phone[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showDetail, setShowDetail] = useState<Phone | null>(null);
   const [showStockModal, setShowStockModal] = useState<Phone | null>(null);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
   const [stockValue, setStockValue] = useState(0);
@@ -53,9 +51,6 @@ export default function HpPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
-  // Scanner states
-  const [showImeiScanner, setShowImeiScanner] = useState(false);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const [formData, setFormData] = useState({
     brand: "",
@@ -68,11 +63,8 @@ export default function HpPage() {
     entryDate: new Date().toISOString().split("T")[0], // default hari ini
   });
   const [metadata, setMetadata] = useState<Metadata[]>([
-    { key: "RAM", value: "" },
-    { key: "Storage", value: "" },
-    { key: "Processor", value: "" },
-    { key: "Battery", value: "" },
-    { key: "Camera", value: "" },
+        { key: "RAM", value: "" },
+        { key: "Camera", value: "" },
   ]);
 
   // Debounce search
@@ -92,6 +84,7 @@ export default function HpPage() {
 
   useEffect(() => {
     fetchPhones();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, debouncedSearch]);
 
   const fetchPhones = async () => {
@@ -234,73 +227,6 @@ export default function HpPage() {
       return { exists: false };
     }
   };
-
-  // Start scanner
-  const startScanner = () => {
-    setShowImeiScanner(true);
-
-    // Inisialisasi scanner setelah modal terbuka
-    setTimeout(() => {
-      const elementId = "imei-scanner";
-      if (document.getElementById(elementId)) {
-        if (scannerRef.current) {
-          scannerRef.current.clear();
-        }
-        
-        scannerRef.current = new Html5QrcodeScanner(
-          elementId,
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
-          },
-          false
-        );
-        
-        scannerRef.current.render(onScanSuccess, onScanError);
-      }
-    }, 100);
-  };
-
-  const onScanSuccess = async (decodedText: string) => {
-    // Stop scanner
-    if (scannerRef.current) {
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-    
-    setFormData(prev => ({ ...prev, imei: decodedText }));
-
-    const result = await checkExistingImei(decodedText);
-    if (result.exists) {
-      setShowImeiScanner(false);
-      alert(`IMEI ${decodedText} sudah terdaftar! Silakan update stok jika ingin menambah.`);
-      if (result.phone) {
-        setShowStockModal(result.phone);
-        setStockValue(result.phone.stock + 1);
-      }
-      return;
-    }
-
-    setShowImeiScanner(false);
-    setTimeout(() => {
-      const brandInput = document.querySelector("input[name='brand']") as HTMLInputElement;
-      if (brandInput) brandInput.focus();
-    }, 100);
-  };
-
-  const onScanError = (error: string) => {
-    console.error("Scan error:", error);
-  };
-
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-    setShowImeiScanner(false);
-  };
-
   const updateStock = async (id: string, newStock: number) => {
     if (newStock < 0) {
       alert("Stok tidak boleh minus!");
@@ -400,9 +326,6 @@ export default function HpPage() {
     } else {
       setMetadata([
         { key: "RAM", value: "" },
-        { key: "Storage", value: "" },
-        { key: "Processor", value: "" },
-        { key: "Battery", value: "" },
         { key: "Camera", value: "" },
       ]);
     }
@@ -422,11 +345,8 @@ export default function HpPage() {
       entryDate: new Date().toISOString().split("T")[0],
     });
     setMetadata([
-      { key: "RAM", value: "" },
-      { key: "Storage", value: "" },
-      { key: "Processor", value: "" },
-      { key: "Battery", value: "" },
-      { key: "Camera", value: "" },
+        { key: "RAM", value: "" },
+        { key: "Camera", value: "" },
     ]);
   };
 
@@ -459,7 +379,6 @@ export default function HpPage() {
   }
 
   const totalStock = phones.reduce((sum, phone) => sum + phone.stock, 0);
-  const lowStockCount = phones.filter(phone => phone.stock > 0 && phone.stock < 3).length;
 
   return (
     <div>
@@ -573,6 +492,7 @@ export default function HpPage() {
                         <td className="px-6 py-4">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
                             {phone.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img src={phone.image} alt={phone.brand} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -773,17 +693,6 @@ export default function HpPage() {
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => startScanner()}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition flex items-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scan
-                  </button>
                 </div>
               </div>
 
@@ -895,26 +804,6 @@ export default function HpPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Scanner Modal untuk IMEI */}
-      {showImeiScanner && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Scan IMEI</h2>
-              <button onClick={stopScanner} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div id="imei-scanner" className="w-full"></div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Arahkan kamera ke barcode IMEI, akan terdeteksi otomatis
-            </p>
           </div>
         </div>
       )}
