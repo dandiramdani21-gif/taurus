@@ -131,12 +131,14 @@ export default function KasirPulsaPage() {
           <div className="md:col-span-2">
             <label className="mb-2 block text-sm font-semibold text-slate-600">No Tujuan</label>
             <input
-              type="text"
+              type="number"
               value={destinationNumber}
+              inputMode="numeric"
+              pattern="^08[1-9][0-9]{7,10}$"
               onChange={(e) => setDestinationNumber(e.target.value)}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
               placeholder="08xxxxxxxxxx"
-              required
+              required={true}
             />
           </div>
 
