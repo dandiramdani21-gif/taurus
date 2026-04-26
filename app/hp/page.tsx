@@ -594,12 +594,6 @@ export default function HpPage() {
 </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => setShowDetail(phone)} className="text-gray-500 hover:text-gray-700">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
                             <button onClick={() => handleEdit(phone)} className="text-blue-600 hover:text-blue-800">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -679,58 +673,6 @@ export default function HpPage() {
             Menampilkan {phones.length} dari {pagination.total} data
           </div>
         </>
-      )}
-
-      {/* Modal Detail */}
-      {showDetail && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Detail HP</h2>
-              <button onClick={() => setShowDetail(null)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="flex justify-center mb-4">
-              <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100">
-                {showDetail.image ? (
-                  <img src={showDetail.image} alt={showDetail.brand} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <div><span className="text-sm text-gray-500">Brand:</span> <p className="font-medium">{showDetail.brand}</p></div>
-              <div><span className="text-sm text-gray-500">Type:</span> <p className="font-medium">{showDetail.type}</p></div>
-                            <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
-              <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.purchasePrice.toLocaleString()}</p></div>
-              <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
-              <div>
-  <span className="text-sm text-gray-500">Tanggal Masuk:</span> 
-  <p className="font-medium">{new Date(showDetail.entryDate).toLocaleDateString("id-ID")}</p>
-</div>
-              {showDetail.metadata.length > 0 && (
-                <div>
-                  <span className="text-sm text-gray-500">Spesifikasi:</span>
-                  <div className="mt-1 space-y-1">
-                    {showDetail.metadata.map((m, i) => (
-                      <p key={i} className="text-sm"><span className="font-medium">{m.key}:</span> {m.value}</p>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Modal Stock */}
