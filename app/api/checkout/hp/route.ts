@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         totalAmount,
         totalCost,
         profit,
-        status: "REFUND",
+        status: "PAID",
         userId: user.id,
         servedByName: user.name || null,
         items: {

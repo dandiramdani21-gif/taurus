@@ -147,7 +147,7 @@ model Pulsa {
 model Transaction {
   id     String            @id @default(cuid())
   type   TransactionType
-  status TransactionStatus @default(REFUND)
+  status TransactionStatus @default(PAID)
   category ProductCategory @default(HANDPHONE)
 
   totalAmount Int
