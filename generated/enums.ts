@@ -18,8 +18,8 @@ export type TransactionType = (typeof TransactionType)[keyof typeof TransactionT
 
 
 export const TransactionStatus = {
-  ACTIVE: 'ACTIVE',
-  CANCELLED: 'CANCELLED'
+  PAID: 'PAID',
+  REFUND: 'REFUND'
 } as const
 
 export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus]

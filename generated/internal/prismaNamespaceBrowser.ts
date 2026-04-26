@@ -100,6 +100,7 @@ export const PhoneScalarFieldEnum = {
   purchaseDate: 'purchaseDate',
   entryDate: 'entryDate',
   stock: 'stock',
+  isHidden: 'isHidden',
   image: 'image',
   createdAt: 'createdAt'
 } as const
@@ -181,6 +182,7 @@ export const TransactionScalarFieldEnum = {
   totalCost: 'totalCost',
   profit: 'profit',
   note: 'note',
+  servedByName: 'servedByName',
   createdAt: 'createdAt',
   userId: 'userId'
 } as const

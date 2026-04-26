@@ -19,8 +19,8 @@ enum TransactionType {
 }
 
 enum TransactionStatus {
-  ACTIVE
-  CANCELLED
+  PAID
+  REFUND
 }
 
 enum ProductCategory {
@@ -63,6 +63,7 @@ model Phone {
   entryDate     DateTime @default(now())
 
   stock Int @default(1)
+  isHidden Boolean @default(false)
   
   image String?
 
@@ -146,7 +147,7 @@ model Pulsa {
 model Transaction {
   id     String            @id @default(cuid())
   type   TransactionType
-  status TransactionStatus @default(ACTIVE)
+  status TransactionStatus @default(REFUND)
   category ProductCategory @default(HANDPHONE)
 
   totalAmount Int
@@ -154,6 +155,7 @@ model Transaction {
   profit      Int
 
   note String?
+  servedByName String?
 
   createdAt DateTime @default(now())
 

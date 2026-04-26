@@ -349,60 +349,39 @@ export default function KasirVoucherPage() {
         {loading ? (
           <div className="text-center py-12">Memuat data...</div>
         ) : (
-          <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px]">
-                <thead className="sticky top-0 bg-slate-50/90">
-                  <tr>
-                    <th className="px-4 py-4 text-left w-20 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Gambar</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Nama Voucher</th>
-                    <th className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Harga Jual</th>
-                    <th className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Stok</th>
-                    <th className="px-4 py-4 text-center w-32 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-violet-50/50">
-                      <td className="px-4 py-4">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-400">🎟️</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 font-medium text-slate-900">{product.name}</td>
-                      <td className="px-4 py-4 text-right font-semibold text-violet-600">
-                        Rp {product.sellPrice.toLocaleString("id-ID")}
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                          product.stock === 0 ? "bg-red-100 text-red-700" :
-                          product.stock < 5 ? "bg-orange-100 text-orange-700" :
-                          "bg-green-100 text-green-700"
-                        }`}>
-                          {product.stock}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <button
-                          onClick={() => addToCart(product)}
-                          disabled={product.stock === 0}
-                          className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:bg-slate-300 whitespace-nowrap"
-                        >
-                          Tambah
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              {products.map((product) => (
+                <article key={product.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">🎟️</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-slate-900">{product.name}</p>
+                      <p className="mt-1 text-sm font-medium text-violet-600">Rp {product.sellPrice.toLocaleString("id-ID")}</p>
+                      <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        product.stock === 0 ? "bg-red-100 text-red-700" :
+                        product.stock < 5 ? "bg-orange-100 text-orange-700" :
+                        "bg-green-100 text-green-700"
+                      }`}>
+                        Stok {product.stock}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addToCart(product)}
+                    disabled={product.stock === 0}
+                    className="mt-4 w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:bg-slate-300"
+                  >
+                    Tambah ke Keranjang
+                  </button>
+                </article>
+              ))}
             </div>
           </div>
         )}

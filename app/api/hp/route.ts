@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { logRestock } from "@/lib/restock";
+import type { Prisma } from "@/generated/client";
 
 const parseDateInput = (value: unknown) => {
   if (value === null || value === undefined || value === "") {
@@ -56,13 +57,13 @@ export async function GET(request: Request) {
     // Build where clause for search
     const where = search
       ? {
+          isHidden: false,
           OR: [
             { brand: { contains: search, mode: "insensitive" as const } },
             { type: { contains: search, mode: "insensitive" as const } },
-            { imei: { contains: search, mode: "insensitive" as const } },
           ],
         }
-      : {};
+      : { isHidden: false };
 
     const [phones, total] = await Promise.all([
       prisma.phone.findMany({
@@ -169,7 +170,7 @@ export async function PUT(request: Request) {
     });
 
     // Build data object hanya dengan field yang dikirim
-    const updateData: any = {};
+    const updateData: Prisma.PhoneUpdateInput = {};
     
     if (brand !== undefined) updateData.brand = brand;
     if (type !== undefined) updateData.type = type;
@@ -187,12 +188,12 @@ export async function PUT(request: Request) {
     });
 
     // Update metadata jika ada
-    if (metadata && metadata.length > 0) {
+    if (Array.isArray(metadata) && metadata.length > 0) {
       await prisma.phoneMetadata.deleteMany({
         where: { phoneId: id },
       });
       await prisma.phoneMetadata.createMany({
-        data: metadata.map((m: any) => ({
+        data: metadata.map((m: { key: string; value: string }) => ({
           phoneId: id,
           key: m.key,
           value: m.value,

@@ -108,7 +108,7 @@ export default function HpPage() {
     }
   };
 
-  const parseImportDate = (value: any) => {
+  const parseImportDate = (value: unknown) => {
     if (!value) return "";
 
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -173,7 +173,7 @@ export default function HpPage() {
     XLSX.writeFile(wb, `HP_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
-  const importPhones = async (rows: Record<string, any>[]) => {
+  const importPhones = async (rows: Array<Record<string, unknown>>) => {
     if (!rows.length) {
       alert("File import kosong");
       return;
@@ -500,7 +500,7 @@ export default function HpPage() {
           </svg>
           <input
             type="text"
-            placeholder="Cari berdasarkan kode, brand, type, atau IMEI..."
+            placeholder="Cari berdasarkan brand atau type..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
@@ -567,8 +567,7 @@ export default function HpPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -599,8 +598,7 @@ export default function HpPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.brand}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.type}</td>
-                        <td className="px-6 py-4 text-sm font-mono text-gray-600">{phone.imei}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
            
 <td className="px-6 py-4 text-sm text-gray-500">
   {new Date(phone.entryDate).toLocaleDateString("id-ID")}
@@ -747,8 +745,7 @@ export default function HpPage() {
             <div className="space-y-3">
               <div><span className="text-sm text-gray-500">Brand:</span> <p className="font-medium">{showDetail.brand}</p></div>
               <div><span className="text-sm text-gray-500">Type:</span> <p className="font-medium">{showDetail.type}</p></div>
-              <div><span className="text-sm text-gray-500">IMEI:</span> <p className="font-medium">{showDetail.imei}</p></div>
-              <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
+                            <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
               <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.purchasePrice.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
               <div>
@@ -786,8 +783,7 @@ export default function HpPage() {
               <div>
                 <p className="text-sm text-gray-500">HP</p>
                 <p className="font-medium">{showStockModal.brand} {showStockModal.type}</p>
-                <p className="text-xs text-gray-400">IMEI: {showStockModal.imei}</p>
-              </div>
+                              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
                 <input

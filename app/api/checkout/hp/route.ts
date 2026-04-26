@@ -76,8 +76,9 @@ export async function POST(request: Request) {
         totalAmount,
         totalCost,
         profit,
-        status: "ACTIVE",
+        status: "REFUND",
         userId: user.id,
+        servedByName: user.name || null,
         items: {
           create: transactionItems,
         },
@@ -91,7 +92,10 @@ export async function POST(request: Request) {
     for (const item of items) {
       await prisma.phone.update({
         where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
+        data: {
+          stock: { decrement: item.quantity },
+          isHidden: true,
+        },
       });
     }
 

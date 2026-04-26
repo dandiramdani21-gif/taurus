@@ -44,11 +44,12 @@ export async function POST(request: Request) {
         data: {
           type: "SALE",
           category: "PRODUK_LAIN",
-          status: "ACTIVE",
+          status: "REFUND",
           totalAmount: Number(totalAmount),
           totalCost: Number(totalCost),
           profit: Number(profit),
           userId: user.id,
+          servedByName: user.name || null,
           note: "Penjualan Voucher",
         },
       });

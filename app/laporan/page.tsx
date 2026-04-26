@@ -13,6 +13,8 @@ type ReportTransaction = {
   id: string;
   createdAt: string;
   category?: ReportCategory;
+  status: "PAID" | "REFUND";
+  servedByName?: string | null;
   totalAmount: number;
   totalCost: number;
   profit: number;
@@ -254,9 +256,12 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
       if (!shouldIncludeItemByFilter(item, productFilter)) return;
 
       const quantity = Number(item.quantity || 1);
-      const revenue = Number(item.sellPrice || 0) * quantity;
-      const cost = Number(item.costPrice || 0) * quantity;
-      const profit = revenue - cost;
+      const baseRevenue = Number(item.sellPrice || 0) * quantity;
+      const baseCost = Number(item.costPrice || 0) * quantity;
+      const sign = transaction.status === "REFUND" ? -1 : 1;
+      const revenue = baseRevenue * sign;
+      const cost = baseCost * sign;
+      const profit = (baseRevenue - baseCost) * sign;
       const product = buildProductLabel(item);
       const category = buildCategoryLabel(item);
       const detail = buildRowDetail(item);
@@ -303,9 +308,10 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
       if (!isPulsaRow) return;
 
       const quantity = Number(item.quantity || 1);
-      const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0);
-      const modal = Number(transaction.totalCost ?? item.costPrice ?? 0);
-      const profit = Number(transaction.profit ?? total - modal);
+      const sign = transaction.status === "REFUND" ? -1 : 1;
+      const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0) * sign;
+      const modal = Number(transaction.totalCost ?? item.costPrice ?? 0) * sign;
+      const profit = Number(transaction.profit ?? total - modal) * sign;
 
       rows.push({
         key: `${transaction.id}-${index}`,
@@ -314,7 +320,7 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
         destinationNumber: item.pulsaDestinationNumber || item.pulsa?.destinationNumber || "-",
         description: item.pulsaDescription || item.pulsa?.description || item.pulsa?.note || "-",
         modal,
-        price: Number(item.sellPrice ?? transaction.totalAmount ?? 0),
+        price: Number(item.sellPrice ?? transaction.totalAmount ?? 0) * sign,
         total: quantity > 1 ? total * quantity : total,
         profit,
         balance: item.pulsaBalance ?? null,
@@ -519,9 +525,10 @@ const filterTransactionsByDateRange = (
 const summarizeTransactions = (transactions: ReportTransaction[]) => {
   return transactions.reduce(
     (acc, transaction) => {
-      acc.totalRevenue += Number(transaction.totalAmount || 0);
-      acc.totalCost += Number(transaction.totalCost || 0);
-      acc.totalProfit += Number(transaction.profit || 0);
+      const sign = transaction.status === "REFUND" ? -1 : 1;
+      acc.totalRevenue += Number(transaction.totalAmount || 0) * sign;
+      acc.totalCost += Number(transaction.totalCost || 0) * sign;
+      acc.totalProfit += Number(transaction.profit || 0) * sign;
       acc.transactionCount += 1;
       return acc;
     },
@@ -550,6 +557,7 @@ export default function LaporanKeuanganPage() {
   const [todayProfit, setTodayProfit] = useState(0);
   const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
   const inFlightKeyRef = useRef<string | null>(null);
+  const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
 
   const fixedFilter: ReportProductFilter | null =
     pathname === "/laporan/hp"
@@ -725,6 +733,30 @@ export default function LaporanKeuanganPage() {
   const groupedRows = buildGroupedRows(transactions, effectiveFilter);
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
   const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
+  const statusByTransactionId = new Map(transactions.map((transaction) => [transaction.id, transaction.status]));
+
+  const updateTransactionStatus = async (transactionId: string, status: "PAID" | "REFUND") => {
+    try {
+      setUpdatingStatusTxId(transactionId);
+      const res = await fetch(`/api/transactions/${transactionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || "Gagal update status transaksi");
+      }
+
+      await fetchLaporan();
+    } catch (error) {
+      console.error("Gagal update status transaksi:", error);
+      alert(error instanceof Error ? error.message : "Gagal update status transaksi");
+    } finally {
+      setUpdatingStatusTxId(null);
+    }
+  };
 
   return (
     <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
@@ -827,6 +859,7 @@ export default function LaporanKeuanganPage() {
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Harga Jual</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Total</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Keuntungan</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
                     </>
                   ) : (
                     <>
@@ -837,6 +870,7 @@ export default function LaporanKeuanganPage() {
                       <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Modal</th>
                       <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Jual</th>
                       <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Laba/Rugi</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Status</th>
                     </>
                   )}
                 </tr>
@@ -848,7 +882,7 @@ export default function LaporanKeuanganPage() {
                       return (
                         <Fragment key={group.dateKey}>
                           <tr className={theme.header}>
-                            <td colSpan={7} className="px-6 py-3 text-sm font-semibold">
+                            <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
                               Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
                             </td>
                           </tr>
@@ -866,6 +900,19 @@ export default function LaporanKeuanganPage() {
                               <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                                 {rupiah(row.profit)}
                               </td>
+                              <td className="px-6 py-4 text-sm text-slate-700">
+                                <select
+                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                  value={statusByTransactionId.get(row.key.split("-")[0]) || "REFUND"}
+                                  onChange={(e) =>
+                                    updateTransactionStatus(row.key.split("-")[0], e.target.value as "PAID" | "REFUND")
+                                  }
+                                  disabled={updatingStatusTxId === row.key.split("-")[0]}
+                                >
+                                  <option value="PAID">PAID</option>
+                                  <option value="REFUND">REFUND</option>
+                                </select>
+                              </td>
                             </tr>
                           ))}
                           <tr className={theme.subtotal}>
@@ -879,6 +926,7 @@ export default function LaporanKeuanganPage() {
                             <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                               {rupiah(group.subtotalProfit)}
                             </td>
+                            <td />
                           </tr>
                         </Fragment>
                       );
@@ -888,7 +936,7 @@ export default function LaporanKeuanganPage() {
                       return (
                         <Fragment key={group.dateKey}>
                           <tr className={theme.header}>
-                            <td colSpan={7} className="px-6 py-3 text-sm font-semibold">
+                            <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
                               Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
                             </td>
                           </tr>
@@ -906,6 +954,19 @@ export default function LaporanKeuanganPage() {
                               <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                                 {rupiah(row.profit)}
                               </td>
+                              <td className="px-6 py-4 text-sm text-slate-700">
+                                <select
+                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                  value={statusByTransactionId.get(row.key.split("-")[0]) || "REFUND"}
+                                  onChange={(e) =>
+                                    updateTransactionStatus(row.key.split("-")[0], e.target.value as "PAID" | "REFUND")
+                                  }
+                                  disabled={updatingStatusTxId === row.key.split("-")[0]}
+                                >
+                                  <option value="PAID">PAID</option>
+                                  <option value="REFUND">REFUND</option>
+                                </select>
+                              </td>
                             </tr>
                           ))}
                           <tr className={theme.subtotal}>
@@ -921,6 +982,7 @@ export default function LaporanKeuanganPage() {
                             <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
                               {rupiah(group.subtotalProfit)}
                             </td>
+                            <td />
                           </tr>
                         </Fragment>
                       );

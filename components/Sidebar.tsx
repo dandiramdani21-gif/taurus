@@ -93,10 +93,10 @@ export default function Sidebar() {
 
       <aside
         className={`
-          fixed left-0 top-0 z-40 flex h-full w-80 flex-col overflow-hidden border-r border-white/30 bg-slate-950/95 text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] backdrop-blur-2xl
+          fixed left-0 top-0 z-40 flex h-full min-h-screen w-80 flex-col overflow-hidden border-r border-white/30 bg-slate-950/95 text-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] backdrop-blur-2xl
           transition-transform duration-300 ease-in-out
           ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:static lg:w-80
+          lg:translate-x-0 lg:static lg:w-80 lg:min-h-full lg:self-stretch
         `}
       >
         <div className="border-b border-white/10 bg-white/5 px-5 py-5">

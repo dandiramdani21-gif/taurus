@@ -13,6 +13,8 @@ interface Transaction {
   totalAmount: number;
   totalCost: number;
   profit: number;
+  status: "PAID" | "REFUND";
+  servedByName?: string | null;
   category: "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
   note?: string | null;
   items?: Array<{
@@ -152,6 +154,7 @@ export default function InvoicesPage() {
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Nomor Invoice</th>
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Tanggal</th>
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Kategori</th>
+              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Dilayani</th>
               <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Total Penjualan</th>
               <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Keuntungan</th>
               <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Aksi</th>
@@ -160,13 +163,13 @@ export default function InvoicesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">
+                <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
                   Memuat data invoice...
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-slate-500">
+                <td colSpan={7} className="px-5 py-10 text-center text-slate-500">
                   Belum ada transaksi invoice
                 </td>
               </tr>
@@ -198,6 +201,9 @@ export default function InvoicesPage() {
                     <span className="inline-flex items-center rounded-full bg-slate-950 px-3 py-1 text-xs font-semibold text-white">
                       {categoryLabelMap[transaction.category]}
                     </span>
+                  </td>
+                  <td className="px-5 py-5 text-sm text-slate-700">
+                    {transaction.servedByName || "-"}
                   </td>
                   <td className="px-5 py-5 text-sm text-right">
                     <p className="font-semibold text-slate-900">

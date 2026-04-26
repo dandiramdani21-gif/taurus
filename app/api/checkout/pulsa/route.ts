@@ -86,13 +86,14 @@ export async function POST(request: Request) {
       const newTransaction = await tx.transaction.create({
         data: {
           type: "SALE",
-          status: "ACTIVE",
+          status: "REFUND",
           category: "PULSA",
           totalAmount: Number(totalAmount ?? sellPrice ?? 0),
           totalCost: Number(totalCost ?? costPrice ?? 0),
           profit: Number(profit ?? (Number(sellPrice ?? 0) - Number(costPrice ?? 0))),
           note: note || description || "Penjualan Pulsa",
           userId: user.id,
+          servedByName: user.name || null,
         },
       });
 
