@@ -9,7 +9,7 @@ const cards = [
     links: [
       { label: "Kasir HP", href: "/kasir/hp" },
       { label: "Inventory HP", href: "/hp" },
-      { label: "Laporan", href: "/laporan?category=HANDPHONE" },
+      { label: "Laporan", href: "/laporan/hp" },
     ],
   },
   {
@@ -20,7 +20,7 @@ const cards = [
       { label: "Aksesoris - Inventory", href: "/aksesoris" },
       { label: "Voucher - Kasir", href: "/kasir/voucher" },
       { label: "Voucher - Inventory", href: "/voucher" },
-      { label: "Laporan", href: "/laporan?category=PRODUK_LAIN" },
+      { label: "Laporan", href: "/laporan/produk-lain" },
     ],
   },
   {
@@ -28,7 +28,7 @@ const cards = [
     description: "Transaksi pulsa langsung tanpa master data inventory.",
     links: [
       { label: "Kasir Pulsa", href: "/kasir/pulsa" },
-      { label: "Laporan", href: "/laporan?category=PULSA" },
+      { label: "Laporan", href: "/laporan/pulsa" },
     ],
   },
 ];

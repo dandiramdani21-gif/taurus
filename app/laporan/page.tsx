@@ -1,8 +1,8 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { format, subDays, startOfMonth } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -109,6 +109,21 @@ const filterToCategory: Record<Exclude<ReportProductFilter, "all">, ReportCatego
   pulsa: "PULSA",
 };
 
+const getItemType = (item: ReportTransaction["items"][number]) => {
+  if (item.phone) return "phone" as const;
+  if (item.accessory) return "accessory" as const;
+  if (item.voucher) return "voucher" as const;
+  if (item.pulsa || item.pulsaDestinationNumber) return "pulsa" as const;
+  return "unknown" as const;
+};
+
+const shouldIncludeItemByFilter = (item: ReportTransaction["items"][number], filter: ReportProductFilter) => {
+  if (filter === "all") return true;
+  const itemType = getItemType(item);
+  if (filter === "accessory") return itemType === "accessory" || itemType === "voucher";
+  return itemType === filter;
+};
+
 const groupThemes = [
   {
     header: "bg-sky-100 text-sky-900",
@@ -157,7 +172,7 @@ const normalizeFilterLabel = (filter: ReportProductFilter) => {
 const normalizeCategoryTitle = (filter: ReportProductFilter) => {
   if (filter === "phone") return "Laporan HP";
   if (filter === "pulsa") return "Laporan Pulsa";
-  if (filter === "accessory") return "Laporan Aksesoris";
+  if (filter === "accessory") return "Laporan Produk Lain";
   if (filter === "voucher") return "Laporan Voucher";
   return "Laporan Semua Produk";
 };
@@ -200,7 +215,7 @@ const buildCategoryLabel = (item: ReportTransaction["items"][number]) => {
   return "-";
 };
 
-const buildGroupedRows = (transactions: ReportTransaction[]) => {
+const buildGroupedRows = (transactions: ReportTransaction[], productFilter: ReportProductFilter) => {
   const map = new Map<
     string,
     {
@@ -236,6 +251,8 @@ const buildGroupedRows = (transactions: ReportTransaction[]) => {
     const group = map.get(dateKey)!;
 
     transaction.items.forEach((item, index) => {
+      if (!shouldIncludeItemByFilter(item, productFilter)) return;
+
       const quantity = Number(item.quantity || 1);
       const revenue = Number(item.sellPrice || 0) * quantity;
       const cost = Number(item.costPrice || 0) * quantity;
@@ -264,7 +281,9 @@ const buildGroupedRows = (transactions: ReportTransaction[]) => {
     });
   });
 
-  return Array.from(map.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  return Array.from(map.values())
+    .filter((group) => group.rows.length > 0)
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
 };
 
 const buildPulsaRows = (transactions: ReportTransaction[]) => {
@@ -480,9 +499,45 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
   );
 }
 
+const getLocalDateKey = (value: string | Date) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return format(date, "yyyy-MM-dd");
+};
+
+const filterTransactionsByDateRange = (
+  transactions: ReportTransaction[],
+  startDate: string,
+  endDate: string
+) => {
+  return transactions.filter((transaction) => {
+    const dateKey = getLocalDateKey(transaction.createdAt);
+    return Boolean(dateKey) && dateKey >= startDate && dateKey <= endDate;
+  });
+};
+
+const summarizeTransactions = (transactions: ReportTransaction[]) => {
+  return transactions.reduce(
+    (acc, transaction) => {
+      acc.totalRevenue += Number(transaction.totalAmount || 0);
+      acc.totalCost += Number(transaction.totalCost || 0);
+      acc.totalProfit += Number(transaction.profit || 0);
+      acc.transactionCount += 1;
+      return acc;
+    },
+    {
+      totalRevenue: 0,
+      totalCost: 0,
+      totalProfit: 0,
+      transactionCount: 0,
+    }
+  );
+};
+
 export default function LaporanKeuanganPage() {
   const { status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [transactions, setTransactions] = useState<ReportTransaction[]>([]);
@@ -494,42 +549,70 @@ export default function LaporanKeuanganPage() {
   const [monthlyCost, setMonthlyCost] = useState(0);
   const [todayProfit, setTodayProfit] = useState(0);
   const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
+  const inFlightKeyRef = useRef<string | null>(null);
+
+  const fixedFilter: ReportProductFilter | null =
+    pathname === "/laporan/hp"
+      ? "phone"
+      : pathname === "/laporan/produk-lain"
+        ? "accessory"
+        : pathname === "/laporan/pulsa"
+          ? "pulsa"
+          : null;
+
+  const effectiveFilter = fixedFilter ?? productFilter;
 
   useEffect(() => {
+    if (fixedFilter) {
+      setProductFilter(fixedFilter);
+      return;
+    }
+
     const category = searchParams.get("category");
     if (category === "HANDPHONE") setProductFilter("phone");
     if (category === "PRODUK_LAIN") setProductFilter("accessory");
     if (category === "PULSA") setProductFilter("pulsa");
-  }, [searchParams]);
+  }, [fixedFilter, searchParams]);
 
   const fetchLaporan = useCallback(async () => {
+    const requestKey = `${effectiveFilter}|${startDate}|${endDate}`;
+    if (inFlightKeyRef.current === requestKey) return;
+    inFlightKeyRef.current = requestKey;
+
     setLoading(true);
     try {
       const categories: ReportCategory[] =
-        productFilter === "all"
+        effectiveFilter === "all"
           ? ["HANDPHONE", "PRODUK_LAIN", "PULSA"]
-          : [filterToCategory[productFilter]];
+          : [filterToCategory[effectiveFilter]];
 
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
       const today = format(new Date(), "yyyy-MM-dd");
+      const requestStart = [startDate, monthStart, today].sort()[0];
+      const requestEnd = [endDate, today].sort()[1];
 
-      const [tableReport, monthReport, todayReport] = await Promise.all([
-        fetchCategoryReport(startDate, endDate, categories),
-        fetchCategoryReport(monthStart, today, categories),
-        fetchCategoryReport(today, today, categories),
-      ]);
+      const report = await fetchCategoryReport(requestStart, requestEnd, categories);
+      const allTransactions = report.transactions || [];
+      const tableTransactions = filterTransactionsByDateRange(allTransactions, startDate, endDate);
+      const monthTransactions = filterTransactionsByDateRange(allTransactions, monthStart, today);
+      const todayTransactions = filterTransactionsByDateRange(allTransactions, today, today);
+      const monthSummary = summarizeTransactions(monthTransactions);
+      const todaySummary = summarizeTransactions(todayTransactions);
 
-      setTransactions(tableReport.transactions);
-      setPulsaRows(buildPulsaRows(tableReport.transactions));
-      setMonthlyProfit(monthReport.summary.totalProfit);
-      setMonthlyCost(monthReport.summary.totalCost);
-      setTodayProfit(todayReport.summary.totalProfit);
+      setTransactions(tableTransactions);
+      setPulsaRows(buildPulsaRows(tableTransactions));
+      setMonthlyProfit(monthSummary.totalProfit);
+      setMonthlyCost(monthSummary.totalCost);
+      setTodayProfit(todaySummary.totalProfit);
     } catch (error) {
       console.error("Gagal mengambil laporan:", error);
     } finally {
+      if (inFlightKeyRef.current === requestKey) {
+        inFlightKeyRef.current = null;
+      }
       setLoading(false);
     }
-  }, [endDate, productFilter, startDate]);
+  }, [effectiveFilter, endDate, startDate]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -543,9 +626,9 @@ export default function LaporanKeuanganPage() {
   }, [fetchLaporan, router, status]);
 
   const exportToExcel = () => {
-    const groupedRows = buildGroupedRows(transactions);
+    const groupedRows = buildGroupedRows(transactions, effectiveFilter);
 
-    if (productFilter === "phone") {
+    if (effectiveFilter === "phone") {
       const aoa = buildPhoneRowsForExport(groupedRows);
       const worksheet = XLSX.utils.aoa_to_sheet(aoa);
       worksheet["!cols"] = [
@@ -583,7 +666,7 @@ export default function LaporanKeuanganPage() {
       return;
     }
 
-    if (productFilter === "pulsa") {
+    if (effectiveFilter === "pulsa") {
       const aoa = buildPulsaRowsForExport(pulsaRows);
       const worksheet = XLSX.utils.aoa_to_sheet(aoa);
       worksheet["!cols"] = [
@@ -636,10 +719,10 @@ export default function LaporanKeuanganPage() {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, worksheet, "Laporan");
-    XLSX.writeFile(wb, `Laporan_${normalizeFilterLabel(productFilter).replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    XLSX.writeFile(wb, `Laporan_${normalizeFilterLabel(effectiveFilter).replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
-  const groupedRows = buildGroupedRows(transactions);
+  const groupedRows = buildGroupedRows(transactions, effectiveFilter);
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
   const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
 
@@ -691,7 +774,7 @@ export default function LaporanKeuanganPage() {
       </div>
 
       <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-600">Tanggal Mulai</label>
             <input
@@ -710,20 +793,6 @@ export default function LaporanKeuanganPage() {
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
             />
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-600">Kategori</label>
-            <select
-              value={productFilter}
-              onChange={(e) => setProductFilter(e.target.value as ReportProductFilter)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
-            >
-              <option value="all">Semua Produk</option>
-              <option value="phone">HP</option>
-              <option value="accessory">Aksesoris</option>
-              <option value="voucher">Voucher</option>
-              <option value="pulsa">Pulsa</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -732,7 +801,7 @@ export default function LaporanKeuanganPage() {
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Detail Transaksi</h2>
             <p className="mt-1 text-sm text-slate-500">
-              {normalizeCategoryTitle(productFilter)} • {productFilter === "pulsa" ? pulsaRows.length : totalItems} baris item
+              {normalizeCategoryTitle(effectiveFilter)} • {effectiveFilter === "pulsa" ? pulsaRows.length : totalItems} baris item
             </p>
           </div>
           <span className="text-sm font-medium text-slate-500">
@@ -749,7 +818,7 @@ export default function LaporanKeuanganPage() {
             <table className="w-full min-w-[1100px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50">
-                  {productFilter === "pulsa" ? (
+                {effectiveFilter === "pulsa" ? (
                     <>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Tanggal Jual</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">No Tujuan</th>
@@ -773,7 +842,7 @@ export default function LaporanKeuanganPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {productFilter === "pulsa"
+                {effectiveFilter === "pulsa"
                   ? groupedPulsaRows.map((group, index) => {
                       const theme = groupThemes[index % groupThemes.length];
                       return (
