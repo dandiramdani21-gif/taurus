@@ -199,6 +199,13 @@ export default function Sidebar() {
             </Link>
 
             <Link
+              href="/arsip"
+              className={`mt-2 flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${isActive("/arsip") ? "bg-white text-slate-950 shadow-lg shadow-black/10" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
+            >
+              <MenuIcon path="/archive" />
+              <span className="text-sm font-medium">Arsip</span>
+            </Link>
+            <Link
               href="/pengaturan"
               className={`mt-2 flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${isActive("/pengaturan") ? "bg-white text-slate-950 shadow-lg shadow-black/10" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
             >

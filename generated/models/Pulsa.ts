@@ -52,6 +52,7 @@ export type PulsaMinAggregateOutputType = {
   note: string | null
   image: string | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +69,7 @@ export type PulsaMaxAggregateOutputType = {
   note: string | null
   image: string | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -84,6 +86,7 @@ export type PulsaCountAggregateOutputType = {
   note: number
   image: number
   category: number
+  deleted: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -116,6 +119,7 @@ export type PulsaMinAggregateInputType = {
   note?: true
   image?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -132,6 +136,7 @@ export type PulsaMaxAggregateInputType = {
   note?: true
   image?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -148,6 +153,7 @@ export type PulsaCountAggregateInputType = {
   note?: true
   image?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -251,6 +257,7 @@ export type PulsaGroupByOutputType = {
   note: string | null
   image: string | null
   category: $Enums.ProductCategory
+  deleted: boolean
   createdAt: Date
   updatedAt: Date
   _count: PulsaCountAggregateOutputType | null
@@ -290,6 +297,7 @@ export type PulsaWhereInput = {
   note?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   category?: Prisma.EnumProductCategoryFilter<"Pulsa"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Pulsa"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -307,6 +315,7 @@ export type PulsaOrderByWithRelationInput = {
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   transactionItems?: Prisma.TransactionItemOrderByRelationAggregateInput
@@ -327,6 +336,7 @@ export type PulsaWhereUniqueInput = Prisma.AtLeast<{
   note?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableFilter<"Pulsa"> | string | null
   category?: Prisma.EnumProductCategoryFilter<"Pulsa"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Pulsa"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pulsa"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -344,6 +354,7 @@ export type PulsaOrderByWithAggregationInput = {
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PulsaCountOrderByAggregateInput
@@ -368,6 +379,7 @@ export type PulsaScalarWhereWithAggregatesInput = {
   note?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
   image?: Prisma.StringNullableWithAggregatesFilter<"Pulsa"> | string | null
   category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Pulsa"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolWithAggregatesFilter<"Pulsa"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Pulsa"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Pulsa"> | Date | string
 }
@@ -384,6 +396,7 @@ export type PulsaCreateInput = {
   note?: string | null
   image?: string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutPulsaInput
@@ -401,6 +414,7 @@ export type PulsaUncheckedCreateInput = {
   note?: string | null
   image?: string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutPulsaInput
@@ -418,6 +432,7 @@ export type PulsaUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutPulsaNestedInput
@@ -435,6 +450,7 @@ export type PulsaUncheckedUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutPulsaNestedInput
@@ -452,6 +468,7 @@ export type PulsaCreateManyInput = {
   note?: string | null
   image?: string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -468,6 +485,7 @@ export type PulsaUpdateManyMutationInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -484,6 +502,7 @@ export type PulsaUncheckedUpdateManyInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -500,6 +519,7 @@ export type PulsaCountOrderByAggregateInput = {
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -523,6 +543,7 @@ export type PulsaMaxOrderByAggregateInput = {
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -539,6 +560,7 @@ export type PulsaMinOrderByAggregateInput = {
   note?: Prisma.SortOrder
   image?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -591,6 +613,7 @@ export type PulsaCreateWithoutTransactionItemsInput = {
   note?: string | null
   image?: string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -607,6 +630,7 @@ export type PulsaUncheckedCreateWithoutTransactionItemsInput = {
   note?: string | null
   image?: string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -639,6 +663,7 @@ export type PulsaUpdateWithoutTransactionItemsInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -655,6 +680,7 @@ export type PulsaUncheckedUpdateWithoutTransactionItemsInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -702,6 +728,7 @@ export type PulsaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   note?: boolean
   image?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   transactionItems?: boolean | Prisma.Pulsa$transactionItemsArgs<ExtArgs>
@@ -720,6 +747,7 @@ export type PulsaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   note?: boolean
   image?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["pulsa"]>
@@ -736,6 +764,7 @@ export type PulsaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   note?: boolean
   image?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["pulsa"]>
@@ -752,11 +781,12 @@ export type PulsaSelectScalar = {
   note?: boolean
   image?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PulsaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "denomination" | "costPrice" | "sellPrice" | "balance" | "destinationNumber" | "description" | "note" | "image" | "category" | "createdAt" | "updatedAt", ExtArgs["result"]["pulsa"]>
+export type PulsaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "denomination" | "costPrice" | "sellPrice" | "balance" | "destinationNumber" | "description" | "note" | "image" | "category" | "deleted" | "createdAt" | "updatedAt", ExtArgs["result"]["pulsa"]>
 export type PulsaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Pulsa$transactionItemsArgs<ExtArgs>
   _count?: boolean | Prisma.PulsaCountOutputTypeDefaultArgs<ExtArgs>
@@ -781,6 +811,7 @@ export type $PulsaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     note: string | null
     image: string | null
     category: $Enums.ProductCategory
+    deleted: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["pulsa"]>
@@ -1218,6 +1249,7 @@ export interface PulsaFieldRefs {
   readonly note: Prisma.FieldRef<"Pulsa", 'String'>
   readonly image: Prisma.FieldRef<"Pulsa", 'String'>
   readonly category: Prisma.FieldRef<"Pulsa", 'ProductCategory'>
+  readonly deleted: Prisma.FieldRef<"Pulsa", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Pulsa", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Pulsa", 'DateTime'>
 }

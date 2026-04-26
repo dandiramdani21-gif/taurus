@@ -64,6 +64,7 @@ model Phone {
 
   stock Int @default(1)
   isHidden Boolean @default(false)
+  deleted Boolean @default(false)
   
   image String?
 
@@ -97,6 +98,7 @@ model Accessory {
   image     String?
   entryDate DateTime @default(now())
   category  ProductCategory @default(PRODUK_LAIN)
+  deleted   Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -116,6 +118,7 @@ model Voucher {
   entryDate DateTime @default(now())
   expiredAt DateTime? // tanggal expired (opsional)
   category  ProductCategory @default(PRODUK_LAIN)
+  deleted   Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,6 +139,7 @@ model Pulsa {
   note        String?  // TAGOG, DIGIPOS, PROMO, REGULER
   image       String?
   category    ProductCategory @default(PULSA)
+  deleted     Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -146,9 +150,11 @@ model Pulsa {
 // ================= TRANSACTION =================
 model Transaction {
   id     String            @id @default(cuid())
+  invoiceNumber String?    @unique
   type   TransactionType
   status TransactionStatus @default(PAID)
   category ProductCategory @default(HANDPHONE)
+  deleted Boolean @default(false)
 
   totalAmount Int
   totalCost   Int

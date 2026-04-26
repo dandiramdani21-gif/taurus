@@ -69,10 +69,15 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const nextStatusRaw = String(body?.status || "");
+    const nextStatusRaw = body?.status ? String(body.status) : null;
+    const nextDeletedRaw = typeof body?.deleted === "boolean" ? body.deleted : null;
 
-    if (!isValidStatus(nextStatusRaw)) {
+    if (nextStatusRaw !== null && !isValidStatus(nextStatusRaw)) {
       return NextResponse.json({ error: "Status tidak valid" }, { status: 400 });
+    }
+
+    if (nextStatusRaw === null && nextDeletedRaw === null) {
+      return NextResponse.json({ error: "Tidak ada perubahan yang dikirim" }, { status: 400 });
     }
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -88,13 +93,14 @@ export async function PATCH(
       }
 
       const prevStatus = transaction.status;
-      const nextStatus = nextStatusRaw as TransactionStatus;
-      if (prevStatus === nextStatus) {
+      const nextStatus = nextStatusRaw as TransactionStatus | null;
+      const nextDeleted = nextDeletedRaw;
+      if ((nextStatus === null || prevStatus === nextStatus) && (nextDeleted === null || transaction.deleted === nextDeleted)) {
         return transaction;
       }
 
-      const shouldRevertSale = prevStatus === "PAID" && nextStatus === "REFUND";
-      const shouldApplySale = prevStatus === "REFUND" && nextStatus === "PAID";
+      const shouldRevertSale = nextStatus === "REFUND" && prevStatus === "PAID";
+      const shouldApplySale = nextStatus === "PAID" && prevStatus === "REFUND";
 
       if (shouldRevertSale || shouldApplySale) {
         for (const item of transaction.items) {
@@ -149,7 +155,8 @@ export async function PATCH(
       return tx.transaction.update({
         where: { id },
         data: {
-          status: nextStatus,
+          ...(nextStatus ? { status: nextStatus } : {}),
+          ...(nextDeleted !== null ? { deleted: nextDeleted } : {}),
         },
         include: {
           items: true,

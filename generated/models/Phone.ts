@@ -48,6 +48,7 @@ export type PhoneMinAggregateOutputType = {
   entryDate: Date | null
   stock: number | null
   isHidden: boolean | null
+  deleted: boolean | null
   image: string | null
   createdAt: Date | null
 }
@@ -64,6 +65,7 @@ export type PhoneMaxAggregateOutputType = {
   entryDate: Date | null
   stock: number | null
   isHidden: boolean | null
+  deleted: boolean | null
   image: string | null
   createdAt: Date | null
 }
@@ -80,6 +82,7 @@ export type PhoneCountAggregateOutputType = {
   entryDate: number
   stock: number
   isHidden: number
+  deleted: number
   image: number
   createdAt: number
   _all: number
@@ -108,6 +111,7 @@ export type PhoneMinAggregateInputType = {
   entryDate?: true
   stock?: true
   isHidden?: true
+  deleted?: true
   image?: true
   createdAt?: true
 }
@@ -124,6 +128,7 @@ export type PhoneMaxAggregateInputType = {
   entryDate?: true
   stock?: true
   isHidden?: true
+  deleted?: true
   image?: true
   createdAt?: true
 }
@@ -140,6 +145,7 @@ export type PhoneCountAggregateInputType = {
   entryDate?: true
   stock?: true
   isHidden?: true
+  deleted?: true
   image?: true
   createdAt?: true
   _all?: true
@@ -243,6 +249,7 @@ export type PhoneGroupByOutputType = {
   entryDate: Date
   stock: number
   isHidden: boolean
+  deleted: boolean
   image: string | null
   createdAt: Date
   _count: PhoneCountAggregateOutputType | null
@@ -282,6 +289,7 @@ export type PhoneWhereInput = {
   entryDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
   stock?: Prisma.IntFilter<"Phone"> | number
   isHidden?: Prisma.BoolFilter<"Phone"> | boolean
+  deleted?: Prisma.BoolFilter<"Phone"> | boolean
   image?: Prisma.StringNullableFilter<"Phone"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Phone"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -300,6 +308,7 @@ export type PhoneOrderByWithRelationInput = {
   entryDate?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   isHidden?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   transactionItems?: Prisma.TransactionItemOrderByRelationAggregateInput
@@ -321,6 +330,7 @@ export type PhoneWhereUniqueInput = Prisma.AtLeast<{
   entryDate?: Prisma.DateTimeFilter<"Phone"> | Date | string
   stock?: Prisma.IntFilter<"Phone"> | number
   isHidden?: Prisma.BoolFilter<"Phone"> | boolean
+  deleted?: Prisma.BoolFilter<"Phone"> | boolean
   image?: Prisma.StringNullableFilter<"Phone"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Phone"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -339,6 +349,7 @@ export type PhoneOrderByWithAggregationInput = {
   entryDate?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   isHidden?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.PhoneCountOrderByAggregateInput
@@ -363,6 +374,7 @@ export type PhoneScalarWhereWithAggregatesInput = {
   entryDate?: Prisma.DateTimeWithAggregatesFilter<"Phone"> | Date | string
   stock?: Prisma.IntWithAggregatesFilter<"Phone"> | number
   isHidden?: Prisma.BoolWithAggregatesFilter<"Phone"> | boolean
+  deleted?: Prisma.BoolWithAggregatesFilter<"Phone"> | boolean
   image?: Prisma.StringNullableWithAggregatesFilter<"Phone"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Phone"> | Date | string
 }
@@ -379,6 +391,7 @@ export type PhoneCreateInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutPhoneInput
@@ -397,6 +410,7 @@ export type PhoneUncheckedCreateInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutPhoneInput
@@ -415,6 +429,7 @@ export type PhoneUpdateInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutPhoneNestedInput
@@ -433,6 +448,7 @@ export type PhoneUncheckedUpdateInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutPhoneNestedInput
@@ -451,6 +467,7 @@ export type PhoneCreateManyInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
 }
@@ -467,6 +484,7 @@ export type PhoneUpdateManyMutationInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -483,6 +501,7 @@ export type PhoneUncheckedUpdateManyInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -499,6 +518,7 @@ export type PhoneCountOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   isHidden?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -520,6 +540,7 @@ export type PhoneMaxOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   isHidden?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -536,6 +557,7 @@ export type PhoneMinOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   isHidden?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   image?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -617,6 +639,7 @@ export type PhoneCreateWithoutMetadataInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutPhoneInput
@@ -634,6 +657,7 @@ export type PhoneUncheckedCreateWithoutMetadataInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutPhoneInput
@@ -667,6 +691,7 @@ export type PhoneUpdateWithoutMetadataInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutPhoneNestedInput
@@ -684,6 +709,7 @@ export type PhoneUncheckedUpdateWithoutMetadataInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutPhoneNestedInput
@@ -701,6 +727,7 @@ export type PhoneCreateWithoutTransactionItemsInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   metadata?: Prisma.PhoneMetadataCreateNestedManyWithoutPhoneInput
@@ -718,6 +745,7 @@ export type PhoneUncheckedCreateWithoutTransactionItemsInput = {
   entryDate?: Date | string
   stock?: number
   isHidden?: boolean
+  deleted?: boolean
   image?: string | null
   createdAt?: Date | string
   metadata?: Prisma.PhoneMetadataUncheckedCreateNestedManyWithoutPhoneInput
@@ -751,6 +779,7 @@ export type PhoneUpdateWithoutTransactionItemsInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   metadata?: Prisma.PhoneMetadataUpdateManyWithoutPhoneNestedInput
@@ -768,6 +797,7 @@ export type PhoneUncheckedUpdateWithoutTransactionItemsInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   isHidden?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   metadata?: Prisma.PhoneMetadataUncheckedUpdateManyWithoutPhoneNestedInput
@@ -825,6 +855,7 @@ export type PhoneSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   entryDate?: boolean
   stock?: boolean
   isHidden?: boolean
+  deleted?: boolean
   image?: boolean
   createdAt?: boolean
   transactionItems?: boolean | Prisma.Phone$transactionItemsArgs<ExtArgs>
@@ -844,6 +875,7 @@ export type PhoneSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   entryDate?: boolean
   stock?: boolean
   isHidden?: boolean
+  deleted?: boolean
   image?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["phone"]>
@@ -860,6 +892,7 @@ export type PhoneSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   entryDate?: boolean
   stock?: boolean
   isHidden?: boolean
+  deleted?: boolean
   image?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["phone"]>
@@ -876,11 +909,12 @@ export type PhoneSelectScalar = {
   entryDate?: boolean
   stock?: boolean
   isHidden?: boolean
+  deleted?: boolean
   image?: boolean
   createdAt?: boolean
 }
 
-export type PhoneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "brand" | "type" | "imei" | "color" | "category" | "purchasePrice" | "purchaseDate" | "entryDate" | "stock" | "isHidden" | "image" | "createdAt", ExtArgs["result"]["phone"]>
+export type PhoneOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "brand" | "type" | "imei" | "color" | "category" | "purchasePrice" | "purchaseDate" | "entryDate" | "stock" | "isHidden" | "deleted" | "image" | "createdAt", ExtArgs["result"]["phone"]>
 export type PhoneInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Phone$transactionItemsArgs<ExtArgs>
   metadata?: boolean | Prisma.Phone$metadataArgs<ExtArgs>
@@ -907,6 +941,7 @@ export type $PhonePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     entryDate: Date
     stock: number
     isHidden: boolean
+    deleted: boolean
     image: string | null
     createdAt: Date
   }, ExtArgs["result"]["phone"]>
@@ -1345,6 +1380,7 @@ export interface PhoneFieldRefs {
   readonly entryDate: Prisma.FieldRef<"Phone", 'DateTime'>
   readonly stock: Prisma.FieldRef<"Phone", 'Int'>
   readonly isHidden: Prisma.FieldRef<"Phone", 'Boolean'>
+  readonly deleted: Prisma.FieldRef<"Phone", 'Boolean'>
   readonly image: Prisma.FieldRef<"Phone", 'String'>
   readonly createdAt: Prisma.FieldRef<"Phone", 'DateTime'>
 }

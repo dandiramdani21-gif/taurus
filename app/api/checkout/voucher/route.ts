@@ -6,12 +6,9 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { notifyLowStockTelegram, notifyTelegram, sendTelegramDocument } from "@/lib/notifications";
 import { getValidatedSessionUser } from "@/lib/session-user";
 import { buildInvoicePdfBuffer, type InvoicePdfItem } from "@/lib/invoice-pdf";
+import { generateInvoiceNumber } from "@/lib/invoice-number";
 
 const LOW_STOCK_THRESHOLD = 3;
-
-function formatInvoiceNumber(transactionId: string) {
-  return `INV-${transactionId.slice(-8).toUpperCase()}`;
-}
 
 function formatMoney(value: number) {
   return `Rp ${Math.round(value || 0).toLocaleString("id-ID")}`;
@@ -42,6 +39,7 @@ export async function POST(request: Request) {
       // 1. Buat Transaction record
       const newTransaction = await tx.transaction.create({
         data: {
+          invoiceNumber: persistedInvoiceNumber,
           type: "SALE",
           category: "PRODUK_LAIN",
           status: "PAID",
@@ -107,7 +105,7 @@ export async function POST(request: Request) {
       return { transaction: newTransaction, invoiceItems, lowStockAlertItems };
     });
 
-    const invoiceNumber = formatInvoiceNumber(transaction.transaction.id);
+    const invoiceNumber = transaction.transaction.invoiceNumber || persistedInvoiceNumber;
     const invoicePdf = buildInvoicePdfBuffer({
       invoiceNumber,
       invoiceDate: new Date(transaction.transaction.createdAt).toLocaleDateString("id-ID", {
@@ -160,7 +158,7 @@ export async function POST(request: Request) {
       }),
       notifyTelegram({
         title: "Checkout Voucher",
-        message: `Invoice: ${transaction.transaction.id}\nTotal: Rp ${Number(totalAmount).toLocaleString("id-ID")}`,
+        message: `Invoice: ${invoiceNumber}\nTotal: Rp ${Number(totalAmount).toLocaleString("id-ID")}`,
       }),
       notifyLowStockTelegram({
         title: "Stok Menipis - Voucher",
@@ -175,6 +173,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       id: transaction.transaction.id,
+      invoiceNumber,
       message: "Checkout voucher berhasil",
     });
 
@@ -190,3 +189,4 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
+    const persistedInvoiceNumber = generateInvoiceNumber("PRODUK_LAIN");

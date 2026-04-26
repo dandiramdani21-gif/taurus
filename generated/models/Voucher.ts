@@ -49,6 +49,7 @@ export type VoucherMinAggregateOutputType = {
   entryDate: Date | null
   expiredAt: Date | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -64,6 +65,7 @@ export type VoucherMaxAggregateOutputType = {
   entryDate: Date | null
   expiredAt: Date | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -79,6 +81,7 @@ export type VoucherCountAggregateOutputType = {
   entryDate: number
   expiredAt: number
   category: number
+  deleted: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -108,6 +111,7 @@ export type VoucherMinAggregateInputType = {
   entryDate?: true
   expiredAt?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -123,6 +127,7 @@ export type VoucherMaxAggregateInputType = {
   entryDate?: true
   expiredAt?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -138,6 +143,7 @@ export type VoucherCountAggregateInputType = {
   entryDate?: true
   expiredAt?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -240,6 +246,7 @@ export type VoucherGroupByOutputType = {
   entryDate: Date
   expiredAt: Date | null
   category: $Enums.ProductCategory
+  deleted: boolean
   createdAt: Date
   updatedAt: Date
   _count: VoucherCountAggregateOutputType | null
@@ -278,6 +285,7 @@ export type VoucherWhereInput = {
   entryDate?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   expiredAt?: Prisma.DateTimeNullableFilter<"Voucher"> | Date | string | null
   category?: Prisma.EnumProductCategoryFilter<"Voucher"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Voucher"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -294,6 +302,7 @@ export type VoucherOrderByWithRelationInput = {
   entryDate?: Prisma.SortOrder
   expiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   transactionItems?: Prisma.TransactionItemOrderByRelationAggregateInput
@@ -313,6 +322,7 @@ export type VoucherWhereUniqueInput = Prisma.AtLeast<{
   entryDate?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   expiredAt?: Prisma.DateTimeNullableFilter<"Voucher"> | Date | string | null
   category?: Prisma.EnumProductCategoryFilter<"Voucher"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Voucher"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Voucher"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -329,6 +339,7 @@ export type VoucherOrderByWithAggregationInput = {
   entryDate?: Prisma.SortOrder
   expiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.VoucherCountOrderByAggregateInput
@@ -352,6 +363,7 @@ export type VoucherScalarWhereWithAggregatesInput = {
   entryDate?: Prisma.DateTimeWithAggregatesFilter<"Voucher"> | Date | string
   expiredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Voucher"> | Date | string | null
   category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Voucher"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolWithAggregatesFilter<"Voucher"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Voucher"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Voucher"> | Date | string
 }
@@ -367,6 +379,7 @@ export type VoucherCreateInput = {
   entryDate?: Date | string
   expiredAt?: Date | string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutVoucherInput
@@ -383,6 +396,7 @@ export type VoucherUncheckedCreateInput = {
   entryDate?: Date | string
   expiredAt?: Date | string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutVoucherInput
@@ -399,6 +413,7 @@ export type VoucherUpdateInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutVoucherNestedInput
@@ -415,6 +430,7 @@ export type VoucherUncheckedUpdateInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutVoucherNestedInput
@@ -431,6 +447,7 @@ export type VoucherCreateManyInput = {
   entryDate?: Date | string
   expiredAt?: Date | string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -446,6 +463,7 @@ export type VoucherUpdateManyMutationInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -461,6 +479,7 @@ export type VoucherUncheckedUpdateManyInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -476,6 +495,7 @@ export type VoucherCountOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   expiredAt?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -497,6 +517,7 @@ export type VoucherMaxOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   expiredAt?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -512,6 +533,7 @@ export type VoucherMinOrderByAggregateInput = {
   entryDate?: Prisma.SortOrder
   expiredAt?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -558,6 +580,7 @@ export type VoucherCreateWithoutTransactionItemsInput = {
   entryDate?: Date | string
   expiredAt?: Date | string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -573,6 +596,7 @@ export type VoucherUncheckedCreateWithoutTransactionItemsInput = {
   entryDate?: Date | string
   expiredAt?: Date | string | null
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -604,6 +628,7 @@ export type VoucherUpdateWithoutTransactionItemsInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -619,6 +644,7 @@ export type VoucherUncheckedUpdateWithoutTransactionItemsInput = {
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -665,6 +691,7 @@ export type VoucherSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   entryDate?: boolean
   expiredAt?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   transactionItems?: boolean | Prisma.Voucher$transactionItemsArgs<ExtArgs>
@@ -682,6 +709,7 @@ export type VoucherSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   entryDate?: boolean
   expiredAt?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["voucher"]>
@@ -697,6 +725,7 @@ export type VoucherSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   entryDate?: boolean
   expiredAt?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["voucher"]>
@@ -712,11 +741,12 @@ export type VoucherSelectScalar = {
   entryDate?: boolean
   expiredAt?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type VoucherOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "costPrice" | "sellPrice" | "stock" | "image" | "entryDate" | "expiredAt" | "category" | "createdAt" | "updatedAt", ExtArgs["result"]["voucher"]>
+export type VoucherOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "costPrice" | "sellPrice" | "stock" | "image" | "entryDate" | "expiredAt" | "category" | "deleted" | "createdAt" | "updatedAt", ExtArgs["result"]["voucher"]>
 export type VoucherInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Voucher$transactionItemsArgs<ExtArgs>
   _count?: boolean | Prisma.VoucherCountOutputTypeDefaultArgs<ExtArgs>
@@ -740,6 +770,7 @@ export type $VoucherPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     entryDate: Date
     expiredAt: Date | null
     category: $Enums.ProductCategory
+    deleted: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["voucher"]>
@@ -1176,6 +1207,7 @@ export interface VoucherFieldRefs {
   readonly entryDate: Prisma.FieldRef<"Voucher", 'DateTime'>
   readonly expiredAt: Prisma.FieldRef<"Voucher", 'DateTime'>
   readonly category: Prisma.FieldRef<"Voucher", 'ProductCategory'>
+  readonly deleted: Prisma.FieldRef<"Voucher", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Voucher", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Voucher", 'DateTime'>
 }

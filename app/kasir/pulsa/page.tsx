@@ -11,6 +11,7 @@ export default function KasirPulsaPage() {
   const [destinationNumber, setDestinationNumber] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [balance, setBalance] = useState("");
+  const [balanceDraft, setBalanceDraft] = useState("");
   const [sellPrice, setSellPrice] = useState("");
   const [description, setDescription] = useState("");
   const [note, setNote] = useState("");
@@ -35,6 +36,7 @@ export default function KasirPulsaPage() {
         const data = await res.json();
         if (data.balance !== null && data.balance !== undefined) {
           setBalance(String(data.balance));
+          setBalanceDraft(String(data.balance));
         }
       } catch (error) {
         console.error("Error fetching last pulsa balance:", error);
@@ -45,6 +47,17 @@ export default function KasirPulsaPage() {
 
     fetchLastBalance();
   }, [status]);
+
+
+  const commitBalanceChange = () => {
+    if (balanceDraft === balance) return;
+    const confirmed = window.confirm("Anda yakin ingin mengubah saldo?");
+    if (!confirmed) {
+      setBalanceDraft(balance);
+      return;
+    }
+    setBalance(balanceDraft);
+  };
 
   const profit = Math.max(0, Number(sellPrice || 0) - Number(costPrice || 0));
   const currentBalance = balance === "" ? null : Number(balance);
@@ -94,8 +107,10 @@ export default function KasirPulsaPage() {
 
       if (data.balance !== null && data.balance !== undefined) {
         setBalance(String(data.balance));
+        setBalanceDraft(String(data.balance));
       } else if (remainingBalance !== null) {
         setBalance(String(remainingBalance));
+        setBalanceDraft(String(remainingBalance));
       }
       setDestinationNumber("");
       setCostPrice("");
@@ -129,7 +144,7 @@ export default function KasirPulsaPage() {
       <form onSubmit={handleSubmit} className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl space-y-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-semibold text-slate-600">No Tujuan</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">No Tujuan*</label>
             <input
               type="number"
               value={destinationNumber}
@@ -143,15 +158,23 @@ export default function KasirPulsaPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo Anda</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo Anda*</label>
             <input
               type="number"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
+              value={balanceDraft}
+              onChange={(e) => setBalanceDraft(e.target.value)}
+              onBlur={commitBalanceChange}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
               placeholder={loadingBalance ? "Memuat saldo terakhir..." : "Gunakan saldo terakhir"}
               min="0"
             />
+            {/* <button
+              type="button"
+              onClick={commitBalanceChange}
+              className="mt-2 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Simpan Perubahan Saldo
+            </button> */}
             <p className="mt-1 text-xs text-slate-500">
               {loadingBalance
                 ? "Mengambil sisa saldo terakhir..."
@@ -203,6 +226,7 @@ export default function KasirPulsaPage() {
           <select
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            required
             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
           >
             <option value="">Pilih keterangan</option>
@@ -243,4 +267,6 @@ export default function KasirPulsaPage() {
       </form>
     </div>
   );
+  
 }
+

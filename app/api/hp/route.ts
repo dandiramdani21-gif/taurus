@@ -70,9 +70,14 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Build where clause for search
+    const deletedParam = searchParams.get("deleted");
+    const deleted =
+      deletedParam === "true" ? true : deletedParam === "false" || deletedParam === null ? false : undefined;
+
     const where = search
       ? {
-          isHidden: false,
+          ...(deleted === undefined ? {} : { deleted }),
+          ...(deleted ? {} : { isHidden: false }),
           OR: [
             { brand: { contains: search, mode: "insensitive" as const } },
             { type: { contains: search, mode: "insensitive" as const } },
@@ -91,7 +96,10 @@ export async function GET(request: Request) {
           ],
 
         }
-      : { isHidden: false };
+      : {
+          ...(deleted === undefined ? {} : { deleted }),
+          ...(deleted ? {} : { isHidden: false }),
+        };
 
     const [phones, total] = await Promise.all([
       prisma.phone.findMany({
@@ -191,7 +199,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, brand, type, imei, color, purchasePrice, purchaseDate, stock, image, metadata, entryDate } = body;
+    const { id, brand, type, imei, color, purchasePrice, purchaseDate, stock, image, metadata, entryDate, deleted, isHidden } = body;
     const existingPhone = await prisma.phone.findUnique({
       where: { id },
       select: { stock: true, brand: true, type: true, purchasePrice: true },
@@ -209,6 +217,8 @@ export async function PUT(request: Request) {
     if (stock !== undefined) updateData.stock = parseInt(stock);
     if (image !== undefined) updateData.image = image;
     if (entryDate !== undefined) updateData.entryDate = parseDateInput(entryDate);
+    if (deleted !== undefined) updateData.deleted = Boolean(deleted);
+    if (isHidden !== undefined) updateData.isHidden = Boolean(isHidden);
 
     const updatedPhone = await prisma.phone.update({
       where: { id },
@@ -273,11 +283,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
 
-    await prisma.phone.delete({
+    await prisma.phone.update({
       where: { id },
+      data: { deleted: true, isHidden: true },
     });
 
-    return NextResponse.json({ message: "HP deleted successfully" });
+    return NextResponse.json({ message: "HP berhasil diarsipkan" });
   } catch (error) {
     console.error("Error deleting phone:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

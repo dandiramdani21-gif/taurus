@@ -9,6 +9,7 @@ type InvoiceCategory = "ALL" | "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
 
 interface Transaction {
   id: string;
+  invoiceNumber?: string | null;
   createdAt: string;
   totalAmount: number;
   totalCost: number;
@@ -46,10 +47,13 @@ export default function InvoicesPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [limit] = useState(15);
+  const [limit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
   const [category, setCategory] = useState<InvoiceCategory>(() => {
     const initialCategory = searchParams.get("category") as InvoiceCategory | null;
     return initialCategory && categoryOptions.some((option) => option.value === initialCategory)
@@ -79,6 +83,9 @@ export default function InvoicesPage() {
         if (category !== "ALL") {
           params.set("category", category);
         }
+        if (startDate) params.set("startDate", startDate);
+        if (endDate) params.set("endDate", endDate);
+        params.set("deleted", showDeleted ? "true" : "false");
 
         const res = await fetch(`/api/transactions?${params.toString()}`);
         const data = await res.json();
@@ -94,10 +101,36 @@ export default function InvoicesPage() {
     };
 
     fetchInvoices();
-  }, [status, page, limit, search, category]);
+  }, [status, page, limit, search, category, startDate, endDate, showDeleted]);
+
+  const updateDeletedState = async (id: string, deleted: boolean) => {
+    const res = await fetch(`/api/transactions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deleted }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "Gagal mengubah arsip transaksi");
+      return;
+    }
+    setTransactions((prev) => prev.filter((transaction) => transaction.id !== id));
+  };
 
   const handleDownload = (id: string) => {
     window.open(`/invoice/${id}?print=1`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDownloadZip = () => {
+    const params = new URLSearchParams({
+      search,
+      type: "SALE",
+      deleted: showDeleted ? "true" : "false",
+    });
+    if (category !== "ALL") params.set("category", category);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    window.open(`/api/transactions/export-zip?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -128,6 +161,45 @@ export default function InvoicesPage() {
       </section>
 
       <div className="flex flex-wrap gap-2">
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => {
+            setStartDate(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-700"
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => {
+            setEndDate(e.target.value);
+            setPage(1);
+          }}
+          className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-sm text-slate-700"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setShowDeleted((current) => !current);
+            setPage(1);
+          }}
+          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            showDeleted
+              ? "bg-rose-600 text-white"
+              : "border border-white/70 bg-white/80 text-slate-700 hover:border-violet-300 hover:bg-violet-50"
+          }`}
+        >
+          {showDeleted ? "Lihat Aktif" : "Lihat Arsip"}
+        </button>
+        <button
+          type="button"
+          onClick={handleDownloadZip}
+          className="rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white"
+        >
+          Download All PDF (ZIP)
+        </button>
         {categoryOptions.map((option) => (
           <button
             key={option.value}
@@ -178,7 +250,7 @@ export default function InvoicesPage() {
                 <tr key={transaction.id} className="border-t border-slate-100/80 hover:bg-violet-50/50 transition">
                   <td className="px-5 py-5 text-sm">
                     <div className="font-mono font-medium text-slate-900">
-                      INV-{transaction.id.slice(-8).toUpperCase()}
+                      {transaction.invoiceNumber || `INV-${transaction.id.slice(-8).toUpperCase()}`}
                     </div>
                     {transaction.note && <div className="mt-1 text-xs text-slate-500">{transaction.note}</div>}
                   </td>
@@ -230,6 +302,23 @@ export default function InvoicesPage() {
                       >
                         Download
                       </button>
+                      {showDeleted ? (
+                        <button
+                          type="button"
+                          onClick={() => updateDeletedState(transaction.id, false)}
+                          className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                        >
+                          Restore
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updateDeletedState(transaction.id, true)}
+                          className="inline-flex items-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-rose-700"
+                        >
+                          Arsipkan
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

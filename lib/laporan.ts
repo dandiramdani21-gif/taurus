@@ -19,12 +19,13 @@ export async function getCategoryLaporan({
   end.setHours(23, 59, 59, 999);
 
 const transactions = await prisma.transaction.findMany({
-  where: {
-    type: "SALE",
-    category,
-    createdAt: {
-      gte: start,
-      lte: end,
+    where: {
+      type: "SALE",
+      category,
+      deleted: false,
+      createdAt: {
+        gte: start,
+        lte: end,
     },
     ...(search
       ? {

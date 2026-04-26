@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -67,6 +69,7 @@ export default function KasirHpPage() {
 
   useEffect(() => {
     fetchProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, search]);
 
   const fetchProducts = async () => {
@@ -341,7 +344,7 @@ export default function KasirHpPage() {
             </div>
             <h1 className="text-3xl font-semibold sm:text-4xl">Kasir HP</h1>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-              Pilih aksesoris yang akan dijual
+              Pilih handphone yang akan dijual
             </p>
           </div>
 
@@ -554,13 +557,13 @@ export default function KasirHpPage() {
             {/* Title */}
             <div className="text-center px-6">
               <h2 className={`text-2xl font-bold ${checkoutModal.success ? 'text-green-600' : 'text-red-600'}`}>
-                {checkoutModal.success ? 'Payment Successful!' : 'Payment Failed'}
+                {checkoutModal.success ? 'Pembayaran Berhasil' : 'Payment Failed'}
               </h2>
 
               {/* Message */}
               <p className="text-gray-500 mt-3 leading-relaxed">
                 {checkoutModal.success
-                  ? `Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur amet labore.`
+                  ? `Terima kasih telah berbelanja di Taurus Cell.`
                   : checkoutModal.message
                 }
               </p>

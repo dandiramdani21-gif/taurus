@@ -22,6 +22,7 @@ interface TransactionItem {
 
 interface Transaction {
   id: string;
+  invoiceNumber?: string | null;
   totalAmount: number;
   totalCost: number;
   profit: number;
@@ -75,7 +76,7 @@ export default function InvoicePage() {
       const data = await res.json();
       setTransaction(data);
 
-      setInvoiceNumber(`INV-${data.id.slice(-8).toUpperCase()}`);
+      setInvoiceNumber(data.invoiceNumber || `INV-${data.id.slice(-8).toUpperCase()}`);
       setInvoiceDate(
         new Date(data.createdAt).toLocaleDateString("id-ID", {
           day: "numeric",

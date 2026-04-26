@@ -47,6 +47,9 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
+    const deletedParam = searchParams.get("deleted");
+    const deleted =
+      deletedParam === "true" ? true : deletedParam === "false" || deletedParam === null ? false : undefined;
 
     const skip = (page - 1) * limit;
 
@@ -54,6 +57,7 @@ export async function GET(request: Request) {
 
     const where = search
       ? {
+        ...(deleted === undefined ? {} : { deleted }),
 
         OR: [
           { code: { contains: search, mode: "insensitive" as const } },
@@ -71,7 +75,7 @@ export async function GET(request: Request) {
             : []),
         ],
       }
-      : {};
+      : { ...(deleted === undefined ? {} : { deleted }) };
       
 
     const [accessories, total] = await Promise.all([
@@ -163,7 +167,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, name, costPrice, sellPrice, stock, image, entryDate } = body;
+    const { id, name, costPrice, sellPrice, stock, image, entryDate, deleted } = body;
     const existingAccessory = await prisma.accessory.findUnique({
       where: { id },
       select: { stock: true, name: true, costPrice: true },
@@ -180,6 +184,7 @@ export async function PUT(request: Request) {
     if (stock !== undefined) updateData.stock = parseInt(stock);
     if (image !== undefined) updateData.image = image || null;
     if (entryDate !== undefined) updateData.entryDate = entryDate ? new Date(entryDate) : undefined;
+    if (deleted !== undefined) updateData.deleted = Boolean(deleted);
 
     const accessory = await prisma.accessory.update({
       where: { id },
@@ -227,20 +232,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID diperlukan" }, { status: 400 });
     }
 
-    // Optional: Cek apakah sudah dipakai di transaksi
-    const used = await prisma.transactionItem.count({
-      where: { accessoryId: id },
-    });
+    await prisma.accessory.update({ where: { id }, data: { deleted: true } });
 
-    if (used > 0) {
-      return NextResponse.json({
-        error: "Tidak bisa dihapus karena sudah digunakan di transaksi"
-      }, { status: 400 });
-    }
-
-    await prisma.accessory.delete({ where: { id } });
-
-    return NextResponse.json({ message: "Aksesoris berhasil dihapus" });
+    return NextResponse.json({ message: "Aksesoris berhasil diarsipkan" });
   } catch (error: unknown) {
     console.error("Error deleting accessory:", error);
     if (isPrismaNotFoundError(error)) {

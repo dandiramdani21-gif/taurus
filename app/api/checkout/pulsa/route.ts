@@ -5,10 +5,7 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import { notifyTelegram, sendTelegramDocument } from "@/lib/notifications";
 import { getValidatedSessionUser } from "@/lib/session-user";
 import { buildInvoicePdfBuffer } from "@/lib/invoice-pdf";
-
-function formatInvoiceNumber(transactionId: string) {
-  return `INV-${transactionId.slice(-8).toUpperCase()}`;
-}
+import { generateInvoiceNumber } from "@/lib/invoice-number";
 
 function formatMoney(value: number) {
   return `Rp ${Math.round(value || 0).toLocaleString("id-ID")}`;
@@ -82,9 +79,11 @@ export async function POST(request: Request) {
         ? Math.max(0, enteredBalance - usedCost)
         : null;
 
+    const persistedInvoiceNumber = generateInvoiceNumber("PULSA");
     const transaction = await prisma.$transaction(async (tx) => {
       const newTransaction = await tx.transaction.create({
         data: {
+          invoiceNumber: persistedInvoiceNumber,
           type: "SALE",
           status: "PAID",
           category: "PULSA",
@@ -126,7 +125,7 @@ export async function POST(request: Request) {
       return newTransaction;
     });
 
-    const invoiceNumber = formatInvoiceNumber(transaction.id);
+    const invoiceNumber = transaction.invoiceNumber || persistedInvoiceNumber;
     const invoicePdf = buildInvoicePdfBuffer({
       invoiceNumber,
       invoiceDate: new Date(transaction.createdAt).toLocaleDateString("id-ID", {
@@ -176,7 +175,7 @@ export async function POST(request: Request) {
       notifyTelegram({
         title: "Transaksi Pulsa",
         message: [
-          `Invoice: ${transaction.id}`,
+          `Invoice: ${invoiceNumber}`,
           `Total: Rp ${Number(totalAmount ?? sellPrice ?? 0).toLocaleString("id-ID")}`,
           destinationNumber ? `Tujuan: ${destinationNumber}` : null,
           description ? `Keterangan: ${description}` : null,
@@ -189,6 +188,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       id: transaction.id,
+      invoiceNumber,
       balance: remainingBalance,
       message: "Checkout pulsa berhasil",
     });

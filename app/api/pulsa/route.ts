@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import type { Prisma } from "@/generated/client";
 
 export async function GET(request: Request) {
   try {
@@ -15,17 +16,21 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
+    const deletedParam = searchParams.get("deleted");
+    const deleted =
+      deletedParam === "true" ? true : deletedParam === "false" || deletedParam === null ? false : undefined;
 
     const skip = (page - 1) * limit;
 
     const where = search
       ? {
+          ...(deleted === undefined ? {} : { deleted }),
           OR: [
             { code: { contains: search, mode: "insensitive" as const } },
             { note: { contains: search, mode: "insensitive" as const } },
           ],
         }
-      : {};
+      : { ...(deleted === undefined ? {} : { deleted }) };
 
     const [pulsa, total] = await Promise.all([
       prisma.pulsa.findMany({
@@ -95,7 +100,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, code, denomination, costPrice, sellPrice, note, image } = body;
+    const { id, code, denomination, costPrice, sellPrice, note, image, deleted } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID diperlukan" }, { status: 400 });
@@ -108,13 +113,14 @@ export async function PUT(request: Request) {
       }
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.PulsaUpdateInput = {};
     if (code !== undefined) updateData.code = code;
     if (denomination !== undefined) updateData.denomination = parseInt(denomination);
     if (costPrice !== undefined) updateData.costPrice = parseInt(costPrice);
     if (sellPrice !== undefined) updateData.sellPrice = parseInt(sellPrice);
     if (note !== undefined) updateData.note = note || null;
     if (image !== undefined) updateData.image = image || null;
+    if (deleted !== undefined) updateData.deleted = Boolean(deleted);
 
     const pulsa = await prisma.pulsa.update({
       where: { id },
@@ -122,9 +128,9 @@ export async function PUT(request: Request) {
     });
 
     return NextResponse.json(pulsa);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating pulsa:", error);
-    if (error.code === "P2025") {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2025") {
       return NextResponse.json({ error: "Pulsa tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -146,19 +152,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID diperlukan" }, { status: 400 });
     }
 
-    const used = await prisma.transactionItem.count({ where: { pulsaId: id } });
-    if (used > 0) {
-      return NextResponse.json({ 
-        error: "Tidak bisa dihapus karena sudah digunakan di transaksi" 
-      }, { status: 400 });
-    }
+    await prisma.pulsa.update({ where: { id }, data: { deleted: true } });
 
-    await prisma.pulsa.delete({ where: { id } });
-
-    return NextResponse.json({ message: "Pulsa berhasil dihapus" });
-  } catch (error: any) {
+    return NextResponse.json({ message: "Pulsa berhasil diarsipkan" });
+  } catch (error: unknown) {
     console.error("Error deleting pulsa:", error);
-    if (error.code === "P2025") {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2025") {
       return NextResponse.json({ error: "Pulsa tidak ditemukan" }, { status: 404 });
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

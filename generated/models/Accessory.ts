@@ -48,6 +48,7 @@ export type AccessoryMinAggregateOutputType = {
   image: string | null
   entryDate: Date | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -62,6 +63,7 @@ export type AccessoryMaxAggregateOutputType = {
   image: string | null
   entryDate: Date | null
   category: $Enums.ProductCategory | null
+  deleted: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -76,6 +78,7 @@ export type AccessoryCountAggregateOutputType = {
   image: number
   entryDate: number
   category: number
+  deleted: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -104,6 +107,7 @@ export type AccessoryMinAggregateInputType = {
   image?: true
   entryDate?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -118,6 +122,7 @@ export type AccessoryMaxAggregateInputType = {
   image?: true
   entryDate?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -132,6 +137,7 @@ export type AccessoryCountAggregateInputType = {
   image?: true
   entryDate?: true
   category?: true
+  deleted?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -233,6 +239,7 @@ export type AccessoryGroupByOutputType = {
   image: string | null
   entryDate: Date
   category: $Enums.ProductCategory
+  deleted: boolean
   createdAt: Date
   updatedAt: Date
   _count: AccessoryCountAggregateOutputType | null
@@ -270,6 +277,7 @@ export type AccessoryWhereInput = {
   image?: Prisma.StringNullableFilter<"Accessory"> | string | null
   entryDate?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   category?: Prisma.EnumProductCategoryFilter<"Accessory"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Accessory"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -285,6 +293,7 @@ export type AccessoryOrderByWithRelationInput = {
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   entryDate?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   transactionItems?: Prisma.TransactionItemOrderByRelationAggregateInput
@@ -303,6 +312,7 @@ export type AccessoryWhereUniqueInput = Prisma.AtLeast<{
   image?: Prisma.StringNullableFilter<"Accessory"> | string | null
   entryDate?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   category?: Prisma.EnumProductCategoryFilter<"Accessory"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolFilter<"Accessory"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Accessory"> | Date | string
   transactionItems?: Prisma.TransactionItemListRelationFilter
@@ -318,6 +328,7 @@ export type AccessoryOrderByWithAggregationInput = {
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   entryDate?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.AccessoryCountOrderByAggregateInput
@@ -340,6 +351,7 @@ export type AccessoryScalarWhereWithAggregatesInput = {
   image?: Prisma.StringNullableWithAggregatesFilter<"Accessory"> | string | null
   entryDate?: Prisma.DateTimeWithAggregatesFilter<"Accessory"> | Date | string
   category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Accessory"> | $Enums.ProductCategory
+  deleted?: Prisma.BoolWithAggregatesFilter<"Accessory"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Accessory"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Accessory"> | Date | string
 }
@@ -354,6 +366,7 @@ export type AccessoryCreateInput = {
   image?: string | null
   entryDate?: Date | string
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemCreateNestedManyWithoutAccessoryInput
@@ -369,6 +382,7 @@ export type AccessoryUncheckedCreateInput = {
   image?: string | null
   entryDate?: Date | string
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   transactionItems?: Prisma.TransactionItemUncheckedCreateNestedManyWithoutAccessoryInput
@@ -384,6 +398,7 @@ export type AccessoryUpdateInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUpdateManyWithoutAccessoryNestedInput
@@ -399,6 +414,7 @@ export type AccessoryUncheckedUpdateInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactionItems?: Prisma.TransactionItemUncheckedUpdateManyWithoutAccessoryNestedInput
@@ -414,6 +430,7 @@ export type AccessoryCreateManyInput = {
   image?: string | null
   entryDate?: Date | string
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -428,6 +445,7 @@ export type AccessoryUpdateManyMutationInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -442,6 +460,7 @@ export type AccessoryUncheckedUpdateManyInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -456,6 +475,7 @@ export type AccessoryCountOrderByAggregateInput = {
   image?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -476,6 +496,7 @@ export type AccessoryMaxOrderByAggregateInput = {
   image?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -490,6 +511,7 @@ export type AccessoryMinOrderByAggregateInput = {
   image?: Prisma.SortOrder
   entryDate?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  deleted?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -531,6 +553,7 @@ export type AccessoryCreateWithoutTransactionItemsInput = {
   image?: string | null
   entryDate?: Date | string
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -545,6 +568,7 @@ export type AccessoryUncheckedCreateWithoutTransactionItemsInput = {
   image?: string | null
   entryDate?: Date | string
   category?: $Enums.ProductCategory
+  deleted?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -575,6 +599,7 @@ export type AccessoryUpdateWithoutTransactionItemsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -589,6 +614,7 @@ export type AccessoryUncheckedUpdateWithoutTransactionItemsInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
+  deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -634,6 +660,7 @@ export type AccessorySelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   image?: boolean
   entryDate?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   transactionItems?: boolean | Prisma.Accessory$transactionItemsArgs<ExtArgs>
@@ -650,6 +677,7 @@ export type AccessorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   image?: boolean
   entryDate?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["accessory"]>
@@ -664,6 +692,7 @@ export type AccessorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   image?: boolean
   entryDate?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["accessory"]>
@@ -678,11 +707,12 @@ export type AccessorySelectScalar = {
   image?: boolean
   entryDate?: boolean
   category?: boolean
+  deleted?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type AccessoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "costPrice" | "sellPrice" | "stock" | "image" | "entryDate" | "category" | "createdAt" | "updatedAt", ExtArgs["result"]["accessory"]>
+export type AccessoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "name" | "costPrice" | "sellPrice" | "stock" | "image" | "entryDate" | "category" | "deleted" | "createdAt" | "updatedAt", ExtArgs["result"]["accessory"]>
 export type AccessoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactionItems?: boolean | Prisma.Accessory$transactionItemsArgs<ExtArgs>
   _count?: boolean | Prisma.AccessoryCountOutputTypeDefaultArgs<ExtArgs>
@@ -705,6 +735,7 @@ export type $AccessoryPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     image: string | null
     entryDate: Date
     category: $Enums.ProductCategory
+    deleted: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["accessory"]>
@@ -1140,6 +1171,7 @@ export interface AccessoryFieldRefs {
   readonly image: Prisma.FieldRef<"Accessory", 'String'>
   readonly entryDate: Prisma.FieldRef<"Accessory", 'DateTime'>
   readonly category: Prisma.FieldRef<"Accessory", 'ProductCategory'>
+  readonly deleted: Prisma.FieldRef<"Accessory", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Accessory", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Accessory", 'DateTime'>
 }

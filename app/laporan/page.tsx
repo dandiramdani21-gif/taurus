@@ -55,6 +55,7 @@ type ReportTransaction = {
 
 type ReportRow = {
   key: string;
+  transactionId: string;
   dateKey: string;
   dateLabel: string;
   category: string;
@@ -78,6 +79,7 @@ type GroupedRows = {
 
 type PulsaRow = {
   key: string;
+  transactionId: string;
   dateKey: string;
   dateLabel: string;
   destinationNumber: string;
@@ -268,6 +270,7 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
 
       group.rows.push({
         key: `${transaction.id}-${index}`,
+        transactionId: transaction.id,
         dateKey,
         dateLabel,
         category,
@@ -315,6 +318,7 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
 
       rows.push({
         key: `${transaction.id}-${index}`,
+        transactionId: transaction.id,
         dateKey,
         dateLabel,
         destinationNumber: item.pulsaDestinationNumber || item.pulsa?.destinationNumber || "-",
@@ -559,6 +563,8 @@ export default function LaporanKeuanganPage() {
   const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
   const inFlightKeyRef = useRef<string | null>(null);
   const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const groupsPerPage = 5;
   const [search, setSearch] = useState("");
 
   const fixedFilter: ReportProductFilter | null =
@@ -583,6 +589,10 @@ export default function LaporanKeuanganPage() {
     if (category === "PRODUK_LAIN") setProductFilter("accessory");
     if (category === "PULSA") setProductFilter("pulsa");
   }, [fixedFilter, searchParams, search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [effectiveFilter, startDate, endDate, search]);
 
   const fetchLaporan = useCallback(async () => {
     const requestKey = `${effectiveFilter}|${startDate}|${endDate}`;
@@ -735,6 +745,11 @@ export default function LaporanKeuanganPage() {
   const groupedRows = buildGroupedRows(transactions, effectiveFilter);
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
   const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
+  const activeGroups = effectiveFilter === "pulsa" ? groupedPulsaRows : groupedRows;
+  const totalGroupPages = Math.max(1, Math.ceil(activeGroups.length / groupsPerPage));
+  const groupStartIndex = (page - 1) * groupsPerPage;
+  const pagedGroups = groupedRows.slice(groupStartIndex, groupStartIndex + groupsPerPage);
+  const pagedPulsaGroups = groupedPulsaRows.slice(groupStartIndex, groupStartIndex + groupsPerPage);
   const statusByTransactionId = new Map(transactions.map((transaction) => [transaction.id, transaction.status]));
 
   const updateTransactionStatus = async (transactionId: string, status: "PAID" | "REFUND") => {
@@ -752,6 +767,7 @@ export default function LaporanKeuanganPage() {
       }
 
       await fetchLaporan();
+      setPage(1);
     } catch (error) {
       console.error("Gagal update status transaksi:", error);
       alert(error instanceof Error ? error.message : "Gagal update status transaksi");
@@ -890,7 +906,7 @@ export default function LaporanKeuanganPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {effectiveFilter === "pulsa"
-                  ? groupedPulsaRows.map((group, index) => {
+                  ? pagedPulsaGroups.map((group, index) => {
                       const theme = groupThemes[index % groupThemes.length];
                       return (
                         <Fragment key={group.dateKey}>
@@ -916,11 +932,11 @@ export default function LaporanKeuanganPage() {
                               <td className="px-6 py-4 text-sm text-slate-700">
                                 <select
                                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                  value={statusByTransactionId.get(row.key.split("-")[0]) || "REFUND"}
+                                  value={statusByTransactionId.get(row.transactionId) || "REFUND"}
                                   onChange={(e) =>
-                                    updateTransactionStatus(row.key.split("-")[0], e.target.value as "PAID" | "REFUND")
+                                    updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
                                   }
-                                  disabled={updatingStatusTxId === row.key.split("-")[0]}
+                                  disabled={updatingStatusTxId === row.transactionId}
                                 >
                                   <option value="PAID">PAID</option>
                                   <option value="REFUND">REFUND</option>
@@ -944,7 +960,7 @@ export default function LaporanKeuanganPage() {
                         </Fragment>
                       );
                     })
-                  : groupedRows.map((group, index) => {
+                  : pagedGroups.map((group, index) => {
                       const theme = groupThemes[index % groupThemes.length];
                       return (
                         <Fragment key={group.dateKey}>
@@ -970,11 +986,11 @@ export default function LaporanKeuanganPage() {
                               <td className="px-6 py-4 text-sm text-slate-700">
                                 <select
                                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                  value={statusByTransactionId.get(row.key.split("-")[0]) || "REFUND"}
+                                  value={statusByTransactionId.get(row.transactionId) || "REFUND"}
                                   onChange={(e) =>
-                                    updateTransactionStatus(row.key.split("-")[0], e.target.value as "PAID" | "REFUND")
+                                    updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
                                   }
-                                  disabled={updatingStatusTxId === row.key.split("-")[0]}
+                                  disabled={updatingStatusTxId === row.transactionId}
                                 >
                                   <option value="PAID">PAID</option>
                                   <option value="REFUND">REFUND</option>
@@ -1005,6 +1021,29 @@ export default function LaporanKeuanganPage() {
           </div>
         )}
       </div>
+      {activeGroups.length > 0 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+            className="rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-slate-600">
+            Halaman {page} dari {totalGroupPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalGroupPages, current + 1))}
+            disabled={page >= totalGroupPages}
+            className="rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -101,6 +101,7 @@ export const PhoneScalarFieldEnum = {
   entryDate: 'entryDate',
   stock: 'stock',
   isHidden: 'isHidden',
+  deleted: 'deleted',
   image: 'image',
   createdAt: 'createdAt'
 } as const
@@ -129,6 +130,7 @@ export const AccessoryScalarFieldEnum = {
   image: 'image',
   entryDate: 'entryDate',
   category: 'category',
+  deleted: 'deleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -147,6 +149,7 @@ export const VoucherScalarFieldEnum = {
   entryDate: 'entryDate',
   expiredAt: 'expiredAt',
   category: 'category',
+  deleted: 'deleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -166,6 +169,7 @@ export const PulsaScalarFieldEnum = {
   note: 'note',
   image: 'image',
   category: 'category',
+  deleted: 'deleted',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -175,9 +179,11 @@ export type PulsaScalarFieldEnum = (typeof PulsaScalarFieldEnum)[keyof typeof Pu
 
 export const TransactionScalarFieldEnum = {
   id: 'id',
+  invoiceNumber: 'invoiceNumber',
   type: 'type',
   status: 'status',
   category: 'category',
+  deleted: 'deleted',
   totalAmount: 'totalAmount',
   totalCost: 'totalCost',
   profit: 'profit',
