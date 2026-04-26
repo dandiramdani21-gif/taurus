@@ -32,6 +32,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Items tidak boleh kosong" }, { status: 400 });
     }
 
+    // Track low stock items within the transaction
+    const lowStockAlertItems: Array<{ name: string; code: string; stock: number }> = [];
+
     // Gunakan Prisma Transaction agar semuanya atomic
     const transaction = await prisma.$transaction(async (tx) => {
       const invoiceItems: InvoicePdfItem[] = [];
@@ -57,6 +60,10 @@ export async function POST(request: Request) {
           select: { name: true, code: true, stock: true },
         });
 
+        if (!voucher) {
+          throw new Error(`Voucher dengan ID ${item.productId} tidak ditemukan`);
+        }
+
         await tx.transactionItem.create({
           data: {
             transactionId: newTransaction.id,
@@ -68,24 +75,32 @@ export async function POST(request: Request) {
         });
 
         // 3. Kurangi stok voucher
-        await tx.voucher.update({
+        const updatedVoucher = await tx.voucher.update({
           where: { id: item.productId },
           data: {
             stock: {
               decrement: item.quantity,
             },
           },
+          select: { name: true, code: true, stock: true },
         });
 
-        if (voucher) {
-          invoiceItems.push({
-            name: voucher.name,
-            code: voucher.code,
-            quantity: Number(item.quantity || 1),
-            unitPrice: Number(item.sellPrice || 0),
-            total: Number(item.sellPrice || 0) * Number(item.quantity || 1),
+        // Check if stock is low after update
+        if (updatedVoucher.stock <= LOW_STOCK_THRESHOLD) {
+          lowStockAlertItems.push({
+            name: updatedVoucher.name,
+            code: updatedVoucher.code,
+            stock: updatedVoucher.stock,
           });
         }
+
+        invoiceItems.push({
+          name: voucher.name,
+          code: voucher.code,
+          quantity: Number(item.quantity || 1),
+          unitPrice: Number(item.sellPrice || 0),
+          total: Number(item.sellPrice || 0) * Number(item.quantity || 1),
+        });
       }
 
       return { transaction: newTransaction, invoiceItems, lowStockAlertItems };
@@ -115,11 +130,21 @@ export async function POST(request: Request) {
       footer: "Terima kasih telah berbelanja di Taurus Cellular.",
     });
 
-    const lowStockVouchers = await prisma.voucher.findMany({
+    // Get all low stock vouchers (including those from other products)
+    const allLowStockVouchers = await prisma.voucher.findMany({
       where: { stock: { lte: LOW_STOCK_THRESHOLD } },
       select: { name: true, code: true, stock: true },
       orderBy: { stock: "asc" },
     });
+
+    // Combine unique low stock items (remove duplicates)
+    const uniqueLowStockItems = Array.from(
+      new Map(
+        [...allLowStockVouchers, ...transaction.lowStockAlertItems].map(item => 
+          [item.code, item]
+        )
+      ).values()
+    );
 
     await Promise.allSettled([
       sendTelegramDocument({
@@ -133,12 +158,12 @@ export async function POST(request: Request) {
         document: invoicePdf,
       }),
       notifyTelegram({
-      title: "Checkout Voucher",
-      message: `Invoice: ${transaction.transaction.id}\nTotal: Rp ${Number(totalAmount).toLocaleString("id-ID")}`,
+        title: "Checkout Voucher",
+        message: `Invoice: ${transaction.transaction.id}\nTotal: Rp ${Number(totalAmount).toLocaleString("id-ID")}`,
       }),
       notifyLowStockTelegram({
         title: "Stok Menipis - Voucher",
-        items: lowStockVouchers.map((item) => ({
+        items: uniqueLowStockItems.map((item) => ({
           name: item.name,
           code: item.code,
           stock: item.stock,

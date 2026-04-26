@@ -63,6 +63,31 @@ export async function notifyTelegram({ title, message }: TelegramPayload) {
   });
 }
 
+// Helper function to safely convert any document input to a Blob
+function documentToBlob(document: Blob | ArrayBuffer | Uint8Array): Blob {
+  // If it's already a Blob, return as is
+  if (document instanceof Blob) {
+    return document;
+  }
+  
+  // Handle Uint8Array
+  if (document instanceof Uint8Array) {
+    // Convert Uint8Array to regular ArrayBuffer by creating a new one
+    const newBuffer = new ArrayBuffer(document.byteLength);
+    const view = new Uint8Array(newBuffer);
+    view.set(document);
+    return new Blob([view], { type: "application/pdf" });
+  }
+  
+  // Handle ArrayBuffer
+  if (document instanceof ArrayBuffer) {
+    return new Blob([document], { type: "application/pdf" });
+  }
+  
+  // Fallback for any other type (should not happen)
+  return new Blob([document], { type: "application/pdf" });
+}
+
 export async function sendTelegramDocument({ title, message, filename, document }: TelegramDocumentPayload) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -75,7 +100,9 @@ export async function sendTelegramDocument({ title, message, filename, document 
   formData.append("chat_id", chatId);
   formData.append("caption", buildTelegramText(title, message));
   formData.append("parse_mode", "HTML");
-  const blob = document instanceof Blob ? document : new Blob([document], { type: "application/pdf" });
+  
+  // Convert document to Blob safely
+  const blob = documentToBlob(document);
   formData.append("document", blob, filename);
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {

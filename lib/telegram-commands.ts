@@ -104,6 +104,26 @@ async function sendTelegramPlainMessage(chatId: number | string, text: string, r
   return { ok: response.ok, status: response.status };
 }
 
+// Helper function to safely convert document to Blob
+function documentToBlob(document: Blob | ArrayBuffer | Uint8Array): Blob {
+  if (document instanceof Blob) {
+    return document;
+  }
+  
+  if (document instanceof Uint8Array) {
+    // Create a new Uint8Array to ensure proper ArrayBuffer
+    const newBuffer = new Uint8Array(document);
+    return new Blob([newBuffer], { type: "application/pdf" });
+  }
+  
+  if (document instanceof ArrayBuffer) {
+    return new Blob([document], { type: "application/pdf" });
+  }
+  
+  // Fallback with type assertion
+  return new Blob([document as ArrayBuffer], { type: "application/pdf" });
+}
+
 async function sendTelegramDocument(
   chatId: number | string,
   { title, message, filename, document }: { title: string; message: string; filename: string; document: Blob | ArrayBuffer | Uint8Array }
@@ -118,7 +138,7 @@ async function sendTelegramDocument(
   formData.append("caption", buildTelegramMessage(title, [message]));
   formData.append("parse_mode", "HTML");
 
-  const blob = document instanceof Blob ? document : new Blob([document], { type: "application/pdf" });
+  const blob = documentToBlob(document);
   formData.append("document", blob, filename);
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
@@ -205,59 +225,54 @@ function getInvoiceCategoryLabel(transaction: NonNullable<Awaited<ReturnType<typ
   return transaction.category;
 }
 
+// Fixed buildInvoiceItems function with proper typing
 function buildInvoiceItems(
   transaction: NonNullable<Awaited<ReturnType<typeof getLatestInvoiceData>>>
 ): InvoicePdfItem[] {
-  return transaction.items
-    .map((item) => {
-      const quantity = Number(item.quantity || 1);
-      const unitPrice = Number(item.sellPrice || 0);
+  const items: InvoicePdfItem[] = [];
+  
+  for (const item of transaction.items) {
+    const quantity = Number(item.quantity || 1);
+    const unitPrice = Number(item.sellPrice || 0);
 
-      if (item.phone) {
-        return {
-          name: `${item.phone.brand} ${item.phone.type}`,
-          code: item.phone.imei,
-          detail: item.phone.color ? `Warna: ${item.phone.color}` : null,
-          quantity,
-          unitPrice,
-          total: unitPrice * quantity,
-        };
-      }
-
-      if (item.accessory) {
-        return {
-          name: item.accessory.name,
-          code: item.accessory.code,
-          quantity,
-          unitPrice,
-          total: unitPrice * quantity,
-        };
-      }
-
-      if (item.voucher) {
-        return {
-          name: item.voucher.name,
-          code: item.voucher.code,
-          quantity,
-          unitPrice,
-          total: unitPrice * quantity,
-        };
-      }
-
-      if (item.pulsa) {
-        return {
-          name: item.pulsa.description || item.pulsa.note || `Pulsa ${item.pulsa.denomination}`,
-          code: item.pulsa.destinationNumber || item.pulsa.code || "-",
-          detail: item.pulsa.balance !== null && item.pulsa.balance !== undefined ? `Saldo: ${formatMoney(Number(item.pulsa.balance))}` : null,
-          quantity,
-          unitPrice,
-          total: unitPrice * quantity,
-        };
-      }
-
-      return null;
-    })
-    .filter((item): item is InvoicePdfItem => Boolean(item));
+    if (item.phone) {
+      items.push({
+        name: `${item.phone.brand} ${item.phone.type}`,
+        code: item.phone.imei,
+        detail: item.phone.color ? `Warna: ${item.phone.color}` : null,
+        quantity,
+        unitPrice,
+        total: unitPrice * quantity,
+      });
+    } else if (item.accessory) {
+      items.push({
+        name: item.accessory.name,
+        code: item.accessory.code,
+        quantity,
+        unitPrice,
+        total: unitPrice * quantity,
+      });
+    } else if (item.voucher) {
+      items.push({
+        name: item.voucher.name,
+        code: item.voucher.code,
+        quantity,
+        unitPrice,
+        total: unitPrice * quantity,
+      });
+    } else if (item.pulsa) {
+      items.push({
+        name: item.pulsa.description || item.pulsa.note || `Pulsa ${item.pulsa.denomination}`,
+        code: item.pulsa.destinationNumber || item.pulsa.code || "-",
+        detail: item.pulsa.balance !== null && item.pulsa.balance !== undefined ? `Saldo: ${formatMoney(Number(item.pulsa.balance))}` : null,
+        quantity,
+        unitPrice,
+        total: unitPrice * quantity,
+      });
+    }
+  }
+  
+  return items;
 }
 
 async function handleHelp(chatId: number | string, replyToMessageId?: number) {
@@ -377,7 +392,8 @@ export async function processTelegramUpdate(update: TelegramUpdate): Promise<Tel
   }
 
   const command = normalizeCommand(text);
-  const replyToMessageId = message.message_id;
+  // Fixed: Ensure message exists before accessing message_id
+  const replyToMessageId = message?.message_id;
 
   if (command === "/start" || command === "/help") {
     await handleHelp(chatId, replyToMessageId);

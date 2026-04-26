@@ -1,10 +1,17 @@
 // app/api/transactions/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { TransactionType, ProductCategory } from "@/generated/client";
 
-function isValidCategory(category: string | null): category is "HANDPHONE" | "PRODUK_LAIN" | "PULSA" {
+// Type guards
+function isValidTransactionType(type: string | null): type is TransactionType {
+  return type === "SALE" || type === "PURCHASE";
+}
+
+function isValidCategory(category: string | null): category is ProductCategory {
   return category === "HANDPHONE" || category === "PRODUK_LAIN" || category === "PULSA";
 }
 
@@ -19,27 +26,31 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "15", 10);
     const search = searchParams.get("search") || "";
-    const category = searchParams.get("category");
-    const type = searchParams.get("type") || "SALE";
+    const categoryParam = searchParams.get("category");
+    const typeParam = searchParams.get("type") || "SALE";
     const skip = (page - 1) * limit;
 
+    // Build where clause with proper types
     const where: {
-      type?: string;
-      category?: "HANDPHONE" | "PRODUK_LAIN" | "PULSA";
+      type?: TransactionType;
+      category?: ProductCategory;
       OR?: Array<
         | { id: { contains: string; mode: "insensitive" } }
         | { note: { contains: string; mode: "insensitive" } }
       >;
     } = {};
 
-    if (type) {
-      where.type = type;
+    // Handle type with proper enum validation
+    if (isValidTransactionType(typeParam)) {
+      where.type = typeParam;
     }
 
-    if (isValidCategory(category)) {
-      where.category = category;
+    // Handle category with proper enum validation
+    if (isValidCategory(categoryParam)) {
+      where.category = categoryParam;
     }
 
+    // Handle search
     if (search.trim()) {
       where.OR = [
         { id: { contains: search.trim(), mode: "insensitive" } },
@@ -57,6 +68,13 @@ export async function GET(request: Request) {
               accessory: true,
               voucher: true,
               pulsa: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
             },
           },
         },
