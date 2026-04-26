@@ -52,7 +52,7 @@ export default function HpPage() {
   });
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
+  
   // Scanner states
   const [showImeiScanner, setShowImeiScanner] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -246,7 +246,7 @@ export default function HpPage() {
         if (scannerRef.current) {
           scannerRef.current.clear();
         }
-
+        
         scannerRef.current = new Html5QrcodeScanner(
           elementId,
           {
@@ -256,7 +256,7 @@ export default function HpPage() {
           },
           false
         );
-
+        
         scannerRef.current.render(onScanSuccess, onScanError);
       }
     }, 100);
@@ -268,7 +268,7 @@ export default function HpPage() {
       scannerRef.current.clear();
       scannerRef.current = null;
     }
-
+    
     setFormData(prev => ({ ...prev, imei: decodedText }));
 
     const result = await checkExistingImei(decodedText);
@@ -306,7 +306,7 @@ export default function HpPage() {
       alert("Stok tidak boleh minus!");
       return;
     }
-
+    
     try {
       const res = await fetch(`/api/hp/stock`, {
         method: "PATCH",
@@ -328,14 +328,14 @@ export default function HpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (parseInt(formData.stock) < 0) {
       alert("Stok tidak boleh minus!");
       return;
     }
-
+    
     const filteredMetadata = metadata.filter(m => m.key && m.value);
-
+    
     const url = editingPhone ? "/api/hp" : "/api/hp";
     const method = editingPhone ? "PUT" : "POST";
     const body = editingPhone
@@ -394,7 +394,7 @@ export default function HpPage() {
       image: phone.image || "",
       entryDate: phone.entryDate ? new Date(phone.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
-
+    
     if (phone.metadata && phone.metadata.length > 0) {
       setMetadata(phone.metadata);
     } else {
@@ -531,7 +531,7 @@ export default function HpPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Stok</p>
+              <p className="text-sm text-gray-500">Total Aset</p>
               <p className="text-xl font-bold text-gray-800">{totalStock}</p>
             </div>
           </div>
@@ -554,7 +554,8 @@ export default function HpPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Imei</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>
@@ -584,11 +585,13 @@ export default function HpPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.brand}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.type}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
-
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(phone.entryDate).toLocaleDateString("id-ID")}
-                        </td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
+    <td className="px-6 py-4 text-sm text-gray-500">
+  {phone.imei}
+</td>       
+<td className="px-6 py-4 text-sm text-gray-500">
+  {new Date(phone.entryDate).toLocaleDateString("id-ID")}
+</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => setShowDetail(phone)} className="text-gray-500 hover:text-gray-700">
@@ -629,7 +632,7 @@ export default function HpPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-
+              
               <div className="flex gap-1">
                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                   let pageNum;
@@ -642,15 +645,16 @@ export default function HpPage() {
                   } else {
                     pageNum = pagination.page - 2 + i;
                   }
-
+                  
                   return (
                     <button
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
-                      className={`px-3 py-1 rounded-lg transition ${pagination.page === pageNum
+                      className={`px-3 py-1 rounded-lg transition ${
+                        pagination.page === pageNum
                           ? "bg-purple-600 text-white"
                           : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-                        }`}
+                      }`}
                     >
                       {pageNum}
                     </button>
@@ -689,7 +693,7 @@ export default function HpPage() {
                 </svg>
               </button>
             </div>
-
+            
             <div className="flex justify-center mb-4">
               <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100">
                 {showDetail.image ? (
@@ -703,17 +707,17 @@ export default function HpPage() {
                 )}
               </div>
             </div>
-
+            
             <div className="space-y-3">
               <div><span className="text-sm text-gray-500">Brand:</span> <p className="font-medium">{showDetail.brand}</p></div>
               <div><span className="text-sm text-gray-500">Type:</span> <p className="font-medium">{showDetail.type}</p></div>
-              <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
+                            <div><span className="text-sm text-gray-500">Warna:</span> <p className="font-medium">{showDetail.color || "-"}</p></div>
               <div><span className="text-sm text-gray-500">Harga Modal:</span> <p className="font-medium">Rp {showDetail.purchasePrice.toLocaleString()}</p></div>
               <div><span className="text-sm text-gray-500">Stok:</span> <p className="font-medium">{showDetail.stock}</p></div>
               <div>
-                <span className="text-sm text-gray-500">Tanggal Masuk:</span>
-                <p className="font-medium">{new Date(showDetail.entryDate).toLocaleDateString("id-ID")}</p>
-              </div>
+  <span className="text-sm text-gray-500">Tanggal Masuk:</span> 
+  <p className="font-medium">{new Date(showDetail.entryDate).toLocaleDateString("id-ID")}</p>
+</div>
               {showDetail.metadata.length > 0 && (
                 <div>
                   <span className="text-sm text-gray-500">Spesifikasi:</span>
@@ -745,7 +749,7 @@ export default function HpPage() {
               <div>
                 <p className="text-sm text-gray-500">HP</p>
                 <p className="font-medium">{showStockModal.brand} {showStockModal.type}</p>
-              </div>
+                              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
                 <input
@@ -875,18 +879,18 @@ export default function HpPage() {
                   />
                   <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
-                  <input
-                    type="date"
-                    value={formData.entryDate}
-                    onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
-                </div>
+                  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+    <input
+      type="date"
+      value={formData.entryDate}
+      onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+    />
+    <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
+  </div>
               </div>
-
+              
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Foto HP</label>
@@ -907,7 +911,7 @@ export default function HpPage() {
                     Tambah
                   </button>
                 </div>
-
+                
                 <div className="space-y-2">
                   {metadata.map((item, idx) => (
                     <div key={idx} className="flex gap-2">

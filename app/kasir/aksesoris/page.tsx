@@ -35,7 +35,7 @@ interface CheckoutModalData {
 }
 
 export default function KasirAksesorisPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [products, setProducts] = useState<Accessory[]>([]);
@@ -64,12 +64,13 @@ export default function KasirAksesorisPage() {
 
   useEffect(() => {
     fetchProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, search]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/accessories?page=${pagination.page}&limit=${pagination.limit}&search=${search}`);
+      const res = await fetch(`/api/accessories/kasir?page=${pagination.page}&limit=${pagination.limit}&search=${search}`);
       const data = await res.json();
       setProducts(data.accessories || []);
       setPagination(data.pagination || { page: 1, limit: 15, total: 0, totalPages: 0 });
@@ -101,6 +102,7 @@ export default function KasirAksesorisPage() {
                 quantity: item.quantity + 1,
                 subtotal: (item.quantity + 1) * item.sellPrice,
                 profit: (item.sellPrice - item.costPrice) * (item.quantity + 1),
+                
               }
             : item
         );
@@ -115,6 +117,7 @@ export default function KasirAksesorisPage() {
           costPrice: product.costPrice,
           sellPrice: product.sellPrice,
           quantity: 1,
+          stock: product.stock,
           subtotal: product.sellPrice,
           profit: product.sellPrice - product.costPrice,
           isEditingCost: false,
@@ -325,7 +328,7 @@ export default function KasirAksesorisPage() {
             </div>
             <h1 className="text-3xl font-semibold sm:text-4xl">Kasir Aksesoris</h1>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-              Layout kasir yang lebih modern untuk aksesoris, dengan search cepat dan panel keranjang yang lebih rapi.
+              Gunakan alat scanner untuk mempermudah
             </p>
           </div>
 
@@ -352,6 +355,7 @@ export default function KasirAksesorisPage() {
                   <div className="flex items-start gap-3">
                     <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
                       {product.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">🛠️</div>

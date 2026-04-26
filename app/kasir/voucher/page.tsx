@@ -67,12 +67,13 @@ export default function KasirVoucherPage() {
 
   useEffect(() => {
     fetchProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, search]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/vouchers?page=${pagination.page}&limit=${pagination.limit}&search=${search}`);
+      const res = await fetch(`/api/vouchers/kasir?page=${pagination.page}&limit=${pagination.limit}&search=${search}`);
       const data = await res.json();
       setProducts(data.vouchers || []);
       setPagination(data.pagination || { page: 1, limit: 15, total: 0, totalPages: 0 });
@@ -329,7 +330,7 @@ export default function KasirVoucherPage() {
             </div>
             <h1 className="text-3xl font-semibold sm:text-4xl">Kasir Voucher</h1>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-              Layout kasir yang lebih modern untuk voucher, dengan search cepat dan panel keranjang yang lebih rapi.
+              Pastikan selalu cek stok voucher anda
             </p>
           </div>
 

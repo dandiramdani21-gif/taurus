@@ -464,12 +464,13 @@ const applyBestEffortFill = (worksheet: XLSX.WorkSheet, rowIndex: number, colCou
   }
 };
 
-async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[]) {
+async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[], search: string) {
   const responses = await Promise.all(
     categories.map(async (category) => {
       const url = new URL(categoryEndpointMap[category], window.location.origin);
       url.searchParams.set("startDate", startDate);
       url.searchParams.set("endDate", endDate);
+      url.searchParams.set("search", search)
 
       const res = await fetch(url.toString());
       if (!res.ok) {
@@ -558,6 +559,7 @@ export default function LaporanKeuanganPage() {
   const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
   const inFlightKeyRef = useRef<string | null>(null);
   const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const fixedFilter: ReportProductFilter | null =
     pathname === "/laporan/hp"
@@ -580,7 +582,7 @@ export default function LaporanKeuanganPage() {
     if (category === "HANDPHONE") setProductFilter("phone");
     if (category === "PRODUK_LAIN") setProductFilter("accessory");
     if (category === "PULSA") setProductFilter("pulsa");
-  }, [fixedFilter, searchParams]);
+  }, [fixedFilter, searchParams, search]);
 
   const fetchLaporan = useCallback(async () => {
     const requestKey = `${effectiveFilter}|${startDate}|${endDate}`;
@@ -599,7 +601,7 @@ export default function LaporanKeuanganPage() {
       const requestStart = [startDate, monthStart, today].sort()[0];
       const requestEnd = [endDate, today].sort()[1];
 
-      const report = await fetchCategoryReport(requestStart, requestEnd, categories);
+      const report = await fetchCategoryReport(requestStart, requestEnd, categories, search);
       const allTransactions = report.transactions || [];
       const tableTransactions = filterTransactionsByDateRange(allTransactions, startDate, endDate);
       const monthTransactions = filterTransactionsByDateRange(allTransactions, monthStart, today);
@@ -620,7 +622,7 @@ export default function LaporanKeuanganPage() {
       }
       setLoading(false);
     }
-  }, [effectiveFilter, endDate, startDate]);
+  }, [effectiveFilter, endDate, startDate, search]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -771,7 +773,7 @@ export default function LaporanKeuanganPage() {
             <div>
               <h1 className="text-3xl font-semibold sm:text-4xl">Laporan Keuangan</h1>
               <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
-                Tabel transaksi, ringkasan bulanan, dan laba hari ini.
+                Laporan transaksi pembeli
               </p>
             </div>
           </div>
@@ -806,7 +808,7 @@ export default function LaporanKeuanganPage() {
       </div>
 
       <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-600">Tanggal Mulai</label>
             <input
@@ -824,6 +826,17 @@ export default function LaporanKeuanganPage() {
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
             />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Pencarian</label>
+          <input
+            type="text"
+            placeholder="Cari nomor invoice atau imei..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+          />
           </div>
         </div>
       </div>

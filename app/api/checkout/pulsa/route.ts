@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       const newTransaction = await tx.transaction.create({
         data: {
           type: "SALE",
-          status: "REFUND",
+          status: "PAID",
           category: "PULSA",
           totalAmount: Number(totalAmount ?? sellPrice ?? 0),
           totalCost: Number(totalCost ?? costPrice ?? 0),

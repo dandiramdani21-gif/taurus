@@ -390,6 +390,7 @@ export default function AksesorisPage() {
                         <td className="px-6 py-4">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
                             {item.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400">

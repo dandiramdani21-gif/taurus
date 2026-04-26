@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         data: {
           type: "SALE",
           category: "PRODUK_LAIN",
-          status: "REFUND",
+          status: "PAID",
           totalAmount: Number(totalAmount),
           totalCost: Number(totalCost),
           profit: Number(profit),

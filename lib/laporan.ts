@@ -5,44 +5,71 @@ type GetLaporanParams = {
   startDate: string;
   endDate: string;
   category: ProductCategory;
+  search: string | null
 };
 
 export async function getCategoryLaporan({
   startDate,
   endDate,
   category,
+  search
 }: GetLaporanParams) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   end.setHours(23, 59, 59, 999);
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      type: "SALE",
-      category,
-      createdAt: {
-        gte: start,
-        lte: end,
+const transactions = await prisma.transaction.findMany({
+  where: {
+    type: "SALE",
+    category,
+    createdAt: {
+      gte: start,
+      lte: end,
+    },
+    ...(search
+      ? {
+          items: {
+            some: {
+              OR: [
+                {
+                  phone: {
+                    imei: {
+                      equals: search,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+                { accessory: { name: { contains: search, mode: "insensitive" } },  },
+                { pulsa: { description: { contains: search, mode: "insensitive"} }}
+              ],
+            },
+          },
+        }
+      : {}),
+
+    
+  },
+
+  include: {
+    user: {
+      select: {
+        id: true,
+        name: true,
       },
     },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      items: {
-        include: {
-          phone: true,
-          accessory: true,
-          voucher: true,
-          pulsa: true,
-        },
+
+    items: {
+      include: {
+        phone: true,
+        accessory: true,
+        voucher: true,
+        pulsa: true,
       },
     },
-    orderBy: { createdAt: "desc" },
-  });
+  },
+
+  orderBy: { createdAt: "desc" },
+});
 
   const totalRevenue = transactions.reduce(
     (sum, transaction) => sum + (transaction.status === "REFUND" ? -transaction.totalAmount : transaction.totalAmount),

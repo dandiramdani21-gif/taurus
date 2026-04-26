@@ -1,11 +1,14 @@
+/* eslint-disable */
+
 "use client";
 
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import { Download, Upload, Loader2 } from "lucide-react";
 
 type SpreadsheetActionsProps = {
   onExport: () => void;
-  onImportRows: (rows: Record<string, any>[]) => Promise<void> | void;
+  onImportRows: (rows: Record<string, any>[]) => Promise<void> | void; 
   exportLabel?: string;
   importLabel?: string;
 };
@@ -41,21 +44,36 @@ export default function SpreadsheetActions({
 
   return (
     <div className="flex flex-wrap gap-3">
+      {/* Export Button */}
       <button
         type="button"
         onClick={onExport}
-        className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+        className="group relative flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-sm font-medium text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 ease-out active:scale-95"
       >
+        <Download className="w-4 h-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
         {exportLabel}
       </button>
+
+      {/* Import Button */}
       <button
         type="button"
         onClick={openPicker}
-        className="px-4 py-2 rounded-xl border border-purple-200 bg-purple-50 text-sm font-medium text-purple-700 hover:bg-purple-100 transition disabled:opacity-60"
         disabled={loading}
+        className="group relative flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-500 text-sm font-medium text-white shadow-md shadow-indigo-200 hover:from-indigo-700 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-300 transition-all duration-200 ease-out disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-md active:scale-95"
       >
-        {loading ? "Memproses..." : importLabel}
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Memproses...
+          </>
+        ) : (
+          <>
+            <Upload className="w-4 h-4" />
+            {importLabel}
+          </>
+        )}
       </button>
+
       <input
         ref={inputRef}
         type="file"

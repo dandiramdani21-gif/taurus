@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const search = searchParams.get("search")
 
     if (!startDate || !endDate) {
       return NextResponse.json({ error: "Tanggal mulai dan akhir diperlukan" }, { status: 400 });
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
       startDate,
       endDate,
       category: "PRODUK_LAIN",
+      search
     });
 
     return NextResponse.json(data);

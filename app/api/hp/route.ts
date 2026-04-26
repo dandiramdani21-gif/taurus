@@ -5,6 +5,19 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import { logRestock } from "@/lib/restock";
 import type { Prisma } from "@/generated/client";
 
+
+
+const parseDate = (dateStr: string) => {
+  const [day, month, year] = dateStr.split("/").map(Number);
+  if (!day || !month || !year) return null;
+
+  const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+  return { start, end };
+};
+
+
 const parseDateInput = (value: unknown) => {
   if (value === null || value === undefined || value === "") {
     return new Date();
@@ -46,11 +59,13 @@ export async function GET(request: Request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
+    const dateFilter = parseDate(search);
 
     const skip = (page - 1) * limit;
 
@@ -61,7 +76,20 @@ export async function GET(request: Request) {
           OR: [
             { brand: { contains: search, mode: "insensitive" as const } },
             { type: { contains: search, mode: "insensitive" as const } },
+            { imei: { contains: search, mode: "insensitive" as const } },
+
+        ...(dateFilter
+          ? [
+              {
+                purchaseDate: {
+                  gte: dateFilter.start,
+                  lte: dateFilter.end,
+                },
+              },
+            ]
+          : []),
           ],
+
         }
       : { isHidden: false };
 

@@ -110,7 +110,7 @@ export default function InvoicesPage() {
             </div>
             <h2 className="text-3xl font-semibold sm:text-4xl">Daftar Invoice</h2>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-              Filter per kategori produk, lalu buka atau download invoice satu per satu dengan tampilan yang lebih rapi.
+              Daftar invoice yang telah berhasil melakukan pembayaran.
             </p>
           </div>
 

@@ -5,6 +5,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { logRestock } from "@/lib/restock";
 
+
+const parseDate = (dateStr: string) => {
+  const [day, month, year] = dateStr.split("/").map(Number);
+  if (!day || !month || !year) return null;
+
+  const start = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+  return { start, end };
+};
+
 function buildVoucherCode(name: string) {
   const base = name
     .normalize("NFKD")
@@ -37,16 +48,37 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
+    const dateFilter = parseDate(search);
 
     const skip = (page - 1) * limit;
 
     const where = search
       ? {
-          OR: [
-            { code: { contains: search, mode: "insensitive" as const } },
-            { name: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
+        OR: [
+          { code: { contains: search, mode: "insensitive" as const } },
+          { name: { contains: search, mode: "insensitive" as const } },
+          ...(dateFilter
+            ? [
+              {
+                entryDate: {
+                  gte: dateFilter.start,
+                  lte: dateFilter.end,
+                }
+              },
+            ]
+            : []),
+          ...(dateFilter
+            ? [
+              {
+                expiredAt: {
+                  gte: dateFilter.start,
+                  lte: dateFilter.end,
+                }
+              },
+            ]
+            : []),
+        ],
+      }
       : {};
 
     const [vouchers, total] = await Promise.all([
@@ -206,8 +238,8 @@ export async function DELETE(request: Request) {
 
     const used = await prisma.transactionItem.count({ where: { voucherId: id } });
     if (used > 0) {
-      return NextResponse.json({ 
-        error: "Tidak bisa dihapus karena sudah digunakan di transaksi" 
+      return NextResponse.json({
+        error: "Tidak bisa dihapus karena sudah digunakan di transaksi"
       }, { status: 400 });
     }
 

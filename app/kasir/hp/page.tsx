@@ -102,11 +102,11 @@ export default function KasirHpPage() {
         return prevCart.map((item) =>
           item.productId === product.id
             ? {
-                ...item,
-                quantity: item.quantity + 1,
-                subtotal: (item.quantity + 1) * item.sellPrice,
-                profit: (item.sellPrice - item.costPrice) * (item.quantity + 1),
-              }
+              ...item,
+              quantity: item.quantity + 1,
+              subtotal: (item.quantity + 1) * item.sellPrice,
+              profit: (item.sellPrice - item.costPrice) * (item.quantity + 1),
+            }
             : item
         );
       }
@@ -139,11 +139,11 @@ export default function KasirHpPage() {
       prevCart.map((item) =>
         item.id === id
           ? {
-              ...item,
-              quantity: newQuantity,
-              subtotal: newQuantity * item.sellPrice,
-              profit: (item.sellPrice - item.costPrice) * newQuantity,
-            }
+            ...item,
+            quantity: newQuantity,
+            subtotal: newQuantity * item.sellPrice,
+            profit: (item.sellPrice - item.costPrice) * newQuantity,
+          }
           : item
       )
     );
@@ -154,11 +154,11 @@ export default function KasirHpPage() {
       prevCart.map((item) =>
         item.id === id
           ? {
-              ...item,
-              sellPrice: newPrice,
-              subtotal: item.quantity * newPrice,
-              profit: (newPrice - item.costPrice) * item.quantity,
-            }
+            ...item,
+            sellPrice: newPrice,
+            subtotal: item.quantity * newPrice,
+            profit: (newPrice - item.costPrice) * item.quantity,
+          }
           : item
       )
     );
@@ -214,12 +214,12 @@ export default function KasirHpPage() {
           prevCart.map((item) =>
             item.id === id
               ? {
-                  ...item,
-                  costPrice: newCostPrice,
-                  tempCostPrice: newCostPrice,
-                  isEditingCost: false,
-                  profit: (item.sellPrice - newCostPrice) * item.quantity,
-                }
+                ...item,
+                costPrice: newCostPrice,
+                tempCostPrice: newCostPrice,
+                isEditingCost: false,
+                profit: (item.sellPrice - newCostPrice) * item.quantity,
+              }
               : item
           )
         );
@@ -341,7 +341,7 @@ export default function KasirHpPage() {
             </div>
             <h1 className="text-3xl font-semibold sm:text-4xl">Kasir HP</h1>
             <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-              Cari, pilih, dan checkout handphone dalam layout yang lebih rapi seperti aplikasi kasir modern.
+              Pilih aksesoris yang akan dijual
             </p>
           </div>
 
@@ -356,171 +356,168 @@ export default function KasirHpPage() {
       </section>
 
       <div className="flex flex-col gap-6 xl:flex-row">
-      {/* LEFT - TABEL PRODUK */}
-      <div className="flex-1">
+        {/* LEFT - TABEL PRODUK */}
+        <div className="flex-1">
 
-        {loading ? (
-          <div className="text-center py-12">Memuat data...</div>
-        ) : (
-          <div className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-              {products.map((product) => (
-                <article key={product.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
-                      {product.image ? (
-                        <img src={product.image} alt={product.brand} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">📱</div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-900">{product.brand} {product.type}</p>
-                      <p className="mt-1 text-sm font-medium text-violet-600">Rp {product.purchasePrice.toLocaleString("id-ID")}</p>
-                      <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        product.stock === 0 ? "bg-red-100 text-red-700" :
-                        product.stock < 5 ? "bg-orange-100 text-orange-700" :
-                        "bg-green-100 text-green-700"
-                      }`}>
-                        Stok {product.stock}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => addToCart(product)}
-                    disabled={product.stock === 0}
-                    className="mt-4 w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:bg-slate-300"
-                  >
-                    Tambah ke Keranjang
-                  </button>
-                </article>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-center gap-4 mt-8">
-            <button
-              onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-              disabled={pagination.page === 1}
-              className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
-            >
-              Previous
-            </button>
-            <span className="px-6 py-3 text-slate-600">
-              Halaman {pagination.page} dari {pagination.totalPages}
-            </span>
-            <button
-              onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-              disabled={pagination.page === pagination.totalPages}
-              className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* RIGHT - KERANJANG */}
-      <div className="lg:w-96 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl flex flex-col h-fit sticky top-6">
-        <div className="p-6 border-b border-slate-100">
-          <h2 className="font-bold text-2xl text-slate-900">Keranjang</h2>
-          <p className="text-slate-500 mt-1">{cart.length} item</p>
-        </div>
-
-        <div className="flex-1 max-h-[520px] overflow-y-auto p-6 space-y-4">
-          {cart.length === 0 ? (
-            <div className="text-center text-slate-400 py-12">
-              Keranjang kosong<br />Klik tombol &quot;Tambah&quot; di tabel
-            </div>
+          {loading ? (
+            <div className="text-center py-12">Memuat data...</div>
           ) : (
-            cart.map((item) => (
-              <div key={item.id} className="border border-slate-200 rounded-3xl p-4">
-                <div className="font-medium text-slate-900">{item.name}</div>
-                
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 border rounded-xl border-slate-200">-</button>
-                    <span className="w-8 text-center font-medium text-slate-900">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 border rounded-xl border-slate-200">+</button>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-slate-500">Harga Modal</label>
-                    {item.isEditingCost ? (
-                      <div className="flex gap-2 mt-1">
-                        <input
-                          type="number"
-                          value={item.tempCostPrice}
-                          onChange={(e) => updateTempCost(item.id, parseInt(e.target.value) || 0)}
-                          className="flex-1 rounded-xl border border-slate-200 p-2 text-sm"
-                          autoFocus
-                        />
-                        <button onClick={() => saveCostPrice(item.id, item.productId, item.tempCostPrice || 0)} className="px-4 rounded-xl bg-emerald-600 text-white">Save</button>
-                        <button onClick={() => cancelEditCost(item.id)} className="px-4 rounded-xl bg-slate-200 text-slate-700">Batal</button>
+            <div className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {products.map((product) => (
+                  <article key={product.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
+                        {product.image ? (
+                          <img src={product.image} alt={product.brand} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">📱</div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="flex justify-between mt-1">
-                        <span className="text-slate-900">Rp {item.costPrice.toLocaleString()}</span>
-                        <button onClick={() => startEditCost(item.id, item.costPrice)} className="text-xs text-violet-600">Edit</button>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-slate-900">{product.brand}</p>
+                        <p className="mt-1 text-sm font-medium text-violet-600">Rp {product.purchasePrice.toLocaleString("id-ID")}</p>
+                        <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${product.stock === 0 ? "bg-red-100 text-red-700" :
+                            product.stock < 5 ? "bg-orange-100 text-orange-700" :
+                              "bg-green-100 text-green-700"
+                          }`}>
+                          Tipe {product.type}
+                        </span>
                       </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-slate-500">Harga Jual</label>
-                    <input
-                      type="number"
-                      value={item.sellPrice}
-                      onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
-                      className="w-full mt-1 rounded-xl border border-slate-200 p-2 text-sm"
-                    />
-                  </div>
-
-                  <div className="flex justify-between border-t border-slate-100 pt-3 font-medium">
-                    <span>Subtotal</span>
-                    <span className="text-slate-900">Rp {item.subtotal.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => removeFromCart(item.id)}
-                  className="mt-4 text-xs text-rose-500 hover:text-rose-700"
-                >
-                  Hapus
-                </button>
+                    </div>
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="mt-4 w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:bg-slate-300"
+                    >
+                      Tambah ke Keranjang
+                    </button>
+                  </article>
+                ))}
               </div>
-            ))
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="flex justify-center gap-4 mt-8">
+              <button
+                onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+                disabled={pagination.page === 1}
+                className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
+              >
+                Previous
+              </button>
+              <span className="px-6 py-3 text-slate-600">
+                Halaman {pagination.page} dari {pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+                disabled={pagination.page === pagination.totalPages}
+                className="px-6 py-3 rounded-2xl border border-white/70 bg-white/80 disabled:opacity-50 hover:bg-violet-50"
+              >
+                Next
+              </button>
+            </div>
           )}
         </div>
 
-        <div className="rounded-b-[2rem] border-t border-slate-100 bg-slate-50/80 p-6">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Total Modal</span>
-              <span>Rp {calculateTotalCost().toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Total Penjualan</span>
-              <span className="font-semibold">Rp {calculateTotal().toLocaleString()}</span>
-            </div>
-            <div className={`flex justify-between font-bold text-lg ${calculateTotalProfit() >= 0 ? "text-green-600" : "text-red-600"}`}>
-              <span>Keuntungan</span>
-              <span>Rp {calculateTotalProfit().toLocaleString()}</span>
-            </div>
+        {/* RIGHT - KERANJANG */}
+        <div className="lg:w-96 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl flex flex-col h-fit sticky top-6">
+          <div className="p-6 border-b border-slate-100">
+            <h2 className="font-bold text-2xl text-slate-900">Keranjang</h2>
+            <p className="text-slate-500 mt-1">{cart.length} item</p>
           </div>
 
-          <button
-            onClick={handleCheckout}
-            disabled={cart.length === 0 || isCheckingOut}
-            className="w-full mt-6 rounded-2xl bg-slate-950 py-4 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            {isCheckingOut ? "Memproses..." : "Bayar Sekarang"}
-          </button>
+          <div className="flex-1 max-h-[520px] overflow-y-auto p-6 space-y-4">
+            {cart.length === 0 ? (
+              <div className="text-center text-slate-400 py-12">
+                Keranjang kosong<br />Klik tombol &quot;Tambah&quot; di tabel
+              </div>
+            ) : (
+              cart.map((item) => (
+                <div key={item.id} className="border border-slate-200 rounded-3xl p-4">
+
+                  <div className="flex justify-between">
+                    <div className="font-medium text-slate-900">{item.name}</div>
+
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className=" text-xs text-rose-500 hover:text-rose-700"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="text-xs text-slate-500">Harga Modal</label>
+                      {item.isEditingCost ? (
+                        <div className="flex gap-2 mt-1">
+                          <input
+                            type="number"
+                            value={item.tempCostPrice}
+                            onChange={(e) => updateTempCost(item.id, parseInt(e.target.value) || 0)}
+                            className="flex-1 rounded-xl border border-slate-200 p-2 text-sm"
+                            autoFocus
+                          />
+                          <button onClick={() => saveCostPrice(item.id, item.productId, item.tempCostPrice || 0)} className="px-4 rounded-xl bg-emerald-600 text-white">Save</button>
+                          <button onClick={() => cancelEditCost(item.id)} className="px-4 rounded-xl bg-slate-200 text-slate-700">Batal</button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between mt-1">
+                          <span className="text-slate-900">Rp {item.costPrice.toLocaleString()}</span>
+                          <button onClick={() => startEditCost(item.id, item.costPrice)} className="text-xs text-violet-600">Edit</button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-slate-500">Harga Jual</label>
+                      <input
+                        type="number"
+                        value={item.sellPrice}
+                        onChange={(e) => updateSellPrice(item.id, parseInt(e.target.value) || 0)}
+                        className="w-full mt-1 rounded-xl border border-slate-200 p-2 text-sm"
+                      />
+                    </div>
+
+                    <div className="flex justify-between border-t border-slate-100 pt-3 font-medium">
+                      <span>Subtotal</span>
+                      <span className="text-slate-900">Rp {item.subtotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="rounded-b-[2rem] border-t border-slate-100 bg-slate-50/80 p-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Total Modal</span>
+                <span>Rp {calculateTotalCost().toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Total Penjualan</span>
+                <span className="font-semibold">Rp {calculateTotal().toLocaleString()}</span>
+              </div>
+              <div className={`flex justify-between font-bold text-lg ${calculateTotalProfit() >= 0 ? "text-green-600" : "text-red-600"}`}>
+                <span>Keuntungan</span>
+                <span>Rp {calculateTotalProfit().toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCheckout}
+              disabled={cart.length === 0 || isCheckingOut}
+              className="w-full mt-6 rounded-2xl bg-slate-950 py-4 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {isCheckingOut ? "Memproses..." : "Bayar Sekarang"}
+            </button>
+          </div>
         </div>
-      </div>
       </div>
 
       {isCheckingOut && (
@@ -559,10 +556,10 @@ export default function KasirHpPage() {
               <h2 className={`text-2xl font-bold ${checkoutModal.success ? 'text-green-600' : 'text-red-600'}`}>
                 {checkoutModal.success ? 'Payment Successful!' : 'Payment Failed'}
               </h2>
-              
+
               {/* Message */}
               <p className="text-gray-500 mt-3 leading-relaxed">
-                {checkoutModal.success 
+                {checkoutModal.success
                   ? `Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur amet labore.`
                   : checkoutModal.message
                 }

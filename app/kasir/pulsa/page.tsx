@@ -141,6 +141,23 @@ export default function KasirPulsaPage() {
           </div>
 
           <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo Anda</label>
+            <input
+              type="number"
+              value={balance}
+              onChange={(e) => setBalance(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
+              placeholder={loadingBalance ? "Memuat saldo terakhir..." : "Gunakan saldo terakhir"}
+              min="0"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              {loadingBalance
+                ? "Mengambil sisa saldo terakhir..."
+                : "Saldo ini otomatis dikurangi sesuai modal dan disimpan sebagai saldo sisa."}
+            </p>
+          </div>
+
+          <div>
             <label className="mb-2 block text-sm font-semibold text-slate-600">Modal</label>
             <input
               type="number"
@@ -156,23 +173,6 @@ export default function KasirPulsaPage() {
                 Sisa saldo setelah transaksi: Rp {remainingBalance.toLocaleString("id-ID")}
               </p>
             )}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo</label>
-            <input
-              type="number"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-transparent focus:ring-2 focus:ring-violet-500"
-              placeholder={loadingBalance ? "Memuat saldo terakhir..." : "Gunakan saldo terakhir"}
-              min="0"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              {loadingBalance
-                ? "Mengambil sisa saldo terakhir..."
-                : "Saldo ini otomatis dikurangi sesuai modal dan disimpan sebagai saldo sisa."}
-            </p>
           </div>
 
           <div>
