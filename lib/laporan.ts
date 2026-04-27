@@ -5,20 +5,27 @@ type GetLaporanParams = {
   startDate: string;
   endDate: string;
   category: ProductCategory;
-  search: string | null
+  search: string | null;
+  page?: number;
+  pageSize?: number;
 };
 
 export async function getCategoryLaporan({
   startDate,
   endDate,
   category,
-  search
+  search,
+  page = 1,
+  pageSize = 6,
 }: GetLaporanParams) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   end.setHours(23, 59, 59, 999);
 
-const transactions = await prisma.transaction.findMany({
+  const skip = (page - 1) * pageSize;
+
+  // Get total count for pagination
+  const totalCount = await prisma.transaction.count({
     where: {
       type: "SALE",
       category,
@@ -26,51 +33,80 @@ const transactions = await prisma.transaction.findMany({
       createdAt: {
         gte: start,
         lte: end,
-    },
-    ...(search
-      ? {
-          items: {
-            some: {
-              OR: [
-                {
-                  phone: {
-                    imei: {
-                      equals: search,
-                      mode: "insensitive",
+      },
+      ...(search
+        ? {
+            items: {
+              some: {
+                OR: [
+                  {
+                    phone: {
+                      imei: {
+                        equals: search,
+                        mode: "insensitive",
+                      },
                     },
                   },
-                },
-                { accessory: { name: { contains: search, mode: "insensitive" } },  },
-                { pulsa: { description: { contains: search, mode: "insensitive"} }}
-              ],
+                  { accessory: { name: { contains: search, mode: "insensitive" } } },
+                  { pulsa: { description: { contains: search, mode: "insensitive" } } },
+                ],
+              },
             },
-          },
-        }
-      : {}),
+          }
+        : {}),
+    },
+  });
 
-    
-  },
-
-  include: {
-    user: {
-      select: {
-        id: true,
-        name: true,
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      type: "SALE",
+      category,
+      deleted: false,
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+      ...(search
+        ? {
+            items: {
+              some: {
+                OR: [
+                  {
+                    phone: {
+                      imei: {
+                        equals: search,
+                        mode: "insensitive",
+                      },
+                    },
+                  },
+                  { accessory: { name: { contains: search, mode: "insensitive" } } },
+                  { pulsa: { description: { contains: search, mode: "insensitive" } } },
+                ],
+              },
+            },
+          }
+        : {}),
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      items: {
+        include: {
+          phone: true,
+          accessory: true,
+          voucher: true,
+          pulsa: true,
+        },
       },
     },
-
-    items: {
-      include: {
-        phone: true,
-        accessory: true,
-        voucher: true,
-        pulsa: true,
-      },
-    },
-  },
-
-  orderBy: { createdAt: "desc" },
-});
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: pageSize,
+  });
 
   const totalRevenue = transactions.reduce(
     (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.totalAmount),
@@ -102,6 +138,8 @@ const transactions = await prisma.transaction.findMany({
 
   const chartData = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   return {
     transactions,
     summary: {
@@ -111,5 +149,13 @@ const transactions = await prisma.transaction.findMany({
       transactionCount: transactions.length,
     },
     chartData,
+    pagination: {
+      page,
+      pageSize,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
   };
 }

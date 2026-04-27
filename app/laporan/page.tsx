@@ -468,13 +468,15 @@ const applyBestEffortFill = (worksheet: XLSX.WorkSheet, rowIndex: number, colCou
   }
 };
 
-async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[], search: string) {
+async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[], search: string, page: number = 1) {
   const responses = await Promise.all(
     categories.map(async (category) => {
       const url = new URL(categoryEndpointMap[category], window.location.origin);
       url.searchParams.set("startDate", startDate);
       url.searchParams.set("endDate", endDate);
-      url.searchParams.set("search", search)
+      url.searchParams.set("search", search);
+      url.searchParams.set("page", page.toString());
+      url.searchParams.set("pageSize", "6");
 
       const res = await fetch(url.toString());
       if (!res.ok) {
@@ -495,8 +497,14 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
         totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
         transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
       };
+      
+      // Get pagination from last report (they should all be the same)
+      const pagination = report.pagination || { page: 1, pageSize: 6, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false };
+      
+      // Limit transactions to pageSize after merging from multiple categories
+      const limitedTransactions = transactions.slice(0, pagination.pageSize);
 
-      return { transactions, summary };
+      return { transactions: limitedTransactions, summary, pagination };
     },
     {
       transactions: [] as ReportTransaction[],
@@ -506,6 +514,7 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
         totalProfit: 0,
         transactionCount: 0,
       },
+      pagination: { page: 1, pageSize: 6, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
     }
   );
 }
@@ -564,7 +573,7 @@ export default function LaporanKeuanganPage() {
   const inFlightKeyRef = useRef<string | null>(null);
   const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const groupsPerPage = 5;
+  const itemsPerPage = 6;
   const [search, setSearch] = useState("");
 
   const fixedFilter: ReportProductFilter | null =
@@ -595,7 +604,7 @@ export default function LaporanKeuanganPage() {
   }, [effectiveFilter, startDate, endDate, search]);
 
   const fetchLaporan = useCallback(async () => {
-    const requestKey = `${effectiveFilter}|${startDate}|${endDate}`;
+    const requestKey = `${effectiveFilter}|${startDate}|${endDate}|${page}`;
     if (inFlightKeyRef.current === requestKey) return;
     inFlightKeyRef.current = requestKey;
 
@@ -611,7 +620,7 @@ export default function LaporanKeuanganPage() {
       const requestStart = [startDate, monthStart, today].sort()[0];
       const requestEnd = [endDate, today].sort()[1];
 
-      const report = await fetchCategoryReport(requestStart, requestEnd, categories, search);
+      const report = await fetchCategoryReport(requestStart, requestEnd, categories, search, page);
       const allTransactions = report.transactions || [];
       const tableTransactions = filterTransactionsByDateRange(allTransactions, startDate, endDate);
       const monthTransactions = filterTransactionsByDateRange(allTransactions, monthStart, today);
@@ -632,7 +641,7 @@ export default function LaporanKeuanganPage() {
       }
       setLoading(false);
     }
-  }, [effectiveFilter, endDate, startDate, search]);
+  }, [effectiveFilter, endDate, startDate, search, page]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -745,11 +754,74 @@ export default function LaporanKeuanganPage() {
   const groupedRows = buildGroupedRows(transactions, effectiveFilter);
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
   const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
-  const activeGroups = effectiveFilter === "pulsa" ? groupedPulsaRows : groupedRows;
-  const totalGroupPages = Math.max(1, Math.ceil(activeGroups.length / groupsPerPage));
-  const groupStartIndex = (page - 1) * groupsPerPage;
-  const pagedGroups = groupedRows.slice(groupStartIndex, groupStartIndex + groupsPerPage);
-  const pagedPulsaGroups = groupedPulsaRows.slice(groupStartIndex, groupStartIndex + groupsPerPage);
+  const totalPulsaItems = groupedPulsaRows.reduce((sum, group) => sum + group.rows.length, 0);
+  
+  // Calculate pagination based on items (not groups)
+  const currentTotalItems = effectiveFilter === "pulsa" ? totalPulsaItems : totalItems;
+  const totalPages = Math.max(1, Math.ceil(currentTotalItems / itemsPerPage));
+  const itemStartIndex = (page - 1) * itemsPerPage;
+  const itemEndIndex = itemStartIndex + itemsPerPage;
+  
+  // Paginate and reconstruct groups for non-pulsa
+  let pagedGroups: typeof groupedRows = [];
+  let pagedPulsaGroups: typeof groupedPulsaRows = [];
+  
+  if (effectiveFilter === "pulsa") {
+    // For pulsa: flatten, slice, and reconstruct
+    const flatItems = groupedPulsaRows.flatMap((group) =>
+      group.rows.map((row) => ({ ...row, groupInfo: group }))
+    );
+    const slicedItems = flatItems.slice(itemStartIndex, itemEndIndex);
+    
+    const groupMap = new Map<string, (typeof groupedPulsaRows)[0]>();
+    slicedItems.forEach((item) => {
+      const key = item.groupInfo.dateKey;
+      if (!groupMap.has(key)) {
+        groupMap.set(key, {
+          dateKey: item.groupInfo.dateKey,
+          dateLabel: item.groupInfo.dateLabel,
+          rows: [],
+          subtotalModal: 0,
+          subtotalTotal: 0,
+          subtotalProfit: 0,
+        });
+      }
+      const group = groupMap.get(key)!;
+      group.rows.push(item);
+      group.subtotalModal += item.modal;
+      group.subtotalTotal += item.total;
+      group.subtotalProfit += item.profit;
+    });
+    pagedPulsaGroups = Array.from(groupMap.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  } else {
+    // For non-pulsa: flatten, slice, and reconstruct
+    const flatItems = groupedRows.flatMap((group) =>
+      group.rows.map((row) => ({ ...row, groupInfo: group }))
+    );
+    const slicedItems = flatItems.slice(itemStartIndex, itemEndIndex);
+    
+    const groupMap = new Map<string, (typeof groupedRows)[0]>();
+    slicedItems.forEach((item) => {
+      const key = item.groupInfo.dateKey;
+      if (!groupMap.has(key)) {
+        groupMap.set(key, {
+          dateKey: item.groupInfo.dateKey,
+          dateLabel: item.groupInfo.dateLabel,
+          rows: [],
+          subtotalCost: 0,
+          subtotalRevenue: 0,
+          subtotalProfit: 0,
+        });
+      }
+      const group = groupMap.get(key)!;
+      group.rows.push(item);
+      group.subtotalCost += item.cost;
+      group.subtotalRevenue += item.revenue;
+      group.subtotalProfit += item.profit;
+    });
+    pagedGroups = Array.from(groupMap.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }
+  
   const statusByTransactionId = new Map(transactions.map((transaction) => [transaction.id, transaction.status]));
 
   const updateTransactionStatus = async (transactionId: string, status: "PAID" | "REFUND") => {
@@ -862,11 +934,16 @@ export default function LaporanKeuanganPage() {
           <div>
             <h2 className="text-xl font-semibold text-slate-900">Detail Transaksi</h2>
             <p className="mt-1 text-sm text-slate-500">
-              {normalizeCategoryTitle(effectiveFilter)} • {effectiveFilter === "pulsa" ? pulsaRows.length : totalItems} baris item
+              {(() => {
+                const displayedItems = effectiveFilter === "pulsa" 
+                  ? pagedPulsaGroups.reduce((sum, g) => sum + g.rows.length, 0)
+                  : pagedGroups.reduce((sum, g) => sum + g.rows.length, 0);
+                return `${normalizeCategoryTitle(effectiveFilter)} • ${displayedItems} dari ${currentTotalItems} baris item`;
+              })()}
             </p>
           </div>
           <span className="text-sm font-medium text-slate-500">
-            {groupedRows.length} kelompok tanggal
+            {(effectiveFilter === "pulsa" ? pagedPulsaGroups : pagedGroups).length} kelompok tanggal
           </span>
         </div>
 
@@ -1021,7 +1098,7 @@ export default function LaporanKeuanganPage() {
           </div>
         )}
       </div>
-      {activeGroups.length > 0 && (
+      {currentTotalItems > 0 && (
         <div className="flex items-center justify-center gap-3">
           <button
             type="button"
@@ -1032,12 +1109,12 @@ export default function LaporanKeuanganPage() {
             Previous
           </button>
           <span className="text-sm text-slate-600">
-            Halaman {page} dari {totalGroupPages}
+            Halaman {page} dari {totalPages}
           </span>
           <button
             type="button"
-            onClick={() => setPage((current) => Math.min(totalGroupPages, current + 1))}
-            disabled={page >= totalGroupPages}
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page >= totalPages}
             className="rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm disabled:opacity-50"
           >
             Next

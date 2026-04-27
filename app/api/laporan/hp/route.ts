@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const search = searchParams.get("search")
+    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "6", 10);
 
     if (!startDate || !endDate) {
       return NextResponse.json({ error: "Tanggal mulai dan akhir diperlukan" }, { status: 400 });
@@ -23,7 +25,9 @@ export async function GET(request: Request) {
       startDate,
       endDate,
       category: "HANDPHONE",
-      search
+      search,
+      page,
+      pageSize,
     });
 
     return NextResponse.json(data);
