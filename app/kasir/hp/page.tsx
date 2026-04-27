@@ -384,7 +384,13 @@ export default function KasirHpPage() {
                             product.stock < 5 ? "bg-orange-100 text-orange-700" :
                               "bg-green-100 text-green-700"
                           }`}>
-                          Tipe {product.type}
+                          TIPE {product.type}
+                        </span>
+                        <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${product.stock === 0 ? "bg-red-100 text-red-700" :
+                            product.stock < 5 ? "bg-purple-100 text-purple-700" :
+                              "bg-green-100 text-green-700"
+                          }`}>
+                          IMEI {product.imei}
                         </span>
                       </div>
                     </div>

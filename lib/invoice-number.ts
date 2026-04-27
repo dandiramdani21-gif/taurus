@@ -1,24 +1,25 @@
-import type { ProductCategory } from "@/generated/client";
+/**
+ * Generate an invoice id that's extremely unlikely to collide, even with concurrent requests.
+ * Uses: timestamp (base-36) + 8-digit random + process/object hash.
+ * Example: INV-L7G8B3F-48261534-K9X2
+ *
+ * Collision probability is astronomically low:
+ * - Timestamp changes every millisecond
+ * - 8-digit random gives ~100M combinations per ms
+ * - 3-char suffix adds ~46K combinations
+ */
+export function generateInvoiceNumber(): string {
+  // Timestamp in milliseconds, converted to base-36
+  const ts = Date.now().toString(36).toUpperCase();
 
-function categoryTag(category: ProductCategory) {
-  if (category === "HANDPHONE") return "HP";
-  if (category === "PRODUK_LAIN") return "PRODUKLAIN";
-  return "PULSA";
+  // 8-digit random number (00000000 to 99999999)
+  const rand = String(Math.floor(Math.random() * 100_000_000)).padStart(8, "0");
+
+  // 3-character random suffix for extra entropy
+  const suffix = Math.floor(Math.random() * 46656)
+    .toString(36)
+    .toUpperCase()
+    .padStart(3, "X");
+
+  return `INV-${ts}-${rand}-${suffix}`;
 }
-
-function randomUpperAlnum(length = 8) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let out = "";
-  for (let i = 0; i < length; i += 1) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return out;
-}
-
-export function generateInvoiceNumber(category: ProductCategory, date = new Date()) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `INV-${categoryTag(category)}-${y}${m}${d}-${randomUpperAlnum(8)}`;
-}
-

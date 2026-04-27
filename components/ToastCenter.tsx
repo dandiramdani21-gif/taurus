@@ -21,11 +21,16 @@ export default function ToastCenter() {
       const text = String(message ?? "");
       const id = nextIdRef.current++;
 
-      setToasts((current) => [...current, { id, message: text }]);
-
+      // Defer state update to avoid updating a different component during render.
+      // Calling setTimeout moves this to the macrotask queue so React won't warn
+      // about setState being called while another component is rendering.
       window.setTimeout(() => {
-        setToasts((current) => current.filter((toast) => toast.id !== id));
-      }, 3200);
+        setToasts((current) => [...current, { id, message: text }]);
+
+        window.setTimeout(() => {
+          setToasts((current) => current.filter((toast) => toast.id !== id));
+        }, 3200);
+      }, 0);
     };
 
     return () => {

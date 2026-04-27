@@ -413,7 +413,7 @@ export default function KasirVoucherPage() {
       {/* RIGHT - KERANJANG */}
       <div className="lg:w-96 rounded-[2rem] border border-white/70 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl flex flex-col h-fit sticky top-6">
         <div className="p-6 border-b border-slate-100">
-          <h2 className="font-bold text-2xl text-slate-900">Keranjang</h2>
+          <h2 className="font-bold text-2xl text-slate-900">Keranjangs</h2>
           <p className="text-slate-500 mt-1">{cart.length} item</p>
         </div>
 
