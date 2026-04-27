@@ -59,7 +59,6 @@ export async function GET(request: Request) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -69,7 +68,7 @@ export async function GET(request: Request) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for search
+    // Build where clause for main query
     const deletedParam = searchParams.get("deleted");
     const deleted =
       deletedParam === "true" ? true : deletedParam === "false" || deletedParam === null ? false : undefined;
@@ -82,26 +81,54 @@ export async function GET(request: Request) {
             { brand: { contains: search, mode: "insensitive" as const } },
             { type: { contains: search, mode: "insensitive" as const } },
             { imei: { contains: search, mode: "insensitive" as const } },
-
-        ...(dateFilter
-          ? [
-              {
-                purchaseDate: {
-                  gte: dateFilter.start,
-                  lte: dateFilter.end,
-                },
-              },
-            ]
-          : []),
+            ...(dateFilter
+              ? [
+                  {
+                    purchaseDate: {
+                      gte: dateFilter.start,
+                      lte: dateFilter.end,
+                    },
+                  },
+                ]
+              : []),
           ],
-
         }
       : {
           ...(deleted === undefined ? {} : { deleted }),
           ...(deleted ? {} : { isHidden: false }),
         };
 
-    const [phones, total] = await Promise.all([
+    // Base filter untuk summary (tidak termasuk deleted)
+    const baseFilter = {
+      deleted: false,
+      ...(search && {
+        OR: [
+          { brand: { contains: search, mode: "insensitive" as const } },
+          { type: { contains: search, mode: "insensitive" as const } },
+          { imei: { contains: search, mode: "insensitive" as const } },
+        ],
+      }),
+      ...(dateFilter && {
+        purchaseDate: {
+          gte: dateFilter.start,
+          lte: dateFilter.end,
+        },
+      }),
+    };
+
+    // Filter untuk aset (isHidden: false)
+    const assetFilter = {
+      ...baseFilter,
+      isHidden: false,
+    };
+
+    // Filter untuk barang terjual (isHidden: true)
+    const soldFilter = {
+      ...baseFilter,
+      isHidden: true,
+    };
+
+    const [phones, total, assetSummaries, soldSummaries] = await Promise.all([
       prisma.phone.findMany({
         where,
         include: {
@@ -112,6 +139,20 @@ export async function GET(request: Request) {
         take: limit,
       }),
       prisma.phone.count({ where }),
+      // Total aset (belum terjual)
+      prisma.phone.aggregate({
+        where: assetFilter,
+        _sum: {
+          purchasePrice: true,
+        },
+      }),
+      // Total barang terjual
+      prisma.phone.aggregate({
+        where: soldFilter,
+        _count: {
+          id: true,
+        },
+      }),
     ]);
 
     return NextResponse.json({
@@ -121,6 +162,10 @@ export async function GET(request: Request) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      summaries: {
+        totalPurchasePrice: assetSummaries._sum.purchasePrice || 0,
+        totalSoldCount: soldSummaries._count.id || 0,
       },
     });
   } catch (error) {

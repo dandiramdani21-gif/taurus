@@ -33,6 +33,11 @@ interface PaginationData {
   totalPages: number;
 }
 
+interface Summaries {
+  totalPurchasePrice: number;
+  totalSoldCount: number
+}
+
 export default function HpPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session, status } = useSession();
@@ -43,6 +48,7 @@ export default function HpPage() {
   const [showStockModal, setShowStockModal] = useState<Phone | null>(null);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
   const [stockValue, setStockValue] = useState(0);
+  const [summaries, setSummaries] = useState<Summaries>({totalPurchasePrice: 0, totalSoldCount: 9})
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 10,
@@ -95,6 +101,7 @@ export default function HpPage() {
       const data = await res.json();
       setPhones(data.phones);
       setPagination(data.pagination);
+      setSummaries(data.summaries)
     } catch (error) {
       console.error("Error fetching phones:", error);
     } finally {
@@ -147,8 +154,18 @@ export default function HpPage() {
     return "";
   };
 
-  const exportPhones = () => {
-    const exportData = phones.map((phone) => ({
+const exportPhones = async () => {
+  try {
+    const response = await fetch("/api/hp/exports");
+    if (!response.ok) {
+      throw new Error("Gagal mengambil data HP");
+    }
+    
+    const phones = await response.json();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const exportData = phones.map((phone: any, index: number) => ({
+      NO: index + 1,
       MERK: phone.brand,
       TIPE: phone.type,
       IMEI: phone.imei,
@@ -162,10 +179,30 @@ export default function HpPage() {
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set header background to gray
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:G1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      ws[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "D3D3D3" } // Abu-abu
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+    
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "HP");
     XLSX.writeFile(wb, `HP_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
+  } catch (error) {
+    console.error("Error exporting phones:", error);
+    alert("Gagal mengekspor data HP");
+  }
+};
 
   const importPhones = async (rows: Array<Record<string, unknown>>) => {
     if (!rows.length) {
@@ -429,7 +466,7 @@ export default function HpPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -452,7 +489,20 @@ export default function HpPage() {
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Aset</p>
-              <p className="text-xl font-bold text-gray-800">{totalStock}</p>
+              <p className="text-xl font-bold text-gray-800">Rp. {summaries.totalPurchasePrice.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Barang Terjual</p>
+              <p className="text-xl font-bold text-gray-800">{summaries.totalSoldCount}</p>
             </div>
           </div>
         </div>
@@ -474,8 +524,8 @@ export default function HpPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Imei</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Barang</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Imei</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tgl Masuk</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>

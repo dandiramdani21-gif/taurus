@@ -71,12 +71,13 @@ export async function PATCH(
     const body = await request.json();
     const nextStatusRaw = body?.status ? String(body.status) : null;
     const nextDeletedRaw = typeof body?.deleted === "boolean" ? body.deleted : null;
+    const nextDebtNote = typeof body?.debt_note === "string" ? body.debt_note.trim() : null;
 
     if (nextStatusRaw !== null && !isValidStatus(nextStatusRaw)) {
       return NextResponse.json({ error: "Status tidak valid" }, { status: 400 });
     }
 
-    if (nextStatusRaw === null && nextDeletedRaw === null) {
+    if (nextStatusRaw === null && nextDeletedRaw === null && nextDebtNote === null) {
       return NextResponse.json({ error: "Tidak ada perubahan yang dikirim" }, { status: 400 });
     }
 
@@ -95,7 +96,12 @@ export async function PATCH(
       const prevStatus = transaction.status;
       const nextStatus = nextStatusRaw as TransactionStatus | null;
       const nextDeleted = nextDeletedRaw;
-      if ((nextStatus === null || prevStatus === nextStatus) && (nextDeleted === null || transaction.deleted === nextDeleted)) {
+
+      const statusUnchanged = nextStatus === null || prevStatus === nextStatus;
+      const deletedUnchanged = nextDeleted === null || transaction.deleted === nextDeleted;
+      const debtNoteUnchanged = nextDebtNote === null;
+
+      if (statusUnchanged && deletedUnchanged && debtNoteUnchanged) {
         return transaction;
       }
 
@@ -157,6 +163,7 @@ export async function PATCH(
         data: {
           ...(nextStatus ? { status: nextStatus } : {}),
           ...(nextDeleted !== null ? { deleted: nextDeleted } : {}),
+          ...(nextDebtNote !== null ? { debt_note: nextDebtNote } : {}),
         },
         include: {
           items: true,

@@ -161,6 +161,7 @@ model Transaction {
   profit      Int
 
   note String?
+  debt_note String? @default("-")
   servedByName String?
 
   createdAt DateTime @default(now())

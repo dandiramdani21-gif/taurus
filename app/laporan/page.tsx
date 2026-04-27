@@ -19,6 +19,7 @@ type ReportTransaction = {
   totalCost: number;
   profit: number;
   note?: string | null;
+  debt_note: string;
   items: Array<{
     id?: string;
     quantity: number;
@@ -56,6 +57,7 @@ type ReportTransaction = {
 type ReportRow = {
   key: string;
   transactionId: string;
+  debt_note: string
   dateKey: string;
   dateLabel: string;
   category: string;
@@ -83,6 +85,7 @@ type PulsaRow = {
   dateKey: string;
   dateLabel: string;
   destinationNumber: string;
+  debt_note: string;
   description: string;
   modal: number;
   price: number;
@@ -267,11 +270,13 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
       const product = buildProductLabel(item);
       const category = buildCategoryLabel(item);
       const detail = buildRowDetail(item);
+      const debt_note = transaction.debt_note
 
       group.rows.push({
         key: `${transaction.id}-${index}`,
         transactionId: transaction.id,
         dateKey,
+        debt_note,
         dateLabel,
         category,
         product,
@@ -322,6 +327,7 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
         dateKey,
         dateLabel,
         destinationNumber: item.pulsaDestinationNumber || item.pulsa?.destinationNumber || "-",
+        debt_note: transaction.debt_note,
         description: item.pulsaDescription || item.pulsa?.description || item.pulsa?.note || "-",
         modal,
         price: Number(item.sellPrice ?? transaction.totalAmount ?? 0) * multiplier,
@@ -337,10 +343,11 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
 
 const buildPulsaRowsForExport = (rows: PulsaRow[]) => {
   return [
-    ["Tanggal Jual", "No Tujuan", "Keterangan", "Modal", "Harga Jual", "Total", "Keuntungan", "Saldo"],
+    ["Tanggal Jual", "No Tujuan", "Catatan", "Keterangan", "Modal", "Harga Jual", "Total", "Keuntungan", "Saldo"],
     ...rows.map((row) => [
       row.dateLabel,
       row.destinationNumber,
+      row.debt_note,
       row.description,
       row.modal,
       row.price,
@@ -497,10 +504,10 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
         totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
         transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
       };
-      
+
       // Get pagination from last report (they should all be the same)
       const pagination = report.pagination || { page: 1, pageSize: 6, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false };
-      
+
       // Limit transactions to pageSize after merging from multiple categories
       const limitedTransactions = transactions.slice(0, pagination.pageSize);
 
@@ -569,6 +576,7 @@ export default function LaporanKeuanganPage() {
   const [monthlyProfit, setMonthlyProfit] = useState(0);
   const [monthlyCost, setMonthlyCost] = useState(0);
   const [todayProfit, setTodayProfit] = useState(0);
+  const [debtNotes, setDebtNotes] = useState<Record<string, string>>({});
   const [pulsaRows, setPulsaRows] = useState<PulsaRow[]>([]);
   const inFlightKeyRef = useRef<string | null>(null);
   const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
@@ -602,6 +610,44 @@ export default function LaporanKeuanganPage() {
   useEffect(() => {
     setPage(1);
   }, [effectiveFilter, startDate, endDate, search]);
+
+
+
+  // Handle key down - detect Enter
+  const handleDebtNoteKeyDown = (transactionId: string, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission if any
+      const currentValue = (e.target as HTMLInputElement).value;
+      // Trigger blur manually
+      handleDebtNoteBlur(transactionId, currentValue);
+    }
+  };
+
+  const handleDebtNoteBlur = async (transactionId: string, value: string) => {
+    try {
+      const res = await fetch(`/api/transactions/${transactionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ debt_note: value }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || "Gagal update catatan piutang");
+      }
+
+      // Optional: refresh laporan atau update local state
+      await fetchLaporan();
+    } catch (error) {
+      console.error("Gagal update catatan piutang:", error);
+      alert(error instanceof Error ? error.message : "Gagal update catatan piutang");
+    }
+  };
+
+  // Handle change untuk input tertentu
+  const handleDebtNoteChange = (transactionId: string, value: string) => {
+    setDebtNotes(prev => ({ ...prev, [transactionId]: value }));
+  };
 
   const fetchLaporan = useCallback(async () => {
     const requestKey = `${effectiveFilter}|${startDate}|${endDate}|${page}`;
@@ -755,24 +801,24 @@ export default function LaporanKeuanganPage() {
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
   const totalItems = groupedRows.reduce((sum, group) => sum + group.rows.length, 0);
   const totalPulsaItems = groupedPulsaRows.reduce((sum, group) => sum + group.rows.length, 0);
-  
+
   // Calculate pagination based on items (not groups)
   const currentTotalItems = effectiveFilter === "pulsa" ? totalPulsaItems : totalItems;
   const totalPages = Math.max(1, Math.ceil(currentTotalItems / itemsPerPage));
   const itemStartIndex = (page - 1) * itemsPerPage;
   const itemEndIndex = itemStartIndex + itemsPerPage;
-  
+
   // Paginate and reconstruct groups for non-pulsa
   let pagedGroups: typeof groupedRows = [];
   let pagedPulsaGroups: typeof groupedPulsaRows = [];
-  
+
   if (effectiveFilter === "pulsa") {
     // For pulsa: flatten, slice, and reconstruct
     const flatItems = groupedPulsaRows.flatMap((group) =>
       group.rows.map((row) => ({ ...row, groupInfo: group }))
     );
     const slicedItems = flatItems.slice(itemStartIndex, itemEndIndex);
-    
+
     const groupMap = new Map<string, (typeof groupedPulsaRows)[0]>();
     slicedItems.forEach((item) => {
       const key = item.groupInfo.dateKey;
@@ -799,7 +845,7 @@ export default function LaporanKeuanganPage() {
       group.rows.map((row) => ({ ...row, groupInfo: group }))
     );
     const slicedItems = flatItems.slice(itemStartIndex, itemEndIndex);
-    
+
     const groupMap = new Map<string, (typeof groupedRows)[0]>();
     slicedItems.forEach((item) => {
       const key = item.groupInfo.dateKey;
@@ -821,7 +867,7 @@ export default function LaporanKeuanganPage() {
     });
     pagedGroups = Array.from(groupMap.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }
-  
+
   const statusByTransactionId = new Map(transactions.map((transaction) => [transaction.id, transaction.status]));
 
   const updateTransactionStatus = async (transactionId: string, status: "PAID" | "REFUND") => {
@@ -918,13 +964,13 @@ export default function LaporanKeuanganPage() {
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-600">Pencarian</label>
-          <input
-            type="text"
-            placeholder="Cari nomor invoice atau imei..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-          />
+            <input
+              type="text"
+              placeholder="Cari nomor invoice atau imei..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+            />
           </div>
         </div>
       </div>
@@ -935,7 +981,7 @@ export default function LaporanKeuanganPage() {
             <h2 className="text-xl font-semibold text-slate-900">Detail Transaksi</h2>
             <p className="mt-1 text-sm text-slate-500">
               {(() => {
-                const displayedItems = effectiveFilter === "pulsa" 
+                const displayedItems = effectiveFilter === "pulsa"
                   ? pagedPulsaGroups.reduce((sum, g) => sum + g.rows.length, 0)
                   : pagedGroups.reduce((sum, g) => sum + g.rows.length, 0);
                 return `${normalizeCategoryTitle(effectiveFilter)} • ${displayedItems} dari ${currentTotalItems} baris item`;
@@ -956,10 +1002,11 @@ export default function LaporanKeuanganPage() {
             <table className="w-full min-w-[1100px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50">
-                {effectiveFilter === "pulsa" ? (
+                  {effectiveFilter === "pulsa" ? (
                     <>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Tanggal Jual</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">No Tujuan</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Catatan</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Keterangan</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Modal</th>
                       <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Harga Jual</th>
@@ -970,6 +1017,7 @@ export default function LaporanKeuanganPage() {
                   ) : (
                     <>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Item</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Catatan</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Kategori</th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wide">Detail</th>
                       <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600 uppercase tracking-wide">Qty</th>
@@ -984,115 +1032,135 @@ export default function LaporanKeuanganPage() {
               <tbody className="divide-y divide-slate-100">
                 {effectiveFilter === "pulsa"
                   ? pagedPulsaGroups.map((group, index) => {
-                      const theme = groupThemes[index % groupThemes.length];
-                      return (
-                        <Fragment key={group.dateKey}>
-                          <tr className={theme.header}>
-                            <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
-                              Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                    const theme = groupThemes[index % groupThemes.length];
+                    return (
+                      <Fragment key={group.dateKey}>
+                        <tr className={theme.header}>
+                          <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
+                            Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                          </td>
+                        </tr>
+                        {group.rows.map((row) => (
+                          <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                            <td className="px-6 py-4 text-sm text-slate-700">{row.dateLabel}</td>
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-slate-900">{row.destinationNumber}</div>
+                              <div className="text-xs text-slate-500">Saldo: {row.balance ?? "-"}</div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700">
+                              <input
+                                value={debtNotes[row.transactionId] || ""}
+                                onChange={(e) => handleDebtNoteChange(row.transactionId, e.target.value)}
+                                onBlur={(e) => handleDebtNoteBlur(row.transactionId, e.target.value)}
+                                onKeyDown={(e) => handleDebtNoteKeyDown(row.transactionId, e)}
+                                placeholder="Catatan"
+                                className="bg-blue-100 rounded-md p-2 "
+                              />
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700">{row.description}</td>
+                            <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.modal)}</td>
+                            <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.price)}</td>
+                            <td className="px-6 py-4 text-right text-sm text-slate-700">{rupiah(row.total)}</td>
+                            <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                              {rupiah(row.profit)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700">
+                              <select
+                                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                value={statusByTransactionId.get(row.transactionId) || "REFUND"}
+                                onChange={(e) =>
+                                  updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
+                                }
+                                disabled={updatingStatusTxId === row.transactionId}
+                              >
+                                <option value="PAID">PAID</option>
+                                <option value="REFUND">REFUND</option>
+                              </select>
                             </td>
                           </tr>
-                          {group.rows.map((row) => (
-                            <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
-                              <td className="px-6 py-4 text-sm text-slate-700">{row.dateLabel}</td>
-                              <td className="px-6 py-4">
-                                <div className="font-medium text-slate-900">{row.destinationNumber}</div>
-                                <div className="text-xs text-slate-500">Saldo: {row.balance ?? "-"}</div>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-slate-700">{row.description}</td>
-                              <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.modal)}</td>
-                              <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.price)}</td>
-                              <td className="px-6 py-4 text-right text-sm text-slate-700">{rupiah(row.total)}</td>
-                              <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                                {rupiah(row.profit)}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-slate-700">
-                                <select
-                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                  value={statusByTransactionId.get(row.transactionId) || "REFUND"}
-                                  onChange={(e) =>
-                                    updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
-                                  }
-                                  disabled={updatingStatusTxId === row.transactionId}
-                                >
-                                  <option value="PAID">PAID</option>
-                                  <option value="REFUND">REFUND</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                          <tr className={theme.subtotal}>
-                            <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
-                            <td className="px-6 py-4 text-sm" colSpan={2}>
-                              Laba/Rugi kelompok tanggal ini
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalModal)}</td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">-</td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalTotal)}</td>
-                            <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                              {rupiah(group.subtotalProfit)}
-                            </td>
-                            <td />
-                          </tr>
-                        </Fragment>
-                      );
-                    })
+                        ))}
+                        <tr className={theme.subtotal}>
+                          <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
+                          <td className="px-6 py-4 text-sm" colSpan={2}>
+                            Laba/Rugi kelompok tanggal ini
+                          </td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalModal)}</td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">-</td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalTotal)}</td>
+                          <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                            {rupiah(group.subtotalProfit)}
+                          </td>
+                          <td />
+                        </tr>
+                      </Fragment>
+                    );
+                  })
                   : pagedGroups.map((group, index) => {
-                      const theme = groupThemes[index % groupThemes.length];
-                      return (
-                        <Fragment key={group.dateKey}>
-                          <tr className={theme.header}>
-                            <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
-                              Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                    const theme = groupThemes[index % groupThemes.length];
+                    return (
+                      <Fragment key={group.dateKey}>
+                        <tr className={theme.header}>
+                          <td colSpan={8} className="px-6 py-3 text-sm font-semibold">
+                            Tgl Jual: {group.dateLabel} • {group.rows.length} item • {rupiah(group.subtotalProfit)}
+                          </td>
+                        </tr>
+                        {group.rows.map((row) => (
+                          <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-slate-900">{row.product}</div>
+                              <div className="text-xs text-slate-500">{row.dateLabel}</div>
+                            </td>
+                             <td className="px-6 py-4 text-sm text-slate-700">
+                              <input
+                                value={debtNotes[row.transactionId] || ""}
+                                onChange={(e) => handleDebtNoteChange(row.transactionId, e.target.value)}
+                                onBlur={(e) => handleDebtNoteBlur(row.transactionId, e.target.value)}
+                                onKeyDown={(e) => handleDebtNoteKeyDown(row.transactionId, e)}
+                                placeholder="Catatan"
+                                className="bg-blue-100 rounded-md p-2 "
+                              />
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700">{row.category}</td>
+                            <td className="px-6 py-4 text-sm text-slate-700">{row.detail}</td>
+                            <td className="px-6 py-4 text-right text-sm text-slate-700">{row.quantity}</td>
+                            <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.cost)}</td>
+                            <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.revenue)}</td>
+                            <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                              {rupiah(row.profit)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-700">
+                              <select
+                                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                value={statusByTransactionId.get(row.transactionId) || "REFUND"}
+                                onChange={(e) =>
+                                  updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
+                                }
+                                disabled={updatingStatusTxId === row.transactionId}
+                              >
+                                <option value="PAID">PAID</option>
+                                <option value="REFUND">REFUND</option>
+                              </select>
                             </td>
                           </tr>
-                          {group.rows.map((row) => (
-                            <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
-                              <td className="px-6 py-4">
-                                <div className="font-medium text-slate-900">{row.product}</div>
-                                <div className="text-xs text-slate-500">{row.dateLabel}</div>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-slate-700">{row.category}</td>
-                              <td className="px-6 py-4 text-sm text-slate-700">{row.detail}</td>
-                              <td className="px-6 py-4 text-right text-sm text-slate-700">{row.quantity}</td>
-                              <td className="px-6 py-4 text-right text-sm text-amber-700">{rupiah(row.cost)}</td>
-                              <td className="px-6 py-4 text-right text-sm text-emerald-700">{rupiah(row.revenue)}</td>
-                              <td className={`px-6 py-4 text-right text-sm font-semibold ${row.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                                {rupiah(row.profit)}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-slate-700">
-                                <select
-                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                  value={statusByTransactionId.get(row.transactionId) || "REFUND"}
-                                  onChange={(e) =>
-                                    updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
-                                  }
-                                  disabled={updatingStatusTxId === row.transactionId}
-                                >
-                                  <option value="PAID">PAID</option>
-                                  <option value="REFUND">REFUND</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                          <tr className={theme.subtotal}>
-                            <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
-                            <td className="px-6 py-4 text-sm" colSpan={2}>
-                              Laba/Rugi kelompok tanggal ini
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">
-                              {group.rows.reduce((sum, row) => sum + row.quantity, 0)}
-                            </td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalCost)}</td>
-                            <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalRevenue)}</td>
-                            <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
-                              {rupiah(group.subtotalProfit)}
-                            </td>
-                            <td />
-                          </tr>
-                        </Fragment>
-                      );
-                    })}
+                        ))}
+                        <tr className={theme.subtotal}>
+                          <td className="px-6 py-4 font-semibold">Subtotal {group.dateLabel}</td>
+                          <td className="px-6 py-4 text-sm" colSpan={2}>
+                            Laba/Rugi kelompok tanggal ini
+                          </td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">
+                            {group.rows.reduce((sum, row) => sum + row.quantity, 0)}
+                          </td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalCost)}</td>
+                          <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalRevenue)}</td>
+                          <td className={`px-6 py-4 text-right text-sm font-semibold ${group.subtotalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                            {rupiah(group.subtotalProfit)}
+                          </td>
+                          <td />
+                        </tr>
+                      </Fragment>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
