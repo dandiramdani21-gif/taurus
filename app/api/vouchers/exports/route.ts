@@ -11,29 +11,29 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const includeHidden = searchParams.get("includeHidden") === "true";
     const includeDeleted = searchParams.get("includeDeleted") === "true";
 
-    const [phones, solds] = await Promise.all([
-      prisma.phone.findMany({
+    const [vouchers, solds] = await Promise.all([
+      // Daftar Voucher
+      prisma.voucher.findMany({
         where: {
           ...(includeDeleted ? {} : { deleted: false }),
-          ...(includeHidden ? {} : { isHidden: false }),
         },
         select: {
-          brand: true,
-          type: true,
-          purchasePrice: true,
-          imei: true,
+          code: true,
+          name: true,
+          costPrice: true,
+          sellPrice: true,
+          stock: true,
           entryDate: true,
-          color: true,
+          expiredAt: true,
         },
         orderBy: { createdAt: "desc" },
       }),
       
-      prisma.phone.findMany({
+      // Voucher Terjual
+      prisma.voucher.findMany({
         where: {
-          ...(includeDeleted ? {} : { deleted: false }),
           transactionItems: {
             some: {
               transaction: {
@@ -44,12 +44,10 @@ export async function GET(request: Request) {
           },
         },
         select: {
-          brand: true,
-          type: true,
-          purchasePrice: true,
-          imei: true,
+          code: true,
+          name: true,
+          costPrice: true,
           entryDate: true,
-          color: true,
           transactionItems: {
             where: {
               transaction: {
@@ -59,36 +57,35 @@ export async function GET(request: Request) {
             },
             select: {
               sellPrice: true,
+              quantity: true,
               transaction: {
                 select: {
-                  createdAt: true
-                }
-              }
+                  createdAt: true,
+                },
+              },
             },
-            take: 1, // Ambil 1 aja karena sellPrice harusnya sama
           },
         },
       }),
     ]);
 
-    // Transform solds untuk flatten sellPrice
-    const formattedSolds = solds.map(phone => {
-      const { transactionItems, ...phoneData } = phone;
-      return {
-        ...phoneData,
-        sellPrice: transactionItems[0]?.sellPrice ?? 0,
-        soldDate: transactionItems[0]?.transaction.createdAt.toLocaleString()
-      };
+    // Format solds
+    const formattedSolds = solds.flatMap(item => {
+      const { transactionItems, ...itemData } = item;
+      return transactionItems.map(ti => ({
+        ...itemData,
+        sellPrice: ti.sellPrice,
+        quantity: ti.quantity,
+        soldDate: ti.transaction.createdAt,
+      }));
     });
 
-
-
     return NextResponse.json({
-      phones,
+      vouchers,
       solds: formattedSolds,
     });
   } catch (error) {
-    console.error("Error fetching phones:", error);
+    console.error("Error fetching vouchers:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

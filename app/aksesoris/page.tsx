@@ -25,6 +25,12 @@ interface PaginationData {
   totalPages: number;
 }
 
+interface Summaries {
+  profits: number
+  total_assets: number
+  total_solds: number
+}
+
 export default function AksesorisPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -32,7 +38,11 @@ export default function AksesorisPage() {
   const [accessories, setAccessories] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showDetail, setShowDetail] = useState<Accessory | null>(null);
+  const [summaries, setSummaries] = useState<Summaries>({
+    profits: 0,
+    total_assets: 0,
+    total_solds: 0
+  })
   const [showStockModal, setShowStockModal] = useState<Accessory | null>(null);
   const [editingAccessory, setEditingAccessory] = useState<Accessory | null>(null);
   const [stockValue, setStockValue] = useState(0);
@@ -72,6 +82,7 @@ export default function AksesorisPage() {
 
   useEffect(() => {
     fetchAccessories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, debouncedSearch]);
 
   const fetchAccessories = async () => {
@@ -83,6 +94,7 @@ export default function AksesorisPage() {
       const data = await res.json();
       setAccessories(data.accessories || []);
       setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
+      setSummaries(data.summaries)
     } catch (error) {
       console.error("Error fetching accessories:", error);
     } finally {
@@ -90,37 +102,188 @@ export default function AksesorisPage() {
     }
   };
 
-  const exportAccessories = () => {
-    const exportData = accessories.map((item) => ({
-      Name: item.name,
-      "Harga Modal": item.costPrice,
-      "Harga Jual": item.sellPrice,
-      Stok: item.stock,
-      Image: item.image || "",
-      "Tgl Masuk": item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
+
+  const downloadTemplate = () => {
+    try {
+      // Data dummy dengan key yang sama seperti export
+      const templateData = [
+        {
+          NAMA: "Tempered Glass iPhone 15",
+          HARGA_MODAL: 25000,
+          HARGA_JUAL: 50000,
+          STOK: 10,
+          TGL_MASUK: new Date().toISOString().split("T")[0],
+        },
+        {
+          NAMA: "Casing Samsung A54",
+          HARGA_MODAL: 35000,
+          HARGA_JUAL: 75000,
+          STOK: 15,
+          TGL_MASUK: new Date().toISOString().split("T")[0],
+        },
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+
+      // Set header background to gray
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:E1');
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellAddress]) continue;
+        ws[cellAddress].s = {
+          fill: {
+            fgColor: { rgb: "D3D3D3" }
+          },
+          font: {
+            bold: true
+          }
+        };
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template Aksesoris");
+      XLSX.writeFile(wb, `Template_Aksesoris_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      alert("Gagal mendownload template aksesoris");
+    }
+  };
+
+const exportAccessories = async () => {
+  try {
+    const response = await fetch("/api/accessories/exports");
+    if (!response.ok) {
+      throw new Error("Gagal mengambil data Accessories");
+    }
+    
+    const data = await response.json();
+    const accessories = data.accessories;
+    const solds = data.solds;
+    
+    // Sheet 1: Daftar Accessories
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const accessoryData = accessories.map((item: any, index: number) => ({
+      NO: index + 1,
+      KODE: item.code,
+      NAMA: item.name,
+      HARGA_MODAL: item.costPrice,
+      HARGA_JUAL: item.sellPrice,
+      STOK: item.stock,
+      TGL_MASUK: item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    // Sheet 2: Accessories Terjual
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const soldData = solds.map((item: any, index: number) => ({
+      NO: index + 1,
+      KODE: item.code,
+      NAMA: item.name,
+      HARGA_MODAL: item.costPrice,
+      HARGA_JUAL: item.sellPrice,
+      QTY: item.quantity,
+      TGL_TERJUAL: item.soldDate ? new Date(item.soldDate).toISOString().split("T")[0] : "",
+      KEUNTUNGAN: item.sellPrice - item.costPrice,
+    }));
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Aksesoris");
+
+    // Sheet 1: Daftar Accessories
+    const wsAccessories = XLSX.utils.json_to_sheet(accessoryData);
+    
+    wsAccessories['!cols'] = [
+      { wch: 5 },   // NO
+      { wch: 15 },  // KODE
+      { wch: 30 },  // NAMA
+      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_JUAL
+      { wch: 10 },  // STOK
+      { wch: 15 },  // TGL_MASUK
+    ];
+    
+    const rangeAccessories = XLSX.utils.decode_range(wsAccessories['!ref'] || 'A1:G1');
+    for (let col = rangeAccessories.s.c; col <= rangeAccessories.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!wsAccessories[cellAddress]) continue;
+      wsAccessories[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "D3D3D3" }
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+
+    // Format currency
+    for (let row = 1; row <= accessoryData.length; row++) {
+      const modalCell = XLSX.utils.encode_cell({ r: row, c: 3 });
+      const jualCell = XLSX.utils.encode_cell({ r: row, c: 4 });
+      if (wsAccessories[modalCell]) wsAccessories[modalCell].z = '#,##0';
+      if (wsAccessories[jualCell]) wsAccessories[jualCell].z = '#,##0';
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsAccessories, "Daftar Aksesoris");
+
+    // Sheet 2: Accessories Terjual
+    const wsSolds = XLSX.utils.json_to_sheet(soldData);
+    
+    wsSolds['!cols'] = [
+      { wch: 5 },   // NO
+      { wch: 15 },  // KODE
+      { wch: 30 },  // NAMA
+      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_JUAL
+      { wch: 10 },  // QTY
+      { wch: 15 },  // TGL_TERJUAL
+      { wch: 15 },  // KEUNTUNGAN
+    ];
+    
+    const rangeSolds = XLSX.utils.decode_range(wsSolds['!ref'] || 'A1:H1');
+    for (let col = rangeSolds.s.c; col <= rangeSolds.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!wsSolds[cellAddress]) continue;
+      wsSolds[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "FFD700" }
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+
+    // Format currency
+    for (let row = 1; row <= soldData.length; row++) {
+      const modalCell = XLSX.utils.encode_cell({ r: row, c: 3 });
+      const jualCell = XLSX.utils.encode_cell({ r: row, c: 4 });
+      const untungCell = XLSX.utils.encode_cell({ r: row, c: 7 });
+      if (wsSolds[modalCell]) wsSolds[modalCell].z = '#,##0';
+      if (wsSolds[jualCell]) wsSolds[jualCell].z = '#,##0';
+      if (wsSolds[untungCell]) wsSolds[untungCell].z = '#,##0';
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsSolds, "Aksesoris Terjual");
     XLSX.writeFile(wb, `Aksesoris_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
+  } catch (error) {
+    console.error("Error exporting accessories:", error);
+    alert("Gagal mengekspor data aksesoris");
+  }
+};
 
   const importAccessories = async (rows: Record<string, string | number | null | undefined>[]) => {
     for (const row of rows) {
-      const name = String(row.Name || row.name || "").trim();
+      const name = String(row.NAMA || row.NAMA || "").trim();
       if (!name) continue;
 
       const payload = {
         name,
-        costPrice: Number(row["Harga Modal"] ?? row.costPrice ?? 0),
-        sellPrice: Number(row["Harga Jual"] ?? row.sellPrice ?? 0),
-        stock: Number(row.Stok ?? row.stock ?? 0),
-        image: String(row.Image || row.image || ""),
-        entryDate: row["Tgl Masuk"] || row.entryDate || new Date().toISOString().split("T")[0],
+        costPrice: Number(row["HARGA_MODAL"] ?? row.costPrice ?? 0),
+        sellPrice: Number(row["HARGA_JUAL"] ?? row.sellPrice ?? 0),
+        stock: Number(row.STOCK ?? row.STOCK ?? 0),
+        entryDate: row["TGL_MASUK"] || row.entryDate || new Date().toISOString().split("T")[0],
       };
 
-      const existingRes = await fetch(`/api/accessories?page=1&limit=1000&search=${encodeURIComponent(name)}`);
+      const existingRes = await fetch(`/api/accessories/exports`);
       const existingData = await existingRes.json();
       const existing = existingData.accessories?.find(
         (item: Accessory) => item.name?.trim().toLowerCase() === name.toLowerCase()
@@ -291,6 +454,18 @@ export default function AksesorisPage() {
           Tambah Aksesoris
         </button>
       </div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <SpreadsheetActions
+          exportLabel="Export Aksesoris"
+          importLabel="Import Aksesoris"
+          onExport={exportAccessories}
+          onImportRows={importAccessories}
+        />
+      </div>
+      <div className="template">
+        <p>Download template spreedsheet untuk import data aksesoris <button className="hover:underline text-blue-500" onClick={downloadTemplate}>Disini</button></p>
+      </div>
+      <br />
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -350,6 +525,48 @@ export default function AksesorisPage() {
             <div>
               <p className="text-sm text-gray-500">Stok Menipis (&lt;3)</p>
               <p className="text-xl font-bold text-orange-600">{lowStockCount}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Aset</p>
+              <p className="text-xl font-bold text-gray-800">Rp. {summaries.total_assets.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Terjual</p>
+              <p className="text-xl font-bold text-gray-800">{summaries.total_solds}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Keuntungan</p>
+              <p className="text-xl font-bold text-gray-800">Rp. {summaries.profits.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -474,8 +691,8 @@ export default function AksesorisPage() {
                   let pageNum = pagination.page <= 3
                     ? i + 1
                     : pagination.page >= pagination.totalPages - 2
-                    ? pagination.totalPages - 4 + i
-                    : pagination.page - 2 + i;
+                      ? pagination.totalPages - 4 + i
+                      : pagination.page - 2 + i;
 
                   if (pagination.totalPages <= 5) pageNum = i + 1;
 
@@ -483,11 +700,10 @@ export default function AksesorisPage() {
                     <button
                       key={pageNum}
                       onClick={() => setPagination((prev) => ({ ...prev, page: pageNum }))}
-                      className={`px-3 py-1 rounded-lg transition ${
-                        pagination.page === pageNum
+                      className={`px-3 py-1 rounded-lg transition ${pagination.page === pageNum
                           ? "bg-purple-600 text-white"
                           : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

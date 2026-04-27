@@ -48,7 +48,7 @@ export default function HpPage() {
   const [showStockModal, setShowStockModal] = useState<Phone | null>(null);
   const [editingPhone, setEditingPhone] = useState<Phone | null>(null);
   const [stockValue, setStockValue] = useState(0);
-  const [summaries, setSummaries] = useState<Summaries>({totalPurchasePrice: 0, totalSoldCount: 9})
+  const [summaries, setSummaries] = useState<Summaries>({ totalPurchasePrice: 0, totalSoldCount: 9 })
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
     limit: 10,
@@ -57,7 +57,7 @@ export default function HpPage() {
   });
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  
+
 
   const [formData, setFormData] = useState({
     brand: "",
@@ -70,8 +70,8 @@ export default function HpPage() {
     entryDate: new Date().toISOString().split("T")[0], // default hari ini
   });
   const [metadata, setMetadata] = useState<Metadata[]>([
-        { key: "RAM", value: "" },
-        { key: "Camera", value: "" },
+    { key: "RAM", value: "" },
+    { key: "Camera", value: "" },
   ]);
 
   // Debounce search
@@ -91,7 +91,7 @@ export default function HpPage() {
 
   useEffect(() => {
     fetchPhones();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, debouncedSearch]);
 
   const fetchPhones = async () => {
@@ -154,55 +154,204 @@ export default function HpPage() {
     return "";
   };
 
-const exportPhones = async () => {
-  try {
-    const response = await fetch("/api/hp/exports");
-    if (!response.ok) {
-      throw new Error("Gagal mengambil data HP");
+  const downloadTemplate = () => {
+    try {
+      // Data template dengan 2 contoh dummy
+      const templateData = [
+        {
+          KODE: "ACC001",
+          NAMA: "Tempered Glass iPhone 15",
+          HARGA_BELI: 25000,
+          HARGA_JUAL: 50000,
+          STOK: 10,
+          TGL_MASUK: new Date().toISOString().split("T")[0],
+        },
+        {
+          KODE: "ACC002",
+          NAMA: "Casing Samsung A54",
+          HARGA_BELI: 35000,
+          HARGA_JUAL: 75000,
+          STOK: 15,
+          TGL_MASUK: new Date().toISOString().split("T")[0],
+        },
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+
+      // Set header background to gray
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:G1');
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellAddress]) continue;
+        ws[cellAddress].s = {
+          fill: {
+            fgColor: { rgb: "D3D3D3" } // Abu-abu
+          },
+          font: {
+            bold: true
+          }
+        };
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template Accessories");
+      XLSX.writeFile(wb, `Template_Accessories_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      alert("Gagal mendownload template accessories");
     }
-    
-    const phones = await response.json();
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const exportData = phones.map((phone: any, index: number) => ({
-      NO: index + 1,
-      MERK: phone.brand,
-      TIPE: phone.type,
-      IMEI: phone.imei,
-      WARNA: phone.color || "",
-      TGL_BELI: phone.purchaseDate
-        ? new Date(phone.purchaseDate).toISOString().split("T")[0]
-        : phone.entryDate
+  };
+
+  const exportPhones = async () => {
+    try {
+      const response = await fetch("/api/hp/exports");
+      if (!response.ok) {
+        throw new Error("Gagal mengambil data HP");
+      }
+
+      const data = await response.json();
+      const phones = data.phones;
+      const solds = data.solds;
+
+      // Sheet 1: Daftar HP
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const phoneData = phones.map((phone: any, index: number) => ({
+        NO: index + 1,
+        MERK: phone.brand,
+        TIPE: phone.type,
+        IMEI: phone.imei,
+        WARNA: phone.color || "",
+        TGL_BELI: phone.entryDate
           ? new Date(phone.entryDate).toISOString().split("T")[0]
           : "",
-      HARGA: phone.purchasePrice,
-    }));
+        HARGA_MODAL: phone.purchasePrice,
+      }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    
-    // Set header background to gray
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:G1');
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
-      if (!ws[cellAddress]) continue;
-      ws[cellAddress].s = {
-        fill: {
-          fgColor: { rgb: "D3D3D3" } // Abu-abu
-        },
-        font: {
-          bold: true
+      // Sheet 2: HP Terjual
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const soldData = solds.map((sold: any, index: number) => ({
+        NO: index + 1,
+        MERK: sold.brand,
+        TIPE: sold.type,
+        IMEI: sold.imei,
+        WARNA: sold.color || "",
+        TGL_BELI: sold.entryDate
+          ? new Date(sold.entryDate).toISOString().split("T")[0]
+          : "",
+        HARGA_MODAL: sold.purchasePrice,
+        HARGA_JUAL: sold.sellPrice,
+        TGL_TERJUAL: sold.soldDate
+          ? new Date(sold.soldDate).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          : "",
+        KEUNTUNGAN: sold.sellPrice - sold.purchasePrice,
+      }));
+
+      // Buat workbook baru
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Daftar HP
+      const wsPhones = XLSX.utils.json_to_sheet(phoneData);
+
+      // Set column widths untuk sheet Daftar HP
+      wsPhones['!cols'] = [
+        { wch: 5 },   // NO
+        { wch: 15 },  // MERK
+        { wch: 20 },  // TIPE
+        { wch: 20 },  // IMEI
+        { wch: 15 },  // WARNA
+        { wch: 15 },  // TGL_BELI
+        { wch: 15 },  // HARGA_MODAL
+      ];
+
+      // Set header style untuk sheet Daftar HP
+      const rangePhones = XLSX.utils.decode_range(wsPhones['!ref'] || 'A1:G1');
+      for (let col = rangePhones.s.c; col <= rangePhones.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!wsPhones[cellAddress]) continue;
+        wsPhones[cellAddress].s = {
+          fill: {
+            fgColor: { rgb: "D3D3D3" }
+          },
+          font: {
+            bold: true
+          },
+          alignment: {
+            horizontal: "center",
+            vertical: "center"
+          }
+        };
+      }
+
+      // Format currency untuk HARGA_MODAL di sheet Daftar HP
+      for (let row = 1; row <= phoneData.length; row++) {
+        const hargaCell = XLSX.utils.encode_cell({ r: row, c: 6 });
+        if (wsPhones[hargaCell]) {
+          wsPhones[hargaCell].z = '#,##0';
         }
-      };
+      }
+
+      XLSX.utils.book_append_sheet(wb, wsPhones, "Daftar HP");
+
+      // Sheet 2: HP Terjual
+      const wsSolds = XLSX.utils.json_to_sheet(soldData);
+
+      // Set column widths untuk sheet HP Terjual
+      wsSolds['!cols'] = [
+        { wch: 5 },   // NO
+        { wch: 15 },  // MERK
+        { wch: 20 },  // TIPE
+        { wch: 20 },  // IMEI
+        { wch: 15 },  // WARNA
+        { wch: 15 },  // TGL_BELI
+        { wch: 15 },  // HARGA_MODAL
+        { wch: 15 },  // HARGA_JUAL
+        { wch: 15 },  // TGL_TERJUAL
+        { wch: 15 },  // KEUNTUNGAN
+      ];
+
+      // Set header style untuk sheet HP Terjual
+      const rangeSolds = XLSX.utils.decode_range(wsSolds['!ref'] || 'A1:J1');
+      for (let col = rangeSolds.s.c; col <= rangeSolds.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!wsSolds[cellAddress]) continue;
+        wsSolds[cellAddress].s = {
+          fill: {
+            fgColor: { rgb: "FFD700" } // Gold untuk membedakan
+          },
+          font: {
+            bold: true
+          },
+          alignment: {
+            horizontal: "center",
+            vertical: "center"
+          }
+        };
+      }
+
+      // Format currency untuk HARGA_MODAL, HARGA_JUAL, KEUNTUNGAN di sheet HP Terjual
+      for (let row = 1; row <= soldData.length; row++) {
+        const modalCell = XLSX.utils.encode_cell({ r: row, c: 6 });
+        const jualCell = XLSX.utils.encode_cell({ r: row, c: 7 });
+        const untungCell = XLSX.utils.encode_cell({ r: row, c: 9 });
+
+        if (wsSolds[modalCell]) wsSolds[modalCell].z = '#,##0';
+        if (wsSolds[jualCell]) wsSolds[jualCell].z = '#,##0';
+        if (wsSolds[untungCell]) wsSolds[untungCell].z = '#,##0';
+      }
+
+      XLSX.utils.book_append_sheet(wb, wsSolds, "HP Terjual");
+
+      // Download file
+      XLSX.writeFile(wb, `HP_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (error) {
+      console.error("Error exporting phones:", error);
+      alert("Gagal mengekspor data HP");
     }
-    
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "HP");
-    XLSX.writeFile(wb, `HP_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
-  } catch (error) {
-    console.error("Error exporting phones:", error);
-    alert("Gagal mengekspor data HP");
-  }
-};
+  };
 
   const importPhones = async (rows: Array<Record<string, unknown>>) => {
     if (!rows.length) {
@@ -270,7 +419,7 @@ const exportPhones = async () => {
       alert("Stok tidak boleh minus!");
       return;
     }
-    
+
     try {
       const res = await fetch(`/api/hp/stock`, {
         method: "PATCH",
@@ -292,14 +441,14 @@ const exportPhones = async () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (parseInt(formData.stock) < 0) {
       alert("Stok tidak boleh minus!");
       return;
     }
-    
+
     const filteredMetadata = metadata.filter(m => m.key && m.value);
-    
+
     const url = editingPhone ? "/api/hp" : "/api/hp";
     const method = editingPhone ? "PUT" : "POST";
     const body = editingPhone
@@ -358,7 +507,7 @@ const exportPhones = async () => {
       image: phone.image || "",
       entryDate: phone.entryDate ? new Date(phone.entryDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
-    
+
     if (phone.metadata && phone.metadata.length > 0) {
       setMetadata(phone.metadata);
     } else {
@@ -383,8 +532,8 @@ const exportPhones = async () => {
       entryDate: new Date().toISOString().split("T")[0],
     });
     setMetadata([
-        { key: "RAM", value: "" },
-        { key: "Camera", value: "" },
+      { key: "RAM", value: "" },
+      { key: "Camera", value: "" },
     ]);
   };
 
@@ -447,7 +596,14 @@ const exportPhones = async () => {
           onExport={exportPhones}
           onImportRows={importPhones}
         />
+
+
       </div>
+
+      <div className="template">
+        <p>Download template spreedsheet untuk import data hp <button className="hover:underline text-blue-500" onClick={downloadTemplate}>Disini</button></p>
+      </div>
+      <br />
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -493,7 +649,7 @@ const exportPhones = async () => {
             </div>
           </div>
         </div>
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,13 +712,13 @@ const exportPhones = async () => {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.brand}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{phone.type}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
-    <td className="px-6 py-4 text-sm text-gray-500">
-  {phone.imei}
-</td>       
-<td className="px-6 py-4 text-sm text-gray-500">
-  {new Date(phone.entryDate).toLocaleDateString("id-ID")}
-</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">Rp {phone.purchasePrice.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {phone.imei}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(phone.entryDate).toLocaleDateString("id-ID")}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => handleEdit(phone)} className="text-blue-600 hover:text-blue-800">
@@ -597,7 +753,7 @@ const exportPhones = async () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              
+
               <div className="flex gap-1">
                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                   let pageNum;
@@ -610,16 +766,15 @@ const exportPhones = async () => {
                   } else {
                     pageNum = pagination.page - 2 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
                       onClick={() => goToPage(pageNum)}
-                      className={`px-3 py-1 rounded-lg transition ${
-                        pagination.page === pageNum
+                      className={`px-3 py-1 rounded-lg transition ${pagination.page === pageNum
                           ? "bg-purple-600 text-white"
                           : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>
@@ -662,7 +817,7 @@ const exportPhones = async () => {
               <div>
                 <p className="text-sm text-gray-500">HP</p>
                 <p className="font-medium">{showStockModal.brand} {showStockModal.type}</p>
-                              </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Stok</label>
                 <input
@@ -781,18 +936,18 @@ const exportPhones = async () => {
                   />
                   <p className="text-xs text-gray-400 mt-1">Stok tidak boleh minus</p>
                 </div>
-                  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
-    <input
-      type="date"
-      value={formData.entryDate}
-      onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
-      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
-    />
-    <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
-  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+                  <input
+                    type="date"
+                    value={formData.entryDate}
+                    onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Default: hari ini</p>
+                </div>
               </div>
-              
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Foto HP</label>
@@ -813,7 +968,7 @@ const exportPhones = async () => {
                     Tambah
                   </button>
                 </div>
-                
+
                 <div className="space-y-2">
                   {metadata.map((item, idx) => (
                     <div key={idx} className="flex gap-2">

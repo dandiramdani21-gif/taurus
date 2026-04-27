@@ -77,8 +77,7 @@ export async function GET(request: Request) {
       }
       : { ...(deleted === undefined ? {} : { deleted }) };
       
-
-    const [accessories, total] = await Promise.all([
+    const [accessories, total, summaries] = await Promise.all([
       prisma.accessory.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -86,10 +85,64 @@ export async function GET(request: Request) {
         take: limit,
       }),
       prisma.accessory.count({ where }),
+      prisma.$transaction(async (tx) => {
+        // Ambil semua accessories yang tidak deleted
+        const accessoriesData = await tx.accessory.findMany({
+          where: {
+            deleted: false,
+            ...(search ? {
+              OR: [
+                { code: { contains: search, mode: "insensitive" as const } },
+                { name: { contains: search, mode: "insensitive" as const } },
+              ]
+            } : {})
+          },
+          select: {
+            id: true,
+            costPrice: true,
+            stock: true,
+          },
+        });
+
+        const ids = accessoriesData.map(a => a.id);
+        
+        // Total Assets: sum dari (costPrice * stock)
+        const total_assets = accessoriesData.reduce((sum, item) => sum + (item.costPrice * item.stock), 0);
+
+        // Total Sold & Profits dari TransactionItem join Transaction status PAID
+        const transactionStats = await tx.transactionItem.aggregate({
+          where: {
+            accessoryId: {
+              in: ids,
+            },
+            transaction: {
+              status: "PAID",
+              deleted: false,
+            },
+          },
+          _sum: {
+            quantity: true,
+            sellPrice: true,
+            costPrice: true,
+          },
+        });
+
+        const total_solds = transactionStats?._sum?.quantity ?? 0;
+        const total_revenue = transactionStats?._sum?.sellPrice ?? 0;
+        const total_cost = transactionStats?._sum?.costPrice ?? 0;
+        const profits = total_revenue - total_cost;
+
+        return {
+          total_assets,
+          total_solds,
+          profits,
+        };
+      }),
     ]);
 
     return NextResponse.json({
       accessories,
+      summaries,
       pagination: {
         page,
         limit,

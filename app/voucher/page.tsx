@@ -95,39 +95,193 @@ export default function VoucherPage() {
     }
   };
 
-  const exportVouchers = () => {
-    const exportData = vouchers.map((item) => ({
-      Name: item.name,
-      "Harga Modal": item.costPrice,
-      "Harga Jual": item.sellPrice,
-      Stok: item.stock,
-      Image: item.image || "",
-      "Tgl Masuk": item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
-      "Expired At": item.expiredAt || "",
+
+  const downloadTemplate = () => {
+  try {
+    const templateData = [
+      {
+        NAMA: "TELKOMSEL 100GB",
+        HARGA_MODAL: 25000,
+        HARGA_JUAL: 50000,
+        STOK: 10,
+        TGL_MASUK: new Date().toISOString().split("T")[0],
+        TGL_KADALUARSA: new Date().toISOString().split("T")[0]
+      },
+      {
+        NAMA: "TRI 4GB",
+        HARGA_MODAL: 10000,
+        HARGA_JUAL: 50000,
+        STOK: 10,
+        TGL_MASUK: new Date().toISOString().split("T")[0],
+        TGL_KADALUARSA: new Date().toISOString().split("T")[0]
+      },
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    
+    // Set header background to gray
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:E1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      ws[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "D3D3D3" }
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Aksesoris");
+    XLSX.writeFile(wb, `Template_Voucher_${new Date().toISOString().split("T")[0]}.xlsx`);
+  } catch (error) {
+    console.error("Error downloading template:", error);
+    alert("Gagal mendownload template aksesoris");
+  }
+};
+
+const exportVouchers = async () => {
+  try {
+    const response = await fetch("/api/vouchers/exports");
+    if (!response.ok) {
+      throw new Error("Gagal mengambil data Voucher");
+    }
+    
+    const data = await response.json();
+    const vouchers = data.vouchers;
+    const solds = data.solds;
+    
+    // Sheet 1: Daftar Voucher
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const voucherData = vouchers.map((item: any, index: number) => ({
+      NO: index + 1,
+      KODE: item.code,
+      NAMA: item.name,
+      HARGA_MODAL: item.costPrice,
+      HARGA_JUAL: item.sellPrice,
+      STOK: item.stock,
+      TGL_MASUK: item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
+      TGL_EXPIRED: item.expiredAt ? new Date(item.expiredAt).toISOString().split("T")[0] : "-",
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    // Sheet 2: Voucher Terjual
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const soldData = solds.map((item: any, index: number) => ({
+      NO: index + 1,
+      KODE: item.code,
+      NAMA: item.name,
+      HARGA_MODAL: item.costPrice,
+      HARGA_JUAL: item.sellPrice,
+      QTY: item.quantity,
+      TGL_TERJUAL: item.soldDate ? new Date(item.soldDate).toISOString().split("T")[0] : "",
+      KEUNTUNGAN: (item.sellPrice - item.costPrice) * item.quantity,
+    }));
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Voucher");
+
+    // Sheet 1: Daftar Voucher
+    const wsVouchers = XLSX.utils.json_to_sheet(voucherData);
+    
+    wsVouchers['!cols'] = [
+      { wch: 5 },   // NO
+      { wch: 30 },  // KODE
+      { wch: 25 },  // NAMA
+      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_JUAL
+      { wch: 10 },  // STOK
+      { wch: 15 },  // TGL_MASUK
+      { wch: 15 },  // TGL_EXPIRED
+    ];
+    
+    const rangeVouchers = XLSX.utils.decode_range(wsVouchers['!ref'] || 'A1:H1');
+    for (let col = rangeVouchers.s.c; col <= rangeVouchers.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!wsVouchers[cellAddress]) continue;
+      wsVouchers[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "D3D3D3" }
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+
+    // Format currency
+    for (let row = 1; row <= voucherData.length; row++) {
+      const modalCell = XLSX.utils.encode_cell({ r: row, c: 3 });
+      const jualCell = XLSX.utils.encode_cell({ r: row, c: 4 });
+      if (wsVouchers[modalCell]) wsVouchers[modalCell].z = '#,##0';
+      if (wsVouchers[jualCell]) wsVouchers[jualCell].z = '#,##0';
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsVouchers, "Daftar Voucher");
+
+    // Sheet 2: Voucher Terjual
+    const wsSolds = XLSX.utils.json_to_sheet(soldData);
+    
+    wsSolds['!cols'] = [
+      { wch: 5 },   // NO
+      { wch: 30 },  // KODE
+      { wch: 25 },  // NAMA
+      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_JUAL
+      { wch: 10 },  // QTY
+      { wch: 15 },  // TGL_TERJUAL
+      { wch: 15 },  // KEUNTUNGAN
+    ];
+    
+    const rangeSolds = XLSX.utils.decode_range(wsSolds['!ref'] || 'A1:H1');
+    for (let col = rangeSolds.s.c; col <= rangeSolds.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!wsSolds[cellAddress]) continue;
+      wsSolds[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "FFD700" }
+        },
+        font: {
+          bold: true
+        }
+      };
+    }
+
+    // Format currency
+    for (let row = 1; row <= soldData.length; row++) {
+      const modalCell = XLSX.utils.encode_cell({ r: row, c: 3 });
+      const jualCell = XLSX.utils.encode_cell({ r: row, c: 4 });
+      const untungCell = XLSX.utils.encode_cell({ r: row, c: 7 });
+      if (wsSolds[modalCell]) wsSolds[modalCell].z = '#,##0';
+      if (wsSolds[jualCell]) wsSolds[jualCell].z = '#,##0';
+      if (wsSolds[untungCell]) wsSolds[untungCell].z = '#,##0';
+    }
+
+    XLSX.utils.book_append_sheet(wb, wsSolds, "Voucher Terjual");
     XLSX.writeFile(wb, `Voucher_Inventory_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
+  } catch (error) {
+    console.error("Error exporting vouchers:", error);
+    alert("Gagal mengekspor data voucher");
+  }
+};
 
   const importVouchers = async (rows: SpreadsheetRow[]) => {
     for (const row of rows) {
-      const name = String(row.Name || row.name || "").trim();
+      const name = String(row.NAMA || row.NAMA || "").trim();
       if (!name) continue;
 
       const payload = {
         name,
-        costPrice: Number(row["Harga Modal"] ?? row.costPrice ?? 0),
-        sellPrice: Number(row["Harga Jual"] ?? row.sellPrice ?? 0),
-        stock: Number(row.Stok ?? row.stock ?? 0),
-        image: String(row.Image || row.image || ""),
-        entryDate: row["Tgl Masuk"] || row.entryDate || new Date().toISOString().split("T")[0],
-        expiredAt: row["Expired At"] || row.expiredAt || "",
+        costPrice: Number(row["HARGA_MODAL"] ?? row.costPrice ?? 0),
+        sellPrice: Number(row["HARGA_JUAL"] ?? row.sellPrice ?? 0),
+        stock: Number(row.STOK ?? row.stock ?? 0),
+        image: null,
+        entryDate: row["TGL_MASUK"] || row.entryDate || new Date().toISOString().split("T")[0],
+        expiredAt: row["TGL_KADALUARSA"] || row.expiredAt || "",
       };
 
-      const existingRes = await fetch(`/api/vouchers?page=1&limit=1000&search=${encodeURIComponent(name)}`);
+      const existingRes = await fetch(`/api/vouchers/exports`);
       const existingData = await existingRes.json();
       const existing = existingData.vouchers?.find(
         (item: Voucher) => item.name?.trim().toLowerCase() === name.toLowerCase()
@@ -294,6 +448,19 @@ export default function VoucherPage() {
           Tambah Voucher
         </button>
       </div>
+
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <SpreadsheetActions
+                exportLabel="Export Voucher"
+                importLabel="Import Voucher"
+                onExport={exportVouchers}
+                onImportRows={importVouchers}
+              />
+            </div>
+            <div className="template">
+              <p>Download template spreedsheet untuk import data vouchers <button className="hover:underline text-blue-500" onClick={downloadTemplate}>Disini</button></p>
+            </div>
+            <br />
 
       {/* Search Bar */}
       <div className="mb-6">
