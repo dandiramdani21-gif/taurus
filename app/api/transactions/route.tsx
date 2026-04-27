@@ -36,17 +36,8 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Build where clause with proper types
-    const where: {
-      type?: TransactionType;
-      category?: ProductCategory;
-      deleted?: boolean;
-      createdAt?: { gte?: Date; lte?: Date };
-      OR?: Array<
-        | { id: { contains: string; mode: "insensitive" } }
-        | { invoiceNumber: { contains: string; mode: "insensitive" } }
-        | { note: { contains: string; mode: "insensitive" } }
-      >;
-    } = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
 
     // Handle type with proper enum validation
     if (isValidTransactionType(typeParam)) {
@@ -72,12 +63,30 @@ export async function GET(request: Request) {
       }
     }
 
-    // Handle search
+    // Handle search - search across transaction and product-specific fields
     if (search.trim()) {
+      const searchTerm = search.trim();
+
       where.OR = [
-        { id: { contains: search.trim(), mode: "insensitive" } },
-        { invoiceNumber: { contains: search.trim(), mode: "insensitive" } },
-        { note: { contains: search.trim(), mode: "insensitive" } },
+        // Transaction-level search
+        { id: { contains: searchTerm, mode: "insensitive" } },
+        { invoiceNumber: { contains: searchTerm, mode: "insensitive" } },
+        { note: { contains: searchTerm, mode: "insensitive" } },
+        // HP search: IMEI, brand, type
+        { items: { some: { phone: { imei: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { phone: { brand: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { phone: { type: { contains: searchTerm, mode: "insensitive" } } } } },
+        // Accessory search: name, code
+        { items: { some: { accessory: { name: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { accessory: { code: { contains: searchTerm, mode: "insensitive" } } } } },
+        // Voucher search: name, code
+        { items: { some: { voucher: { name: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { voucher: { code: { contains: searchTerm, mode: "insensitive" } } } } },
+        // Pulsa search: destination number, code, description
+        { items: { some: { pulsa: { destinationNumber: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { pulsa: { code: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { pulsa: { description: { contains: searchTerm, mode: "insensitive" } } } } },
+        { items: { some: { pulsaDestinationNumber: { contains: searchTerm, mode: "insensitive" } } } },
       ];
     }
 

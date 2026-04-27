@@ -149,7 +149,7 @@ export default function InvoicesPage() {
 
           <input
             type="text"
-            placeholder="Cari nomor invoice atau catatan..."
+            placeholder="Cari: invoice, IMEI, brand, HP, nama produk, kode, no pulsa..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
