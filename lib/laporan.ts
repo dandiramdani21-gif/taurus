@@ -24,102 +24,107 @@ export async function getCategoryLaporan({
 
   const skip = (page - 1) * pageSize;
 
-  // Get total count for pagination
-  const totalCount = await prisma.transaction.count({
-    where: {
-      type: "SALE",
-      category,
-      deleted: false,
-      createdAt: {
-        gte: start,
-        lte: end,
-      },
-      ...(search
-        ? {
-            items: {
-              some: {
-                OR: [
-                  {
-                    phone: {
-                      imei: {
-                        equals: search,
-                        mode: "insensitive",
-                      },
-                    },
-                  },
-                  { accessory: { name: { contains: search, mode: "insensitive" } } },
-                  { pulsa: { description: { contains: search, mode: "insensitive" } } },
-                ],
+  const whereCondition = {
+    type: "SALE" as const,
+    category,
+    deleted: false,
+    createdAt: {
+      gte: start,
+      lte: end,
+    },
+    ...(search
+      ? {
+          OR: [
+            { invoiceNumber: { contains: search, mode: "insensitive" as const } },
+            {
+              items: {
+                some: {
+                  OR: [
+                    { phone: { imei: { contains: search, mode: "insensitive" as const } } },
+                    { phone: { brand: { contains: search, mode: "insensitive" as const } } },
+                    { phone: { type: { contains: search, mode: "insensitive" as const } } },
+                    { accessory: { name: { contains: search, mode: "insensitive" as const } } },
+                    { accessory: { code: { contains: search, mode: "insensitive" as const } } },
+                    { voucher: { name: { contains: search, mode: "insensitive" as const } } },
+                    { voucher: { code: { contains: search, mode: "insensitive" as const } } },
+                    { pulsa: { description: { contains: search, mode: "insensitive" as const } } },
+                    { pulsa: { code: { contains: search, mode: "insensitive" as const } } },
+                  ],
+                },
               },
             },
-          }
-        : {}),
-    },
-  });
+          ],
+        }
+      : {}),
+  };
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      type: "SALE",
-      category,
-      deleted: false,
-      createdAt: {
-        gte: start,
-        lte: end,
-      },
-      ...(search
-        ? {
-            items: {
-              some: {
-                OR: [
-                  {
-                    phone: {
-                      imei: {
-                        equals: search,
-                        mode: "insensitive",
-                      },
-                    },
-                  },
-                  { accessory: { name: { contains: search, mode: "insensitive" } } },
-                  { pulsa: { description: { contains: search, mode: "insensitive" } } },
-                ],
-              },
-            },
-          }
-        : {}),
+  // ✅ Summary condition: hanya PAID
+  const summaryWhereCondition = {
+    ...whereCondition,
+    status: "PAID" as const,
+  };
+
+  // ✅ Today's date range
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayEnd = new Date(todayStart);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayWhereCondition = {
+    type: "SALE" as const,
+    category,
+    deleted: false,
+    status: "PAID" as const,
+    createdAt: {
+      gte: todayStart,
+      lte: todayEnd,
     },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
+  };
+
+  const [totalCount, transactions, aggregateResult, todayAggregate] = await Promise.all([
+    prisma.transaction.count({ where: whereCondition }),
+    prisma.transaction.findMany({
+      where: whereCondition,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        items: {
+          include: {
+            phone: true,
+            accessory: true,
+            voucher: true,
+            pulsa: true,
+          },
         },
       },
-      items: {
-        include: {
-          phone: true,
-          accessory: true,
-          voucher: true,
-          pulsa: true,
-        },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.transaction.aggregate({
+      where: summaryWhereCondition, // ✅ Hanya PAID
+      _sum: {
+        totalAmount: true,
+        totalCost: true,
+        profit: true,
       },
-    },
-    orderBy: { createdAt: "desc" },
-    skip,
-    take: pageSize,
-  });
+    }),
+    prisma.transaction.aggregate({
+      where: todayWhereCondition,
+      _sum: {
+        profit: true,
+      },
+    }),
+  ]);
 
-  const totalRevenue = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.totalAmount),
-    0
-  );
-  const totalCost = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.totalCost),
-    0
-  );
-  const totalProfit = transactions.reduce(
-    (sum, transaction) => sum + (transaction.status === "REFUND" ? 0 : transaction.profit),
-    0
-  );
+  const totalRevenue = aggregateResult._sum.totalAmount || 0;
+  const totalCost = aggregateResult._sum.totalCost || 0;
+  const totalProfit = aggregateResult._sum.profit || 0;
+  const todayProfit = todayAggregate._sum.profit || 0;
 
   const dailyMap = new Map<string, { date: string; revenue: number; cost: number; profit: number }>();
 
@@ -136,8 +141,6 @@ export async function getCategoryLaporan({
     day.profit += transaction.profit * multiplier;
   });
 
-  const chartData = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return {
@@ -146,9 +149,9 @@ export async function getCategoryLaporan({
       totalRevenue,
       totalCost,
       totalProfit,
-      transactionCount: transactions.length,
+      todayProfit,
+      transactionCount: totalCount,
     },
-    chartData,
     pagination: {
       page,
       pageSize,

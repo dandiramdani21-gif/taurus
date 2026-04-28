@@ -51,11 +51,6 @@ export default function KasirPulsaPage() {
 
   const commitBalanceChange = () => {
     if (balanceDraft === balance) return;
-    const confirmed = window.confirm("Anda yakin ingin mengubah saldo?");
-    if (!confirmed) {
-      setBalanceDraft(balance);
-      return;
-    }
     setBalance(balanceDraft);
   };
 
@@ -76,10 +71,6 @@ export default function KasirPulsaPage() {
       return;
     }
 
-    if (currentBalance !== null && usedCost > currentBalance) {
-      alert("Saldo tidak cukup untuk menutup modal transaksi ini");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -158,7 +149,7 @@ export default function KasirPulsaPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo Anda*</label>
+            <label className="mb-2 block text-sm font-semibold text-slate-600">Saldo Anda</label>
             <input
               type="number"
               value={balanceDraft}

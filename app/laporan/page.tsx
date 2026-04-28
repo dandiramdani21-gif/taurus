@@ -222,6 +222,8 @@ const buildCategoryLabel = (item: ReportTransaction["items"][number]) => {
   return "-";
 };
 
+
+
 const buildGroupedRows = (transactions: ReportTransaction[], productFilter: ReportProductFilter) => {
   const map = new Map<
     string,
@@ -341,22 +343,6 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
   return rows.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
 };
 
-const buildPulsaRowsForExport = (rows: PulsaRow[]) => {
-  return [
-    ["Tanggal Jual", "No Tujuan", "Catatan", "Keterangan", "Modal", "Harga Jual", "Total", "Keuntungan", "Saldo"],
-    ...rows.map((row) => [
-      row.dateLabel,
-      row.destinationNumber,
-      row.debt_note,
-      row.description,
-      row.modal,
-      row.price,
-      row.total,
-      row.profit,
-      row.balance ?? "",
-    ]),
-  ];
-};
 
 const buildPulsaGroups = (rows: PulsaRow[]) => {
   const map = new Map<string, PulsaGroup>();
@@ -612,6 +598,57 @@ export default function LaporanKeuanganPage() {
   }, [effectiveFilter, startDate, endDate, search]);
 
 
+  async function fetchAllDataForExport(
+  startDate: string, 
+  endDate: string, 
+  categories: ReportCategory[], 
+  search: string
+) {
+  const responses = await Promise.all(
+    categories.map(async (category) => {
+      const url = new URL(categoryEndpointMap[category], window.location.origin);
+      url.searchParams.set("startDate", startDate);
+      url.searchParams.set("endDate", endDate);
+      url.searchParams.set("search", search);
+      url.searchParams.set("page", "1");
+      url.searchParams.set("pageSize", "1000"); // Limit 1000 items
+
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.error || `Gagal mengambil laporan ${category}`);
+      }
+
+      return res.json();
+    })
+  );
+
+  return responses.reduce(
+    (acc, report) => {
+      const transactions = [...acc.transactions, ...(report.transactions || [])];
+      const summary = {
+        totalRevenue: acc.summary.totalRevenue + (report.summary?.totalRevenue || 0),
+        totalCost: acc.summary.totalCost + (report.summary?.totalCost || 0),
+        totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
+        transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
+      };
+
+      return { transactions, summary };
+    },
+    {
+      transactions: [] as ReportTransaction[],
+      summary: {
+        totalRevenue: 0,
+        totalCost: 0,
+        totalProfit: 0,
+        transactionCount: 0,
+      },
+    }
+  );
+}
+
+
+
 
   // Handle key down - detect Enter
   const handleDebtNoteKeyDown = (transactionId: string, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -700,102 +737,206 @@ export default function LaporanKeuanganPage() {
     }
   }, [fetchLaporan, router, status]);
 
-  const exportToExcel = () => {
-    const groupedRows = buildGroupedRows(transactions, effectiveFilter);
+// Update fungsi exportToExcel
+const exportToExcel = async () => {
+  try {
+    setLoading(true);
+    
+    const categories: ReportCategory[] =
+      effectiveFilter === "all"
+        ? ["HANDPHONE", "PRODUK_LAIN", "PULSA"]
+        : [filterToCategory[effectiveFilter]];
 
+    const { transactions: exportTransactions } = await fetchAllDataForExport(
+      startDate,
+      endDate,
+      categories,
+      search
+    );
+
+    const filteredTransactions = filterTransactionsByDateRange(
+      exportTransactions,
+      startDate,
+      endDate
+    );
+
+    if (filteredTransactions.length === 0) {
+      alert("Tidak ada data untuk diexport pada periode ini.");
+      setLoading(false);
+      return;
+    }
+
+    const groupedRows = buildGroupedRows(filteredTransactions, effectiveFilter);
+    const pulsaRowsData = buildPulsaRows(filteredTransactions);
+    const groupedPulsaRows = buildPulsaGroups(pulsaRowsData);
+
+    let aoa: (string | number)[][];
+    let sheetName: string;
+    let colWidths: { wch: number }[];
+
+    // HP
     if (effectiveFilter === "phone") {
-      const aoa = buildPhoneRowsForExport(groupedRows);
-      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
-      worksheet["!cols"] = [
-        { wch: 14 },
-        { wch: 16 },
-        { wch: 18 },
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 18 },
-        { wch: 14 },
-        { wch: 12 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 6 },
-        { wch: 14 },
+      aoa = buildPhoneRowsForExport(groupedRows);
+      sheetName = "Laporan HP";
+      colWidths = [
+        { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 12 },
+        { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 18 },
+        { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
+        { wch: 6 }, { wch: 14 }
       ];
+    }
+    // Pulsa
+    else if (effectiveFilter === "pulsa") {
+      aoa = [
+        ["No Tujuan", "Keterangan", "Denom", "TGL JUAL", "HARGA BELI", "BIAYA", "HARGA JUAL", "RL", "HPP"],
+      ];
+      
+      groupedPulsaRows.forEach((group) => {
+        aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", "", ""]);
+        
+        group.rows.forEach((row) => {
+          const hargaBeli = Number(row.modal || 0);
+          const biaya = 0;
+          const hargaJual = Number(row.price || 0);
+          const hpp = hargaBeli + biaya;
+          const rl = hargaJual - hpp;
+          const denomination = row.description.match(/\d+/)?.[0] || "-";
 
-      let rowIndex = 1;
-      groupedRows.forEach((group, index) => {
-        applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "E0F2FE" : "F0FDF4");
-        rowIndex += 1;
-        group.rows.forEach(() => {
-          applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
-          rowIndex += 1;
+          aoa.push([
+            row.destinationNumber,
+            row.description,
+            denomination,
+            row.dateLabel,
+            hargaBeli,
+            biaya,
+            hargaJual,
+            rl,
+            hpp
+          ]);
         });
-        applyBestEffortFill(worksheet, rowIndex, 14, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
-        rowIndex += 1;
+        
+        aoa.push([
+          `Subtotal ${group.dateLabel}`,
+          "",
+          "",
+          "",
+          group.subtotalModal,
+          "",
+          group.subtotalTotal,
+          group.subtotalProfit,
+          group.subtotalModal,
+          "",
+        ]);
       });
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, worksheet, "Laporan HP");
-      XLSX.writeFile(wb, `Laporan_HP_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-      return;
-    }
-
-    if (effectiveFilter === "pulsa") {
-      const aoa = buildPulsaRowsForExport(pulsaRows);
-      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
-      worksheet["!cols"] = [
-        { wch: 14 },
-        { wch: 16 },
-        { wch: 18 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
-        { wch: 14 },
+      
+      sheetName = "Laporan Pulsa";
+      colWidths = [
+        { wch: 16 }, { wch: 24 }, { wch: 10 }, { wch: 14 },
+        { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 14 },
+        { wch: 14 }
       ];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, worksheet, "Laporan Pulsa");
-      XLSX.writeFile(wb, `Laporan_Pulsa_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-      return;
     }
+    // PRODUK_LAIN (accessory, voucher, all)
+    else {
+      aoa = [
+        ["NAMA PRODUK", "KODE", "TGL BELI", "HARGA BELI", "BIAYA SERVICE", "TGL JUAL", "HARGA JUAL", "RL", "HPP"],
+      ];
+      
+      groupedRows.forEach((group) => {
+        aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", ""]);
+        
+        group.rows.forEach((row) => {
+          const accessory = row.sourceItem.accessory;
+          const voucher = row.sourceItem.voucher;
+          
+          const hargaBeli = Number(row.cost || 0);
+          const biayaService = 0;
+          const hargaJual = Number(row.revenue || 0);
+          const hpp = hargaBeli + biayaService;
+          const rl = hargaJual - hpp;
+          
+          let namaProduk = "";
+          let kode = "";
+          const tglBeli = "-";
+          
+          if (accessory) {
+            namaProduk = accessory.name;
+            kode = accessory.code;
+          } else if (voucher) {
+            namaProduk = voucher.name;
+            kode = voucher.code;
+          }
 
-    const aoa: (string | number)[][] = [["Tanggal Jual", "Kategori", "Item", "Qty", "Modal", "Jual", "Laba/Rugi"]];
-    groupedRows.forEach((group) => {
-      aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", ""]);
-      group.rows.forEach((row) => {
-        aoa.push([group.dateLabel, row.category, row.product, row.quantity, row.cost, row.revenue, row.profit]);
+          aoa.push([
+            namaProduk,
+            kode,
+            tglBeli,
+            hargaBeli,
+            biayaService,
+            group.dateLabel,
+            hargaJual,
+            rl,
+            hpp,
+          ]);
+        });
+        
+        aoa.push([
+          `Subtotal ${group.dateLabel}`,
+          "",
+          "",
+          group.subtotalCost,
+          "",
+          "",
+          group.subtotalRevenue,
+          group.subtotalProfit,
+          group.subtotalCost,
+        ]);
       });
-      aoa.push([`Subtotal ${group.dateLabel}`, "", "", "", group.subtotalCost, group.subtotalRevenue, group.subtotalProfit]);
-    });
+      
+      sheetName = effectiveFilter === "accessory" ? "Laporan Produk Lain" 
+        : effectiveFilter === "voucher" ? "Laporan Voucher" 
+        : "Laporan Semua Produk";
+      colWidths = [
+        { wch: 28 }, { wch: 18 }, { wch: 12 }, { wch: 14 },
+        { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+        { wch: 14 }
+      ];
+    }
 
     const worksheet = XLSX.utils.aoa_to_sheet(aoa);
-    worksheet["!cols"] = [
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 28 },
-      { wch: 8 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 14 },
-    ];
+    worksheet["!cols"] = colWidths;
 
-    let cursor = 1;
-    groupedRows.forEach((group, index) => {
-      applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "E0F2FE" : "F0FDF4");
-      cursor += 1;
-      group.rows.forEach(() => {
-        applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
-        cursor += 1;
-      });
-      applyBestEffortFill(worksheet, cursor, 7, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
-      cursor += 1;
+    // Apply styling
+    let rowIndex = 0;
+    const groupsToStyle = effectiveFilter === "pulsa" ? groupedPulsaRows : groupedRows;
+    const colCount = colWidths.length;
+    
+    groupsToStyle.forEach((_, index) => {
+      rowIndex += 1; // skip header or date row
+      const rowsInGroup = effectiveFilter === "pulsa" 
+        ? (groupsToStyle as PulsaGroup[])[index].rows.length 
+        : (groupsToStyle as GroupedRows[])[index].rows.length;
+      
+      for (let i = 0; i < rowsInGroup; i++) {
+        applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
+        rowIndex += 1;
+      }
+      applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
+      rowIndex += 1;
     });
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, worksheet, "Laporan");
-    XLSX.writeFile(wb, `Laporan_${normalizeFilterLabel(effectiveFilter).replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-  };
+    XLSX.utils.book_append_sheet(wb, worksheet, sheetName);
+    XLSX.writeFile(wb, `${sheetName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    
+  } catch (error) {
+    console.error("Gagal export ke Excel:", error);
+    alert(error instanceof Error ? error.message : "Gagal export ke Excel");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const groupedRows = buildGroupedRows(transactions, effectiveFilter);
   const groupedPulsaRows = buildPulsaGroups(pulsaRows);
