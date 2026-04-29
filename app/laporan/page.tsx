@@ -1044,34 +1044,48 @@ const exportToExcel = async () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={exportToExcel}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-emerald-50"
-          >
-            Export ke Spreadsheet
-          </button>
+
         </div>
 
-        <div className="grid gap-4 border-b border-slate-200/70 bg-slate-50/80 px-6 py-6 sm:grid-cols-3 sm:px-8">
-          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">Laba Bulan Ini</p>
-            <p className={`mt-4 text-3xl font-semibold ${monthlyProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-              {rupiah(monthlyProfit)}
-            </p>
-          </div>
-          <div className="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Modal Bulan Ini</p>
-            <p className="mt-4 text-3xl font-semibold text-amber-600">
-              {rupiah(monthlyCost)}
-            </p>
-          </div>
-          <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-500">Keuntungan Hari Ini</p>
-            <p className={`mt-4 text-3xl font-semibold ${todayProfit >= 0 ? "text-sky-600" : "text-rose-600"}`}>
-              {rupiah(todayProfit)}
-            </p>
-          </div>
-        </div>
+<div className="grid gap-4 border-b border-slate-200 bg-white px-6 py-6 sm:grid-cols-3 sm:px-8">
+  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+      Laba Bulan Ini
+    </p>
+
+    <p
+      className={`mt-4 text-3xl font-semibold ${
+        monthlyProfit >= 0 ? "text-slate-900" : "text-slate-500"
+      }`}
+    >
+      {rupiah(monthlyProfit)}
+    </p>
+  </div>
+
+  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+      Modal Bulan Ini
+    </p>
+
+    <p className="mt-4 text-3xl font-semibold text-slate-900">
+      {rupiah(monthlyCost)}
+    </p>
+  </div>
+
+  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+      Keuntungan Hari Ini
+    </p>
+
+    <p
+      className={`mt-4 text-3xl font-semibold ${
+        todayProfit >= 0 ? "text-slate-900" : "text-slate-500"
+      }`}
+    >
+      {rupiah(todayProfit)}
+    </p>
+  </div>
+</div>
       </div>
 
       <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -1104,6 +1118,14 @@ const exportToExcel = async () => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 bg-white"
             />
+          </div>
+          <div>
+                      <button
+            onClick={exportToExcel}
+            className="bg-black inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5"
+          >
+            Export ke Spreadsheet
+          </button>
           </div>
         </div>
       </div>
