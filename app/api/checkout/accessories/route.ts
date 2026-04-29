@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     }
 
-    const persistedInvoiceNumber = generateInvoiceNumber("PRODUK_LAIN");
+    const persistedInvoiceNumber = generateInvoiceNumber();
 
     const transaction = await prisma.transaction.create({
       data: {

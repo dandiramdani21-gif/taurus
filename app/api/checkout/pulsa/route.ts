@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         ? Math.max(0, enteredBalance - usedCost)
         : null;
 
-    const persistedInvoiceNumber = generateInvoiceNumber("PULSA");
+    const persistedInvoiceNumber = generateInvoiceNumber();
     const transaction = await prisma.$transaction(async (tx) => {
       const newTransaction = await tx.transaction.create({
         data: {
