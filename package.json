@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "cross-env TZ=Asia/Jakarta next dev",
-  "build": "cross-env TZ=Asia/Jakarta next build",
-  "start": "cross-env TZ=Asia/Jakarta next start",
+    "dev": "cross-env TZ=Asia/Jakarta next dev",
+    "build": "cross-env TZ=Asia/Jakarta next build",
+    "start": "cross-env TZ=Asia/Jakarta next start",
     "lint": "eslint",
     "daily-report:listen": "tsx scripts/daily-report-listener.ts",
     "telegram-command:listen": "tsx scripts/telegram-command-listener.ts"
@@ -32,10 +32,11 @@
     "react-webcam": "^7.2.0",
     "recharts": "^3.8.1",
     "xlsx": "^0.18.5",
-    "xlsx-style": "^0.8.13"
+    "xlsx-style": "^0.8.13",
+    "@tailwindcss/postcss": "^4.2.4",
+    "tailwindcss": "^4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
@@ -44,7 +45,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "prisma": "^7.8.0",
-    "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }
