@@ -168,14 +168,6 @@ const toDateKey = (value: string | Date | null | undefined) => {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0];
 };
 
-const normalizeFilterLabel = (filter: ReportProductFilter) => {
-  if (filter === "phone") return "Handphone";
-  if (filter === "pulsa") return "Pulsa";
-  if (filter === "accessory") return "Produk Lain";
-  if (filter === "voucher") return "Voucher";
-  return "Semua Produk";
-};
-
 const normalizeCategoryTitle = (filter: ReportProductFilter) => {
   if (filter === "phone") return "Laporan HP";
   if (filter === "pulsa") return "Laporan Pulsa";
