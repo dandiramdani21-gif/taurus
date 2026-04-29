@@ -27,6 +27,12 @@ interface PaginationData {
   totalPages: number;
 }
 
+interface Summaries {
+  profits: number
+  total_assets: number
+  total_solds: number
+}
+
 type SpreadsheetRow = Record<string, string | number | null | undefined>;
 
 export default function VoucherPage() {
@@ -36,7 +42,11 @@ export default function VoucherPage() {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showDetail, setShowDetail] = useState<Voucher | null>(null);
+  const [summaries, setSummaries] = useState<Summaries>({
+    profits: 0,
+    total_assets: 0,
+    total_solds: 0
+  })
   const [showStockModal, setShowStockModal] = useState<Voucher | null>(null);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   const [stockValue, setStockValue] = useState(0);
@@ -87,6 +97,7 @@ export default function VoucherPage() {
       );
       const data = await res.json();
       setVouchers(data.vouchers || []);
+      setSummaries(data.summaries)
       setPagination(data.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 });
     } catch (error) {
       console.error("Error fetching vouchers:", error);
@@ -521,6 +532,47 @@ const exportVouchers = async () => {
             <div>
               <p className="text-sm text-gray-500">Stok Menipis (&lt;3)</p>
               <p className="text-xl font-bold text-orange-600">{lowStockCount}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Aset</p>
+              <p className="text-xl font-bold text-gray-800">Rp. {summaries.total_assets.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Terjual</p>
+              <p className="text-xl font-bold text-gray-800">{summaries.total_solds}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Keuntungan</p>
+              <p className="text-xl font-bold text-gray-800">Rp. {summaries.profits.toLocaleString()}</p>
             </div>
           </div>
         </div>
