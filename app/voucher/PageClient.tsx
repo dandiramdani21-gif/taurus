@@ -292,16 +292,10 @@ const exportVouchers = async () => {
         expiredAt: row["TGL_KADALUARSA"] || row.expiredAt || "",
       };
 
-      const existingRes = await fetch(`/api/vouchers/exports`);
-      const existingData = await existingRes.json();
-      const existing = existingData.vouchers?.find(
-        (item: Voucher) => item.name?.trim().toLowerCase() === name.toLowerCase()
-      );
-
       const res = await fetch("/api/vouchers", {
-        method: existing ? "PUT" : "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(existing ? { ...payload, id: existing.id } : payload),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {

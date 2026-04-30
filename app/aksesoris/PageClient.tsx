@@ -283,16 +283,10 @@ const exportAccessories = async () => {
         entryDate: row["TGL_MASUK"] || row.entryDate || new Date().toISOString().split("T")[0],
       };
 
-      const existingRes = await fetch(`/api/accessories/exports`);
-      const existingData = await existingRes.json();
-      const existing = existingData.accessories?.find(
-        (item: Accessory) => item.name?.trim().toLowerCase() === name.toLowerCase()
-      );
-
       const res = await fetch("/api/accessories", {
-        method: existing ? "PUT" : "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(existing ? { ...payload, id: existing.id } : payload),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {

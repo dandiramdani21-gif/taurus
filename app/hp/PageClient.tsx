@@ -374,11 +374,6 @@ export default function HpPage() {
         entryDate: tglBeli || new Date().toISOString().split("T")[0],
       };
 
-      const existing = await checkExistingImei(imei);
-      if (existing.exists) {
-        continue;
-      }
-
       const res = await fetch("/api/hp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -395,17 +390,7 @@ export default function HpPage() {
     alert("Import inventory HP selesai");
   };
 
-  // Cek apakah kode sudah ada
-  const checkExistingImei = async (imei: string) => {
-    try {
-      const res = await fetch(`/api/hp/check?imei=${imei}`);
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      console.error("Error checking IMEI:", error);
-      return { exists: false };
-    }
-  };
+
   const updateStock = async (id: string, newStock: number) => {
     if (newStock < 0) {
       alert("Stok tidak boleh minus!");
