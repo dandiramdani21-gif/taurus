@@ -159,20 +159,20 @@ export default function HpPage() {
       // Data template dengan 2 contoh dummy
       const templateData = [
         {
-          KODE: "ACC001",
-          NAMA: "Tempered Glass iPhone 15",
-          HARGA_BELI: 25000,
-          HARGA_JUAL: 50000,
-          STOK: 10,
-          TGL_MASUK: new Date().toISOString().split("T")[0],
+          MERK: "MOTOROLA",
+          TYPE: "G06 PWR 4/128",
+          IMEI: "111111111111111",
+          WARNA: "BROWN",
+          TGL_BELI: new Date().toISOString().split("T")[0],
+          HARGA: 1500000
         },
         {
-          KODE: "ACC002",
-          NAMA: "Casing Samsung A54",
-          HARGA_BELI: 35000,
-          HARGA_JUAL: 75000,
-          STOK: 15,
-          TGL_MASUK: new Date().toISOString().split("T")[0],
+          MERK: "MOTOROLA 2",
+          TYPE: "G06 PWR 4/64",
+          IMEI: "111111111111112",
+          WARNA: "BLACK",
+          TGL_BELI: new Date().toISOString().split("T")[0],
+          HARGA: 1400000
         },
       ];
 
@@ -194,11 +194,11 @@ export default function HpPage() {
       }
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Template Accessories");
-      XLSX.writeFile(wb, `Template_Accessories_${new Date().toISOString().split("T")[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Template HP");
+      XLSX.writeFile(wb, `Template_HP_${new Date().toISOString().split("T")[0]}.xlsx`);
     } catch (error) {
       console.error("Error downloading template:", error);
-      alert("Gagal mendownload template accessories");
+      alert("Gagal mendownload template HP");
     }
   };
 
@@ -224,7 +224,7 @@ export default function HpPage() {
         TGL_BELI: phone.entryDate
           ? new Date(phone.entryDate).toISOString().split("T")[0]
           : "",
-        HARGA_MODAL: phone.purchasePrice,
+        HARGA: phone.purchasePrice,
       }));
 
       // Sheet 2: HP Terjual
@@ -238,7 +238,7 @@ export default function HpPage() {
         TGL_BELI: sold.entryDate
           ? new Date(sold.entryDate).toISOString().split("T")[0]
           : "",
-        HARGA_MODAL: sold.purchasePrice,
+        HARGA: sold.purchasePrice,
         HARGA_JUAL: sold.sellPrice,
         TGL_TERJUAL: sold.soldDate
           ? new Date(sold.soldDate).toLocaleDateString("id-ID", {
@@ -264,7 +264,7 @@ export default function HpPage() {
         { wch: 20 },  // IMEI
         { wch: 15 },  // WARNA
         { wch: 15 },  // TGL_BELI
-        { wch: 15 },  // HARGA_MODAL
+        { wch: 15 },  // HARGA
       ];
 
       // Set header style untuk sheet Daftar HP
@@ -286,7 +286,7 @@ export default function HpPage() {
         };
       }
 
-      // Format currency untuk HARGA_MODAL di sheet Daftar HP
+      // Format currency untuk HARGA di sheet Daftar HP
       for (let row = 1; row <= phoneData.length; row++) {
         const hargaCell = XLSX.utils.encode_cell({ r: row, c: 6 });
         if (wsPhones[hargaCell]) {
@@ -307,7 +307,7 @@ export default function HpPage() {
         { wch: 20 },  // IMEI
         { wch: 15 },  // WARNA
         { wch: 15 },  // TGL_BELI
-        { wch: 15 },  // HARGA_MODAL
+        { wch: 15 },  // HARGA
         { wch: 15 },  // HARGA_JUAL
         { wch: 15 },  // TGL_TERJUAL
         { wch: 15 },  // KEUNTUNGAN
@@ -332,7 +332,7 @@ export default function HpPage() {
         };
       }
 
-      // Format currency untuk HARGA_MODAL, HARGA_JUAL, KEUNTUNGAN di sheet HP Terjual
+      // Format currency untuk HARGA, HARGA_JUAL, KEUNTUNGAN di sheet HP Terjual
       for (let row = 1; row <= soldData.length; row++) {
         const modalCell = XLSX.utils.encode_cell({ r: row, c: 6 });
         const jualCell = XLSX.utils.encode_cell({ r: row, c: 7 });

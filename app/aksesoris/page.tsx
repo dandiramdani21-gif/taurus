@@ -109,14 +109,14 @@ export default function AksesorisPage() {
       const templateData = [
         {
           NAMA: "Tempered Glass iPhone 15",
-          HARGA_MODAL: 25000,
+          HARGA_BELI: 25000,
           HARGA_JUAL: 50000,
           STOK: 10,
           TGL_MASUK: new Date().toISOString().split("T")[0],
         },
         {
           NAMA: "Casing Samsung A54",
-          HARGA_MODAL: 35000,
+          HARGA_BELI: 35000,
           HARGA_JUAL: 75000,
           STOK: 15,
           TGL_MASUK: new Date().toISOString().split("T")[0],
@@ -166,7 +166,7 @@ const exportAccessories = async () => {
       NO: index + 1,
       KODE: item.code,
       NAMA: item.name,
-      HARGA_MODAL: item.costPrice,
+      HARGA_BELI: item.costPrice,
       HARGA_JUAL: item.sellPrice,
       STOK: item.stock,
       TGL_MASUK: item.entryDate ? new Date(item.entryDate).toISOString().split("T")[0] : "",
@@ -178,7 +178,7 @@ const exportAccessories = async () => {
       NO: index + 1,
       KODE: item.code,
       NAMA: item.name,
-      HARGA_MODAL: item.costPrice,
+      HARGA_BELI: item.costPrice,
       HARGA_JUAL: item.sellPrice,
       QTY: item.quantity,
       TGL_TERJUAL: item.soldDate ? new Date(item.soldDate).toISOString().split("T")[0] : "",
@@ -194,7 +194,7 @@ const exportAccessories = async () => {
       { wch: 5 },   // NO
       { wch: 15 },  // KODE
       { wch: 30 },  // NAMA
-      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_BELI
       { wch: 15 },  // HARGA_JUAL
       { wch: 10 },  // STOK
       { wch: 15 },  // TGL_MASUK
@@ -231,7 +231,7 @@ const exportAccessories = async () => {
       { wch: 5 },   // NO
       { wch: 15 },  // KODE
       { wch: 30 },  // NAMA
-      { wch: 15 },  // HARGA_MODAL
+      { wch: 15 },  // HARGA_BELI
       { wch: 15 },  // HARGA_JUAL
       { wch: 10 },  // QTY
       { wch: 15 },  // TGL_TERJUAL
@@ -277,22 +277,17 @@ const exportAccessories = async () => {
 
       const payload = {
         name,
-        costPrice: Number(row["HARGA_MODAL"] ?? row.costPrice ?? 0),
-        sellPrice: Number(row["HARGA_JUAL"] ?? row.sellPrice ?? 0),
-        stock: Number(row.STOCK ?? row.STOCK ?? 0),
-        entryDate: row["TGL_MASUK"] || row.entryDate || new Date().toISOString().split("T")[0],
+        costPrice: Number(row["HARGA_BELI"]),
+        sellPrice: Number(row["HARGA_JUAL"]),
+        stock: Number(row.STOK),
+        entryDate: row["TGL_MASUK"],
       };
 
-      const existingRes = await fetch(`/api/accessories/exports`);
-      const existingData = await existingRes.json();
-      const existing = existingData.accessories?.find(
-        (item: Accessory) => item.name?.trim().toLowerCase() === name.toLowerCase()
-      );
 
       const res = await fetch("/api/accessories", {
-        method: existing ? "PUT" : "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(existing ? { ...payload, id: existing.id } : payload),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
