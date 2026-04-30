@@ -159,20 +159,12 @@ export default function HpPage() {
       // Data template dengan 2 contoh dummy
       const templateData = [
         {
-          KODE: "ACC001",
-          NAMA: "Tempered Glass iPhone 15",
-          HARGA_BELI: 25000,
-          HARGA_JUAL: 50000,
-          STOK: 10,
-          TGL_MASUK: new Date().toISOString().split("T")[0],
-        },
-        {
-          KODE: "ACC002",
-          NAMA: "Casing Samsung A54",
-          HARGA_BELI: 35000,
-          HARGA_JUAL: 75000,
-          STOK: 15,
-          TGL_MASUK: new Date().toISOString().split("T")[0],
+          MERK: "OPPO",
+          TIPE: "A13 6/64",
+          IMEI: "4837248732842",
+          WARNA: "MERAH",
+          HARGA: 1400000,
+          TGL_BELI: new Date().toISOString().split("T")[0],
         },
       ];
 
@@ -194,11 +186,11 @@ export default function HpPage() {
       }
 
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Template Accessories");
-      XLSX.writeFile(wb, `Template_Accessories_${new Date().toISOString().split("T")[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Template HP");
+      XLSX.writeFile(wb, `Template_HP_${new Date().toISOString().split("T")[0]}.xlsx`);
     } catch (error) {
       console.error("Error downloading template:", error);
-      alert("Gagal mendownload template accessories");
+      alert("Gagal mendownload template hp");
     }
   };
 

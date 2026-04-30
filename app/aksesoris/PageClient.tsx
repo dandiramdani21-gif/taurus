@@ -279,7 +279,7 @@ const exportAccessories = async () => {
         name,
         costPrice: Number(row["HARGA_MODAL"] ?? row.costPrice ?? 0),
         sellPrice: Number(row["HARGA_JUAL"] ?? row.sellPrice ?? 0),
-        stock: Number(row.STOCK ?? row.STOCK ?? 0),
+        stock: Number(row.STOK ?? row.STOK ?? 0),
         entryDate: row["TGL_MASUK"] || row.entryDate || new Date().toISOString().split("T")[0],
       };
 
