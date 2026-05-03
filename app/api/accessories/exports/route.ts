@@ -28,14 +28,18 @@ export async function GET(request: Request) {
           entryDate: true,
         },
       }),
-      
+
       // Accessories Terjual
       prisma.accessory.findMany({
         where: {
           transactionItems: {
             some: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },
@@ -49,7 +53,11 @@ export async function GET(request: Request) {
           transactionItems: {
             where: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },

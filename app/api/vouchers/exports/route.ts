@@ -30,14 +30,18 @@ export async function GET(request: Request) {
         },
         orderBy: { createdAt: "desc" },
       }),
-      
+
       // Voucher Terjual
       prisma.voucher.findMany({
         where: {
           transactionItems: {
             some: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },
@@ -51,7 +55,11 @@ export async function GET(request: Request) {
           transactionItems: {
             where: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },

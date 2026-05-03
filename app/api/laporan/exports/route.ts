@@ -30,7 +30,11 @@ export async function GET(request: Request) {
             where: {
                 type: "SALE",
                 category: category as any,
-                status: "PAID",
+                items: {
+                    some: {
+                        status: "PAID"
+                    }
+                },
                 deleted: false,
                 createdAt: { gte: start, lte: end },
             },

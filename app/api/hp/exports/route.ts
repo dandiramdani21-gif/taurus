@@ -30,14 +30,18 @@ export async function GET(request: Request) {
         },
         orderBy: { createdAt: "desc" },
       }),
-      
+
       prisma.phone.findMany({
         where: {
           ...(includeDeleted ? {} : { deleted: false }),
           transactionItems: {
             some: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },
@@ -53,7 +57,11 @@ export async function GET(request: Request) {
           transactionItems: {
             where: {
               transaction: {
-                status: "PAID",
+                items: {
+                  some: {
+                    status: "PAID"
+                  }
+                },
                 deleted: false,
               },
             },
