@@ -227,6 +227,7 @@ export default function InvoicesPage() {
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Tanggal</th>
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Kategori</th>
               <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Dilayani</th>
+              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Total Item</th>
               <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Total Penjualan</th>
               <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Keuntungan</th>
               <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Aksi</th>
@@ -276,6 +277,9 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-5 py-5 text-sm text-slate-700">
                     {transaction.servedByName || "-"}
+                  </td>
+                  <td className="px-5 py-5 text-sm text-slate-700">
+                    {transaction.items?.length || 0}
                   </td>
                   <td className="px-5 py-5 text-sm text-right">
                     <p className="font-semibold text-slate-900">

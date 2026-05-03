@@ -530,7 +530,7 @@ const exportVouchers = async () => {
           </div>
         </div>
       </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -554,19 +554,6 @@ const exportVouchers = async () => {
             <div>
               <p className="text-sm text-gray-500">Total Terjual</p>
               <p className="text-xl font-bold text-gray-800">{summaries.total_solds}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Keuntungan</p>
-              <p className="text-xl font-bold text-gray-800">Rp. {summaries.profits.toLocaleString()}</p>
             </div>
           </div>
         </div>

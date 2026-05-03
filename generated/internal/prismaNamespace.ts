@@ -1220,7 +1220,6 @@ export const TransactionScalarFieldEnum = {
   id: 'id',
   invoiceNumber: 'invoiceNumber',
   type: 'type',
-  status: 'status',
   category: 'category',
   deleted: 'deleted',
   totalAmount: 'totalAmount',
@@ -1238,6 +1237,7 @@ export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[key
 
 export const TransactionItemScalarFieldEnum = {
   id: 'id',
+  status: 'status',
   transactionId: 'transactionId',
   accessoryId: 'accessoryId',
   voucherId: 'voucherId',

@@ -13,7 +13,6 @@ type ReportTransaction = {
   id: string;
   createdAt: string;
   category?: ReportCategory;
-  status: "PAID" | "REFUND";
   servedByName?: string | null;
   totalAmount: number;
   totalCost: number;
@@ -21,7 +20,8 @@ type ReportTransaction = {
   note?: string | null;
   debt_note: string;
   items: Array<{
-    id?: string;
+    id: string;
+    status: "PAID" | "REFUND";  // ← TAMBAHKAN ini
     quantity: number;
     sellPrice: number;
     costPrice: number;
@@ -56,6 +56,7 @@ type ReportTransaction = {
 
 type ReportRow = {
   key: string;
+  itemId: string;  // ← TAMBAHKAN
   transactionId: string;
   debt_note: string
   dateKey: string;
@@ -81,6 +82,8 @@ type GroupedRows = {
 
 type PulsaRow = {
   key: string;
+  itemId: string;  // ← TAMBAHKAN
+  status: "PAID" | "REFUND";  // ← TAMBAHKAN INI
   transactionId: string;
   dateKey: string;
   dateLabel: string;
@@ -257,7 +260,7 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
       const quantity = Number(item.quantity || 1);
       const baseRevenue = Number(item.sellPrice || 0) * quantity;
       const baseCost = Number(item.costPrice || 0) * quantity;
-      const multiplier = transaction.status === "REFUND" ? 0 : 1;
+      const multiplier = item.status === "REFUND" ? 0 : 1;
       const revenue = baseRevenue * multiplier;
       const cost = baseCost * multiplier;
       const profit = (baseRevenue - baseCost) * multiplier;
@@ -267,8 +270,9 @@ const buildGroupedRows = (transactions: ReportTransaction[], productFilter: Repo
       const debt_note = transaction.debt_note
 
       group.rows.push({
-        key: `${transaction.id}-${index}`,
+        key: `${transaction.id}`,
         transactionId: transaction.id,
+        itemId: item.id,
         dateKey,
         debt_note,
         dateLabel,
@@ -310,13 +314,15 @@ const buildPulsaRows = (transactions: ReportTransaction[]) => {
       if (!isPulsaRow) return;
 
       const quantity = Number(item.quantity || 1);
-      const multiplier = transaction.status === "REFUND" ? 0 : 1;
+      const multiplier = item.status === "REFUND" ? 0 : 1;
       const total = Number(transaction.totalAmount ?? item.sellPrice ?? 0) * multiplier;
       const modal = Number(transaction.totalCost ?? item.costPrice ?? 0) * multiplier;
       const profit = Number(transaction.profit ?? total - modal) * multiplier;
 
       rows.push({
         key: `${transaction.id}-${index}`,
+        status: item.status,
+        itemId: item.id,
         transactionId: transaction.id,
         dateKey,
         dateLabel,
@@ -515,11 +521,16 @@ const filterTransactionsByDateRange = (
 const summarizeTransactions = (transactions: ReportTransaction[]) => {
   return transactions.reduce(
     (acc, transaction) => {
-      const multiplier = transaction.status === "REFUND" ? 0 : 1;
-      acc.totalRevenue += Number(transaction.totalAmount || 0) * multiplier;
-      acc.totalCost += Number(transaction.totalCost || 0) * multiplier;
-      acc.totalProfit += Number(transaction.profit || 0) * multiplier;
-      acc.transactionCount += 1;
+      transaction.items.forEach((item) => {
+        if (item.status === "PAID") {
+          const revenue = Number(item.sellPrice || 0) * Number(item.quantity || 1);
+          const cost = Number(item.costPrice || 0) * Number(item.quantity || 1);
+          acc.totalRevenue += revenue;
+          acc.totalCost += cost;
+          acc.totalProfit += revenue - cost;
+          acc.transactionCount += 1; // Hitung per item, bukan per transaksi
+        }
+      });
       return acc;
     },
     {
@@ -530,7 +541,6 @@ const summarizeTransactions = (transactions: ReportTransaction[]) => {
     }
   );
 };
-
 export default function LaporanKeuanganPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -582,53 +592,53 @@ export default function LaporanKeuanganPage() {
 
 
   async function fetchAllDataForExport(
-  startDate: string, 
-  endDate: string, 
-  categories: ReportCategory[], 
-  search: string
-) {
-  const responses = await Promise.all(
-    categories.map(async (category) => {
-      const url = new URL(categoryEndpointMap[category], window.location.origin);
-      url.searchParams.set("startDate", startDate);
-      url.searchParams.set("endDate", endDate);
-      url.searchParams.set("search", search);
-      url.searchParams.set("page", "1");
-      url.searchParams.set("pageSize", "1000"); // Limit 1000 items
+    startDate: string,
+    endDate: string,
+    categories: ReportCategory[],
+    search: string
+  ) {
+    const responses = await Promise.all(
+      categories.map(async (category) => {
+        const url = new URL(categoryEndpointMap[category], window.location.origin);
+        url.searchParams.set("startDate", startDate);
+        url.searchParams.set("endDate", endDate);
+        url.searchParams.set("search", search);
+        url.searchParams.set("page", "1");
+        url.searchParams.set("pageSize", "1000"); // Limit 1000 items
 
-      const res = await fetch(url.toString());
-      if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.error || `Gagal mengambil laporan ${category}`);
-      }
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.error || `Gagal mengambil laporan ${category}`);
+        }
 
-      return res.json();
-    })
-  );
+        return res.json();
+      })
+    );
 
-  return responses.reduce(
-    (acc, report) => {
-      const transactions = [...acc.transactions, ...(report.transactions || [])];
-      const summary = {
-        totalRevenue: acc.summary.totalRevenue + (report.summary?.totalRevenue || 0),
-        totalCost: acc.summary.totalCost + (report.summary?.totalCost || 0),
-        totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
-        transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
-      };
+    return responses.reduce(
+      (acc, report) => {
+        const transactions = [...acc.transactions, ...(report.transactions || [])];
+        const summary = {
+          totalRevenue: acc.summary.totalRevenue + (report.summary?.totalRevenue || 0),
+          totalCost: acc.summary.totalCost + (report.summary?.totalCost || 0),
+          totalProfit: acc.summary.totalProfit + (report.summary?.totalProfit || 0),
+          transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
+        };
 
-      return { transactions, summary };
-    },
-    {
-      transactions: [] as ReportTransaction[],
-      summary: {
-        totalRevenue: 0,
-        totalCost: 0,
-        totalProfit: 0,
-        transactionCount: 0,
+        return { transactions, summary };
       },
-    }
-  );
-}
+      {
+        transactions: [] as ReportTransaction[],
+        summary: {
+          totalRevenue: 0,
+          totalCost: 0,
+          totalProfit: 0,
+          transactionCount: 0,
+        },
+      }
+    );
+  }
 
 
 
@@ -720,205 +730,205 @@ export default function LaporanKeuanganPage() {
     }
   }, [fetchLaporan, router, status]);
 
-// Update fungsi exportToExcel
-const exportToExcel = async () => {
-  try {
-    setLoading(true);
-    
-    const categories: ReportCategory[] =
-      effectiveFilter === "all"
-        ? ["HANDPHONE", "PRODUK_LAIN", "PULSA"]
-        : [filterToCategory[effectiveFilter]];
+  // Update fungsi exportToExcel
+  const exportToExcel = async () => {
+    try {
+      setLoading(true);
 
-    const { transactions: exportTransactions } = await fetchAllDataForExport(
-      startDate,
-      endDate,
-      categories,
-      search
-    );
+      const categories: ReportCategory[] =
+        effectiveFilter === "all"
+          ? ["HANDPHONE", "PRODUK_LAIN", "PULSA"]
+          : [filterToCategory[effectiveFilter]];
 
-    const filteredTransactions = filterTransactionsByDateRange(
-      exportTransactions,
-      startDate,
-      endDate
-    );
+      const { transactions: exportTransactions } = await fetchAllDataForExport(
+        startDate,
+        endDate,
+        categories,
+        search
+      );
 
-    if (filteredTransactions.length === 0) {
-      alert("Tidak ada data untuk diexport pada periode ini.");
-      setLoading(false);
-      return;
-    }
+      const filteredTransactions = filterTransactionsByDateRange(
+        exportTransactions,
+        startDate,
+        endDate
+      );
 
-    const groupedRows = buildGroupedRows(filteredTransactions, effectiveFilter);
-    const pulsaRowsData = buildPulsaRows(filteredTransactions);
-    const groupedPulsaRows = buildPulsaGroups(pulsaRowsData);
-
-    let aoa: (string | number)[][];
-    let sheetName: string;
-    let colWidths: { wch: number }[];
-
-    // HP
-    if (effectiveFilter === "phone") {
-      aoa = buildPhoneRowsForExport(groupedRows);
-      sheetName = "Laporan HP";
-      colWidths = [
-        { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 12 },
-        { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 18 },
-        { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
-        { wch: 6 }, { wch: 14 }
-      ];
-    }
-    // Pulsa
-    else if (effectiveFilter === "pulsa") {
-      aoa = [
-        ["No Tujuan", "Keterangan", "Denom", "TGL JUAL", "HARGA BELI", "BIAYA", "HARGA JUAL", "RL", "HPP"],
-      ];
-      
-      groupedPulsaRows.forEach((group) => {
-        aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", "", ""]);
-        
-        group.rows.forEach((row) => {
-          const hargaBeli = Number(row.modal || 0);
-          const biaya = 0;
-          const hargaJual = Number(row.price || 0);
-          const hpp = hargaBeli + biaya;
-          const rl = hargaJual - hpp;
-          const denomination = row.description.match(/\d+/)?.[0] || "-";
-
-          aoa.push([
-            row.destinationNumber,
-            row.description,
-            denomination,
-            row.dateLabel,
-            hargaBeli,
-            biaya,
-            hargaJual,
-            rl,
-            hpp
-          ]);
-        });
-        
-        aoa.push([
-          `Subtotal ${group.dateLabel}`,
-          "",
-          "",
-          "",
-          group.subtotalModal,
-          "",
-          group.subtotalTotal,
-          group.subtotalProfit,
-          group.subtotalModal,
-          "",
-        ]);
-      });
-      
-      sheetName = "Laporan Pulsa";
-      colWidths = [
-        { wch: 16 }, { wch: 24 }, { wch: 10 }, { wch: 14 },
-        { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 14 },
-        { wch: 14 }
-      ];
-    }
-    // PRODUK_LAIN (accessory, voucher, all)
-    else {
-      aoa = [
-        ["NAMA PRODUK", "KODE", "TGL BELI", "HARGA BELI", "BIAYA SERVICE", "TGL JUAL", "HARGA JUAL", "RL", "HPP"],
-      ];
-      
-      groupedRows.forEach((group) => {
-        aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", ""]);
-        
-        group.rows.forEach((row) => {
-          const accessory = row.sourceItem.accessory;
-          const voucher = row.sourceItem.voucher;
-          
-          const hargaBeli = Number(row.cost || 0);
-          const biayaService = 0;
-          const hargaJual = Number(row.revenue || 0);
-          const hpp = hargaBeli + biayaService;
-          const rl = hargaJual - hpp;
-          
-          let namaProduk = "";
-          let kode = "";
-          const tglBeli = "-";
-          
-          if (accessory) {
-            namaProduk = accessory.name;
-            kode = accessory.code;
-          } else if (voucher) {
-            namaProduk = voucher.name;
-            kode = voucher.code;
-          }
-
-          aoa.push([
-            namaProduk,
-            kode,
-            tglBeli,
-            hargaBeli,
-            biayaService,
-            group.dateLabel,
-            hargaJual,
-            rl,
-            hpp,
-          ]);
-        });
-        
-        aoa.push([
-          `Subtotal ${group.dateLabel}`,
-          "",
-          "",
-          group.subtotalCost,
-          "",
-          "",
-          group.subtotalRevenue,
-          group.subtotalProfit,
-          group.subtotalCost,
-        ]);
-      });
-      
-      sheetName = effectiveFilter === "accessory" ? "Laporan Produk Lain" 
-        : effectiveFilter === "voucher" ? "Laporan Voucher" 
-        : "Laporan Semua Produk";
-      colWidths = [
-        { wch: 28 }, { wch: 18 }, { wch: 12 }, { wch: 14 },
-        { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
-        { wch: 14 }
-      ];
-    }
-
-    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
-    worksheet["!cols"] = colWidths;
-
-    // Apply styling
-    let rowIndex = 0;
-    const groupsToStyle = effectiveFilter === "pulsa" ? groupedPulsaRows : groupedRows;
-    const colCount = colWidths.length;
-    
-    groupsToStyle.forEach((_, index) => {
-      rowIndex += 1; // skip header or date row
-      const rowsInGroup = effectiveFilter === "pulsa" 
-        ? (groupsToStyle as PulsaGroup[])[index].rows.length 
-        : (groupsToStyle as GroupedRows[])[index].rows.length;
-      
-      for (let i = 0; i < rowsInGroup; i++) {
-        applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
-        rowIndex += 1;
+      if (filteredTransactions.length === 0) {
+        alert("Tidak ada data untuk diexport pada periode ini.");
+        setLoading(false);
+        return;
       }
-      applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
-      rowIndex += 1;
-    });
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, worksheet, sheetName);
-    XLSX.writeFile(wb, `${sheetName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-    
-  } catch (error) {
-    console.error("Gagal export ke Excel:", error);
-    alert(error instanceof Error ? error.message : "Gagal export ke Excel");
-  } finally {
-    setLoading(false);
-  }
-};
+      const groupedRows = buildGroupedRows(filteredTransactions, effectiveFilter);
+      const pulsaRowsData = buildPulsaRows(filteredTransactions);
+      const groupedPulsaRows = buildPulsaGroups(pulsaRowsData);
+
+      let aoa: (string | number)[][];
+      let sheetName: string;
+      let colWidths: { wch: number }[];
+
+      // HP
+      if (effectiveFilter === "phone") {
+        aoa = buildPhoneRowsForExport(groupedRows);
+        sheetName = "Laporan HP";
+        colWidths = [
+          { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 12 },
+          { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 18 },
+          { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
+          { wch: 6 }, { wch: 14 }
+        ];
+      }
+      // Pulsa
+      else if (effectiveFilter === "pulsa") {
+        aoa = [
+          ["No Tujuan", "Keterangan", "Denom", "TGL JUAL", "HARGA BELI", "BIAYA", "HARGA JUAL", "RL", "HPP"],
+        ];
+
+        groupedPulsaRows.forEach((group) => {
+          aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", "", ""]);
+
+          group.rows.forEach((row) => {
+            const hargaBeli = Number(row.modal || 0);
+            const biaya = 0;
+            const hargaJual = Number(row.price || 0);
+            const hpp = hargaBeli + biaya;
+            const rl = hargaJual - hpp;
+            const denomination = row.description.match(/\d+/)?.[0] || "-";
+
+            aoa.push([
+              row.destinationNumber,
+              row.description,
+              denomination,
+              row.dateLabel,
+              hargaBeli,
+              biaya,
+              hargaJual,
+              rl,
+              hpp
+            ]);
+          });
+
+          aoa.push([
+            `Subtotal ${group.dateLabel}`,
+            "",
+            "",
+            "",
+            group.subtotalModal,
+            "",
+            group.subtotalTotal,
+            group.subtotalProfit,
+            group.subtotalModal,
+            "",
+          ]);
+        });
+
+        sheetName = "Laporan Pulsa";
+        colWidths = [
+          { wch: 16 }, { wch: 24 }, { wch: 10 }, { wch: 14 },
+          { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 14 },
+          { wch: 14 }
+        ];
+      }
+      // PRODUK_LAIN (accessory, voucher, all)
+      else {
+        aoa = [
+          ["NAMA PRODUK", "KODE", "TGL BELI", "HARGA BELI", "BIAYA SERVICE", "TGL JUAL", "HARGA JUAL", "RL", "HPP"],
+        ];
+
+        groupedRows.forEach((group) => {
+          aoa.push([`TGL JUAL: ${group.dateLabel}`, "", "", "", "", "", "", "", ""]);
+
+          group.rows.forEach((row) => {
+            const accessory = row.sourceItem.accessory;
+            const voucher = row.sourceItem.voucher;
+
+            const hargaBeli = Number(row.cost || 0);
+            const biayaService = 0;
+            const hargaJual = Number(row.revenue || 0);
+            const hpp = hargaBeli + biayaService;
+            const rl = hargaJual - hpp;
+
+            let namaProduk = "";
+            let kode = "";
+            const tglBeli = "-";
+
+            if (accessory) {
+              namaProduk = accessory.name;
+              kode = accessory.code;
+            } else if (voucher) {
+              namaProduk = voucher.name;
+              kode = voucher.code;
+            }
+
+            aoa.push([
+              namaProduk,
+              kode,
+              tglBeli,
+              hargaBeli,
+              biayaService,
+              group.dateLabel,
+              hargaJual,
+              rl,
+              hpp,
+            ]);
+          });
+
+          aoa.push([
+            `Subtotal ${group.dateLabel}`,
+            "",
+            "",
+            group.subtotalCost,
+            "",
+            "",
+            group.subtotalRevenue,
+            group.subtotalProfit,
+            group.subtotalCost,
+          ]);
+        });
+
+        sheetName = effectiveFilter === "accessory" ? "Laporan Produk Lain"
+          : effectiveFilter === "voucher" ? "Laporan Voucher"
+            : "Laporan Semua Produk";
+        colWidths = [
+          { wch: 28 }, { wch: 18 }, { wch: 12 }, { wch: 14 },
+          { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+          { wch: 14 }
+        ];
+      }
+
+      const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+      worksheet["!cols"] = colWidths;
+
+      // Apply styling
+      let rowIndex = 0;
+      const groupsToStyle = effectiveFilter === "pulsa" ? groupedPulsaRows : groupedRows;
+      const colCount = colWidths.length;
+
+      groupsToStyle.forEach((_, index) => {
+        rowIndex += 1; // skip header or date row
+        const rowsInGroup = effectiveFilter === "pulsa"
+          ? (groupsToStyle as PulsaGroup[])[index].rows.length
+          : (groupsToStyle as GroupedRows[])[index].rows.length;
+
+        for (let i = 0; i < rowsInGroup; i++) {
+          applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "F8FBFF" : "F7FFF8");
+          rowIndex += 1;
+        }
+        applyBestEffortFill(worksheet, rowIndex, colCount, index % 2 === 0 ? "BAE6FD" : "BBF7D0");
+        rowIndex += 1;
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, worksheet, sheetName);
+      XLSX.writeFile(wb, `${sheetName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+
+    } catch (error) {
+      console.error("Gagal export ke Excel:", error);
+      alert(error instanceof Error ? error.message : "Gagal export ke Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const groupedRows = buildGroupedRows(transactions, effectiveFilter);
@@ -992,12 +1002,11 @@ const exportToExcel = async () => {
     pagedGroups = Array.from(groupMap.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }
 
-  const statusByTransactionId = new Map(transactions.map((transaction) => [transaction.id, transaction.status]));
 
-  const updateTransactionStatus = async (transactionId: string, status: "PAID" | "REFUND") => {
+  const updateTransactionStatus = async (itemId: string, status: "PAID" | "REFUND") => {
     try {
-      setUpdatingStatusTxId(transactionId);
-      const res = await fetch(`/api/transactions/${transactionId}`, {
+      setUpdatingStatusTxId(itemId);
+      const res = await fetch(`/api/transactions/items/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -1038,45 +1047,43 @@ const exportToExcel = async () => {
 
         </div>
 
-<div className="grid gap-4 border-b border-slate-200 bg-white px-6 py-6 sm:grid-cols-3 sm:px-8">
-  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-      Laba Bulan Ini
-    </p>
+        <div className="grid gap-4 border-b border-slate-200 bg-white px-6 py-6 sm:grid-cols-3 sm:px-8">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Laba Bulan Ini
+            </p>
 
-    <p
-      className={`mt-4 text-3xl font-semibold ${
-        monthlyProfit >= 0 ? "text-slate-900" : "text-slate-500"
-      }`}
-    >
-      {rupiah(monthlyProfit)}
-    </p>
-  </div>
+            <p
+              className={`mt-4 text-3xl font-semibold ${monthlyProfit >= 0 ? "text-slate-900" : "text-slate-500"
+                }`}
+            >
+              {rupiah(monthlyProfit)}
+            </p>
+          </div>
 
-  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-      Modal Bulan Ini
-    </p>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Modal Bulan Ini
+            </p>
 
-    <p className="mt-4 text-3xl font-semibold text-slate-900">
-      {rupiah(monthlyCost)}
-    </p>
-  </div>
+            <p className="mt-4 text-3xl font-semibold text-slate-900">
+              {rupiah(monthlyCost)}
+            </p>
+          </div>
 
-  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-      Keuntungan Hari Ini
-    </p>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Keuntungan Hari Ini
+            </p>
 
-    <p
-      className={`mt-4 text-3xl font-semibold ${
-        todayProfit >= 0 ? "text-slate-900" : "text-slate-500"
-      }`}
-    >
-      {rupiah(todayProfit)}
-    </p>
-  </div>
-</div>
+            <p
+              className={`mt-4 text-3xl font-semibold ${todayProfit >= 0 ? "text-slate-900" : "text-slate-500"
+                }`}
+            >
+              {rupiah(todayProfit)}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -1111,12 +1118,12 @@ const exportToExcel = async () => {
             />
           </div>
           <div>
-                      <button
-            onClick={exportToExcel}
-            className="bg-black inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5"
-          >
-            Export ke Spreadsheet
-          </button>
+            <button
+              onClick={exportToExcel}
+              className="bg-black inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5"
+            >
+              Export ke Spreadsheet
+            </button>
           </div>
         </div>
       </div>
@@ -1187,7 +1194,7 @@ const exportToExcel = async () => {
                           </td>
                         </tr>
                         {group.rows.map((row) => (
-                          <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                          <tr key={row.itemId} className={`${theme.row} transition hover:bg-white/80`}>
                             <td className="px-6 py-4 text-sm text-slate-700">{row.dateLabel}</td>
                             <td className="px-6 py-4">
                               <div className="font-medium text-slate-900">{row.destinationNumber}</div>
@@ -1213,14 +1220,15 @@ const exportToExcel = async () => {
                             <td className="px-6 py-4 text-sm text-slate-700">
                               <select
                                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                value={statusByTransactionId.get(row.transactionId) || "REFUND"}
+                                value={row.status}
                                 onChange={(e) =>
-                                  updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
+                                  updateTransactionStatus(row.itemId, e.target.value as "PAID" | "REFUND")
                                 }
-                                disabled={updatingStatusTxId === row.transactionId}
+                                disabled={updatingStatusTxId === row.itemId}
                               >
                                 <option value="PAID">PAID</option>
                                 <option value="REFUND">REFUND</option>
+
                               </select>
                             </td>
                           </tr>
@@ -1252,12 +1260,12 @@ const exportToExcel = async () => {
                           </td>
                         </tr>
                         {group.rows.map((row) => (
-                          <tr key={row.key} className={`${theme.row} transition hover:bg-white/80`}>
+                          <tr key={row.itemId} className={`${theme.row} transition hover:bg-white/80`}>
                             <td className="px-6 py-4">
                               <div className="font-medium text-slate-900">{row.product}</div>
                               <div className="text-xs text-slate-500">{row.dateLabel}</div>
                             </td>
-                             <td className="px-6 py-4 text-sm text-slate-700">
+                            <td className="px-6 py-4 text-sm text-slate-700">
                               <input
                                 value={debtNotes[row.transactionId] || ""}
                                 onChange={(e) => handleDebtNoteChange(row.transactionId, e.target.value)}
@@ -1278,11 +1286,11 @@ const exportToExcel = async () => {
                             <td className="px-6 py-4 text-sm text-slate-700">
                               <select
                                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-                                value={statusByTransactionId.get(row.transactionId) || "REFUND"}
+                                value={row.sourceItem.status}
                                 onChange={(e) =>
-                                  updateTransactionStatus(row.transactionId, e.target.value as "PAID" | "REFUND")
+                                  updateTransactionStatus(row.itemId, e.target.value as "PAID" | "REFUND")
                                 }
-                                disabled={updatingStatusTxId === row.transactionId}
+                                disabled={updatingStatusTxId === row.itemId}
                               >
                                 <option value="PAID">PAID</option>
                                 <option value="REFUND">REFUND</option>
@@ -1295,6 +1303,7 @@ const exportToExcel = async () => {
                           <td className="px-6 py-4 text-sm" colSpan={2}>
                             Laba/Rugi kelompok tanggal ini
                           </td>
+                          <td></td>
                           <td className="px-6 py-4 text-right text-sm font-semibold">
                             {group.rows.reduce((sum, row) => sum + row.quantity, 0)}
                           </td>
@@ -1313,29 +1322,6 @@ const exportToExcel = async () => {
           </div>
         )}
       </div>
-      {currentTotalItems > 0 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page === 1}
-            className="rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-slate-600">
-            Halaman {page} dari {totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            disabled={page >= totalPages}
-            className="rounded-xl border border-white/70 bg-white/80 px-4 py-2 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }

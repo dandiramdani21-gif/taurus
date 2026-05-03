@@ -42,6 +42,7 @@ export type TransactionItemSumAggregateOutputType = {
 
 export type TransactionItemMinAggregateOutputType = {
   id: string | null
+  status: $Enums.TransactionStatus | null
   transactionId: string | null
   accessoryId: string | null
   voucherId: string | null
@@ -57,6 +58,7 @@ export type TransactionItemMinAggregateOutputType = {
 
 export type TransactionItemMaxAggregateOutputType = {
   id: string | null
+  status: $Enums.TransactionStatus | null
   transactionId: string | null
   accessoryId: string | null
   voucherId: string | null
@@ -72,6 +74,7 @@ export type TransactionItemMaxAggregateOutputType = {
 
 export type TransactionItemCountAggregateOutputType = {
   id: number
+  status: number
   transactionId: number
   accessoryId: number
   voucherId: number
@@ -103,6 +106,7 @@ export type TransactionItemSumAggregateInputType = {
 
 export type TransactionItemMinAggregateInputType = {
   id?: true
+  status?: true
   transactionId?: true
   accessoryId?: true
   voucherId?: true
@@ -118,6 +122,7 @@ export type TransactionItemMinAggregateInputType = {
 
 export type TransactionItemMaxAggregateInputType = {
   id?: true
+  status?: true
   transactionId?: true
   accessoryId?: true
   voucherId?: true
@@ -133,6 +138,7 @@ export type TransactionItemMaxAggregateInputType = {
 
 export type TransactionItemCountAggregateInputType = {
   id?: true
+  status?: true
   transactionId?: true
   accessoryId?: true
   voucherId?: true
@@ -235,6 +241,7 @@ export type TransactionItemGroupByArgs<ExtArgs extends runtime.Types.Extensions.
 
 export type TransactionItemGroupByOutputType = {
   id: string
+  status: $Enums.TransactionStatus
   transactionId: string
   accessoryId: string | null
   voucherId: string | null
@@ -273,6 +280,7 @@ export type TransactionItemWhereInput = {
   OR?: Prisma.TransactionItemWhereInput[]
   NOT?: Prisma.TransactionItemWhereInput | Prisma.TransactionItemWhereInput[]
   id?: Prisma.StringFilter<"TransactionItem"> | string
+  status?: Prisma.EnumTransactionStatusFilter<"TransactionItem"> | $Enums.TransactionStatus
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
@@ -293,6 +301,7 @@ export type TransactionItemWhereInput = {
 
 export type TransactionItemOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
   accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -316,6 +325,7 @@ export type TransactionItemWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.TransactionItemWhereInput | Prisma.TransactionItemWhereInput[]
   OR?: Prisma.TransactionItemWhereInput[]
   NOT?: Prisma.TransactionItemWhereInput | Prisma.TransactionItemWhereInput[]
+  status?: Prisma.EnumTransactionStatusFilter<"TransactionItem"> | $Enums.TransactionStatus
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
@@ -336,6 +346,7 @@ export type TransactionItemWhereUniqueInput = Prisma.AtLeast<{
 
 export type TransactionItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
   accessoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   voucherId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -359,6 +370,7 @@ export type TransactionItemScalarWhereWithAggregatesInput = {
   OR?: Prisma.TransactionItemScalarWhereWithAggregatesInput[]
   NOT?: Prisma.TransactionItemScalarWhereWithAggregatesInput | Prisma.TransactionItemScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"TransactionItem"> | string
+  status?: Prisma.EnumTransactionStatusWithAggregatesFilter<"TransactionItem"> | $Enums.TransactionStatus
   transactionId?: Prisma.StringWithAggregatesFilter<"TransactionItem"> | string
   accessoryId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableWithAggregatesFilter<"TransactionItem"> | string | null
@@ -374,6 +386,7 @@ export type TransactionItemScalarWhereWithAggregatesInput = {
 
 export type TransactionItemCreateInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -389,6 +402,7 @@ export type TransactionItemCreateInput = {
 
 export type TransactionItemUncheckedCreateInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -404,6 +418,7 @@ export type TransactionItemUncheckedCreateInput = {
 
 export type TransactionItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -419,6 +434,7 @@ export type TransactionItemUpdateInput = {
 
 export type TransactionItemUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -434,6 +450,7 @@ export type TransactionItemUncheckedUpdateInput = {
 
 export type TransactionItemCreateManyInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -449,6 +466,7 @@ export type TransactionItemCreateManyInput = {
 
 export type TransactionItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -459,6 +477,7 @@ export type TransactionItemUpdateManyMutationInput = {
 
 export type TransactionItemUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -484,6 +503,7 @@ export type TransactionItemOrderByRelationAggregateInput = {
 
 export type TransactionItemCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
@@ -506,6 +526,7 @@ export type TransactionItemAvgOrderByAggregateInput = {
 
 export type TransactionItemMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
@@ -521,6 +542,7 @@ export type TransactionItemMaxOrderByAggregateInput = {
 
 export type TransactionItemMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   transactionId?: Prisma.SortOrder
   accessoryId?: Prisma.SortOrder
   voucherId?: Prisma.SortOrder
@@ -751,8 +773,13 @@ export type TransactionItemUncheckedUpdateManyWithoutTransactionNestedInput = {
   deleteMany?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
 }
 
+export type EnumTransactionStatusFieldUpdateOperationsInput = {
+  set?: $Enums.TransactionStatus
+}
+
 export type TransactionItemCreateWithoutPhoneInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -767,6 +794,7 @@ export type TransactionItemCreateWithoutPhoneInput = {
 
 export type TransactionItemUncheckedCreateWithoutPhoneInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -810,6 +838,7 @@ export type TransactionItemScalarWhereInput = {
   OR?: Prisma.TransactionItemScalarWhereInput[]
   NOT?: Prisma.TransactionItemScalarWhereInput | Prisma.TransactionItemScalarWhereInput[]
   id?: Prisma.StringFilter<"TransactionItem"> | string
+  status?: Prisma.EnumTransactionStatusFilter<"TransactionItem"> | $Enums.TransactionStatus
   transactionId?: Prisma.StringFilter<"TransactionItem"> | string
   accessoryId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
   voucherId?: Prisma.StringNullableFilter<"TransactionItem"> | string | null
@@ -825,6 +854,7 @@ export type TransactionItemScalarWhereInput = {
 
 export type TransactionItemCreateWithoutAccessoryInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -839,6 +869,7 @@ export type TransactionItemCreateWithoutAccessoryInput = {
 
 export type TransactionItemUncheckedCreateWithoutAccessoryInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   voucherId?: string | null
   pulsaId?: string | null
@@ -879,6 +910,7 @@ export type TransactionItemUpdateManyWithWhereWithoutAccessoryInput = {
 
 export type TransactionItemCreateWithoutVoucherInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -893,6 +925,7 @@ export type TransactionItemCreateWithoutVoucherInput = {
 
 export type TransactionItemUncheckedCreateWithoutVoucherInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   pulsaId?: string | null
@@ -933,6 +966,7 @@ export type TransactionItemUpdateManyWithWhereWithoutVoucherInput = {
 
 export type TransactionItemCreateWithoutPulsaInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -947,6 +981,7 @@ export type TransactionItemCreateWithoutPulsaInput = {
 
 export type TransactionItemUncheckedCreateWithoutPulsaInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -987,6 +1022,7 @@ export type TransactionItemUpdateManyWithWhereWithoutPulsaInput = {
 
 export type TransactionItemCreateWithoutTransactionInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   pulsaDestinationNumber?: string | null
   pulsaDescription?: string | null
   pulsaBalance?: number | null
@@ -1001,6 +1037,7 @@ export type TransactionItemCreateWithoutTransactionInput = {
 
 export type TransactionItemUncheckedCreateWithoutTransactionInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
@@ -1041,6 +1078,7 @@ export type TransactionItemUpdateManyWithWhereWithoutTransactionInput = {
 
 export type TransactionItemCreateManyPhoneInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -1055,6 +1093,7 @@ export type TransactionItemCreateManyPhoneInput = {
 
 export type TransactionItemUpdateWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1069,6 +1108,7 @@ export type TransactionItemUpdateWithoutPhoneInput = {
 
 export type TransactionItemUncheckedUpdateWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1083,6 +1123,7 @@ export type TransactionItemUncheckedUpdateWithoutPhoneInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutPhoneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1097,6 +1138,7 @@ export type TransactionItemUncheckedUpdateManyWithoutPhoneInput = {
 
 export type TransactionItemCreateManyAccessoryInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   voucherId?: string | null
   pulsaId?: string | null
@@ -1111,6 +1153,7 @@ export type TransactionItemCreateManyAccessoryInput = {
 
 export type TransactionItemUpdateWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1125,6 +1168,7 @@ export type TransactionItemUpdateWithoutAccessoryInput = {
 
 export type TransactionItemUncheckedUpdateWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1139,6 +1183,7 @@ export type TransactionItemUncheckedUpdateWithoutAccessoryInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutAccessoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1153,6 +1198,7 @@ export type TransactionItemUncheckedUpdateManyWithoutAccessoryInput = {
 
 export type TransactionItemCreateManyVoucherInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   pulsaId?: string | null
@@ -1167,6 +1213,7 @@ export type TransactionItemCreateManyVoucherInput = {
 
 export type TransactionItemUpdateWithoutVoucherInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1181,6 +1228,7 @@ export type TransactionItemUpdateWithoutVoucherInput = {
 
 export type TransactionItemUncheckedUpdateWithoutVoucherInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1195,6 +1243,7 @@ export type TransactionItemUncheckedUpdateWithoutVoucherInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutVoucherInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1209,6 +1258,7 @@ export type TransactionItemUncheckedUpdateManyWithoutVoucherInput = {
 
 export type TransactionItemCreateManyPulsaInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   transactionId: string
   accessoryId?: string | null
   voucherId?: string | null
@@ -1223,6 +1273,7 @@ export type TransactionItemCreateManyPulsaInput = {
 
 export type TransactionItemUpdateWithoutPulsaInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1237,6 +1288,7 @@ export type TransactionItemUpdateWithoutPulsaInput = {
 
 export type TransactionItemUncheckedUpdateWithoutPulsaInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1251,6 +1303,7 @@ export type TransactionItemUncheckedUpdateWithoutPulsaInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutPulsaInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   transactionId?: Prisma.StringFieldUpdateOperationsInput | string
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1265,6 +1318,7 @@ export type TransactionItemUncheckedUpdateManyWithoutPulsaInput = {
 
 export type TransactionItemCreateManyTransactionInput = {
   id?: string
+  status?: $Enums.TransactionStatus
   accessoryId?: string | null
   voucherId?: string | null
   pulsaId?: string | null
@@ -1279,6 +1333,7 @@ export type TransactionItemCreateManyTransactionInput = {
 
 export type TransactionItemUpdateWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   pulsaDestinationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaBalance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1293,6 +1348,7 @@ export type TransactionItemUpdateWithoutTransactionInput = {
 
 export type TransactionItemUncheckedUpdateWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1307,6 +1363,7 @@ export type TransactionItemUncheckedUpdateWithoutTransactionInput = {
 
 export type TransactionItemUncheckedUpdateManyWithoutTransactionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   accessoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   voucherId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pulsaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1323,6 +1380,7 @@ export type TransactionItemUncheckedUpdateManyWithoutTransactionInput = {
 
 export type TransactionItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  status?: boolean
   transactionId?: boolean
   accessoryId?: boolean
   voucherId?: boolean
@@ -1343,6 +1401,7 @@ export type TransactionItemSelect<ExtArgs extends runtime.Types.Extensions.Inter
 
 export type TransactionItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  status?: boolean
   transactionId?: boolean
   accessoryId?: boolean
   voucherId?: boolean
@@ -1363,6 +1422,7 @@ export type TransactionItemSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
 
 export type TransactionItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  status?: boolean
   transactionId?: boolean
   accessoryId?: boolean
   voucherId?: boolean
@@ -1383,6 +1443,7 @@ export type TransactionItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
 
 export type TransactionItemSelectScalar = {
   id?: boolean
+  status?: boolean
   transactionId?: boolean
   accessoryId?: boolean
   voucherId?: boolean
@@ -1396,7 +1457,7 @@ export type TransactionItemSelectScalar = {
   costPrice?: boolean
 }
 
-export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "transactionId" | "accessoryId" | "voucherId" | "pulsaId" | "pulsaDestinationNumber" | "pulsaDescription" | "pulsaBalance" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
+export type TransactionItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "transactionId" | "accessoryId" | "voucherId" | "pulsaId" | "pulsaDestinationNumber" | "pulsaDescription" | "pulsaBalance" | "phoneId" | "quantity" | "sellPrice" | "costPrice", ExtArgs["result"]["transactionItem"]>
 export type TransactionItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transaction?: boolean | Prisma.TransactionDefaultArgs<ExtArgs>
   accessory?: boolean | Prisma.TransactionItem$accessoryArgs<ExtArgs>
@@ -1430,6 +1491,7 @@ export type $TransactionItemPayload<ExtArgs extends runtime.Types.Extensions.Int
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    status: $Enums.TransactionStatus
     transactionId: string
     accessoryId: string | null
     voucherId: string | null
@@ -1870,6 +1932,7 @@ export interface Prisma__TransactionItemClient<T, Null = never, ExtArgs extends 
  */
 export interface TransactionItemFieldRefs {
   readonly id: Prisma.FieldRef<"TransactionItem", 'String'>
+  readonly status: Prisma.FieldRef<"TransactionItem", 'TransactionStatus'>
   readonly transactionId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly accessoryId: Prisma.FieldRef<"TransactionItem", 'String'>
   readonly voucherId: Prisma.FieldRef<"TransactionItem", 'String'>

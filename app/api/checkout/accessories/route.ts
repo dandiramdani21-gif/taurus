@@ -51,6 +51,7 @@ export async function POST(request: Request) {
         quantity: item.quantity,
         sellPrice: item.sellPrice,
         costPrice: item.costPrice,
+        status: item.status
       });
 
       invoiceItems.push({
@@ -73,7 +74,6 @@ export async function POST(request: Request) {
         totalAmount,
         totalCost,
         profit,
-        status: "PAID",
         userId: user.id,
         servedByName: user.name || null,
         items: {

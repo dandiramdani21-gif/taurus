@@ -64,7 +64,6 @@ export async function POST(request: Request) {
               invoiceNumber,
               type: "SALE",
               category: "PRODUK_LAIN",
-              status: "PAID",
               totalAmount: Number(totalAmount),
               totalCost: Number(totalCost),
               profit: Number(profit),
@@ -88,6 +87,7 @@ export async function POST(request: Request) {
             await tx.transactionItem.create({
               data: {
                 transactionId: newTransaction.id,
+                status: "PAID",
                 voucherId: item.productId,
                 quantity: item.quantity,
                 sellPrice: Number(item.sellPrice),

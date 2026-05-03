@@ -85,7 +85,6 @@ export async function POST(request: Request) {
         data: {
           invoiceNumber: persistedInvoiceNumber,
           type: "SALE",
-          status: "PAID",
           category: "PULSA",
           totalAmount: Number(totalAmount ?? sellPrice ?? 0),
           totalCost: Number(totalCost ?? costPrice ?? 0),
@@ -105,6 +104,7 @@ export async function POST(request: Request) {
               quantity: Number(item.quantity || 1),
               sellPrice: Number(item.sellPrice ?? 0),
               costPrice: Number(item.costPrice ?? 0),
+              status: "PAID"
             },
           });
         }

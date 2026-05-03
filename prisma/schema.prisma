@@ -152,7 +152,6 @@ model Transaction {
   id     String            @id @default(cuid())
   invoiceNumber String?    @unique
   type   TransactionType
-  status TransactionStatus @default(PAID)
   category ProductCategory @default(HANDPHONE)
   deleted Boolean @default(false)
 
@@ -177,7 +176,7 @@ model Transaction {
 // ================= TRANSACTION ITEM =================
 model TransactionItem {
   id String @id @default(cuid())
-
+  status TransactionStatus @default(PAID)
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id])
 
@@ -187,7 +186,6 @@ model TransactionItem {
   
   voucherId String?
   voucher   Voucher? @relation(fields: [voucherId], references: [id])
-  
   pulsaId String?
   pulsa   Pulsa? @relation(fields: [pulsaId], references: [id])
   pulsaDestinationNumber String?

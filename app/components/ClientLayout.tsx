@@ -37,11 +37,11 @@ export default function ClientLayout({
     return <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.08),_transparent_34%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)]">{children}</main>;
   }
 
-  // Default dengan sidebar
+  // Default dengan sidebar - Content scrollable
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.08),_transparent_34%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-900">
+    <div className="flex h-screen bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.08),_transparent_34%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-900">
       <Sidebar />
-      <main className="flex-1 w-full overflow-x-hidden">
+      <main className="flex-1 w-full overflow-y-auto">  {/* ← tambahkan overflow-y-auto */}
         <div className="mx-auto max-w-[1700px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
           {children}
         </div>

@@ -7,6 +7,7 @@ import { withAccelerate } from "@prisma/extension-accelerate";
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocal = process.env.NODE_ENV === 'development';
 
+
 let prisma: PrismaClient; // Remove 'any' typing
 
 if (isProduction) {

@@ -109,33 +109,27 @@ export async function GET(request: Request) {
         // Total Assets: sum dari (costPrice * stock)
         const total_assets = accessoriesData.reduce((sum, item) => sum + (item.costPrice * item.stock), 0);
 
-        // Total Sold & Profits dari TransactionItem join Transaction status PAID
+        // Total Sold dari TransactionItem dengan status PAID
         const transactionStats = await tx.transactionItem.aggregate({
           where: {
             accessoryId: {
               in: ids,
             },
+            status: "PAID",  // ← status dari item
             transaction: {
-              status: "PAID",
               deleted: false,
             },
           },
           _sum: {
             quantity: true,
-            sellPrice: true,
-            costPrice: true,
           },
         });
 
         const total_solds = transactionStats?._sum?.quantity ?? 0;
-        const total_revenue = transactionStats?._sum?.sellPrice ?? 0;
-        const total_cost = transactionStats?._sum?.costPrice ?? 0;
-        const profits = total_revenue - total_cost;
 
         return {
           total_assets,
           total_solds,
-          profits,
         };
       }),
     ]);

@@ -87,6 +87,7 @@ export async function GET(request: Request) {
         { items: { some: { pulsa: { code: { contains: searchTerm, mode: "insensitive" } } } } },
         { items: { some: { pulsa: { description: { contains: searchTerm, mode: "insensitive" } } } } },
         { items: { some: { pulsaDestinationNumber: { contains: searchTerm, mode: "insensitive" } } } },
+
       ];
     }
 

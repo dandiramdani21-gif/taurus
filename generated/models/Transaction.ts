@@ -42,7 +42,6 @@ export type TransactionMinAggregateOutputType = {
   id: string | null
   invoiceNumber: string | null
   type: $Enums.TransactionType | null
-  status: $Enums.TransactionStatus | null
   category: $Enums.ProductCategory | null
   deleted: boolean | null
   totalAmount: number | null
@@ -59,7 +58,6 @@ export type TransactionMaxAggregateOutputType = {
   id: string | null
   invoiceNumber: string | null
   type: $Enums.TransactionType | null
-  status: $Enums.TransactionStatus | null
   category: $Enums.ProductCategory | null
   deleted: boolean | null
   totalAmount: number | null
@@ -76,7 +74,6 @@ export type TransactionCountAggregateOutputType = {
   id: number
   invoiceNumber: number
   type: number
-  status: number
   category: number
   deleted: number
   totalAmount: number
@@ -107,7 +104,6 @@ export type TransactionMinAggregateInputType = {
   id?: true
   invoiceNumber?: true
   type?: true
-  status?: true
   category?: true
   deleted?: true
   totalAmount?: true
@@ -124,7 +120,6 @@ export type TransactionMaxAggregateInputType = {
   id?: true
   invoiceNumber?: true
   type?: true
-  status?: true
   category?: true
   deleted?: true
   totalAmount?: true
@@ -141,7 +136,6 @@ export type TransactionCountAggregateInputType = {
   id?: true
   invoiceNumber?: true
   type?: true
-  status?: true
   category?: true
   deleted?: true
   totalAmount?: true
@@ -245,7 +239,6 @@ export type TransactionGroupByOutputType = {
   id: string
   invoiceNumber: string | null
   type: $Enums.TransactionType
-  status: $Enums.TransactionStatus
   category: $Enums.ProductCategory
   deleted: boolean
   totalAmount: number
@@ -285,7 +278,6 @@ export type TransactionWhereInput = {
   id?: Prisma.StringFilter<"Transaction"> | string
   invoiceNumber?: Prisma.StringNullableFilter<"Transaction"> | string | null
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   deleted?: Prisma.BoolFilter<"Transaction"> | boolean
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
@@ -304,7 +296,6 @@ export type TransactionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   invoiceNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   category?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
@@ -326,7 +317,6 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.TransactionWhereInput[]
   NOT?: Prisma.TransactionWhereInput | Prisma.TransactionWhereInput[]
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   deleted?: Prisma.BoolFilter<"Transaction"> | boolean
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
@@ -345,7 +335,6 @@ export type TransactionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   invoiceNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   category?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
@@ -370,7 +359,6 @@ export type TransactionScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   invoiceNumber?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   type?: Prisma.EnumTransactionTypeWithAggregatesFilter<"Transaction"> | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusWithAggregatesFilter<"Transaction"> | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryWithAggregatesFilter<"Transaction"> | $Enums.ProductCategory
   deleted?: Prisma.BoolWithAggregatesFilter<"Transaction"> | boolean
   totalAmount?: Prisma.IntWithAggregatesFilter<"Transaction"> | number
@@ -387,7 +375,6 @@ export type TransactionCreateInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -405,7 +392,6 @@ export type TransactionUncheckedCreateInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -423,7 +409,6 @@ export type TransactionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -441,7 +426,6 @@ export type TransactionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -459,7 +443,6 @@ export type TransactionCreateManyInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -476,7 +459,6 @@ export type TransactionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -492,7 +474,6 @@ export type TransactionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -519,7 +500,6 @@ export type TransactionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   invoiceNumber?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   category?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
@@ -542,7 +522,6 @@ export type TransactionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   invoiceNumber?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   category?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
@@ -559,7 +538,6 @@ export type TransactionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   invoiceNumber?: Prisma.SortOrder
   type?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   category?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
@@ -629,10 +607,6 @@ export type EnumTransactionTypeFieldUpdateOperationsInput = {
   set?: $Enums.TransactionType
 }
 
-export type EnumTransactionStatusFieldUpdateOperationsInput = {
-  set?: $Enums.TransactionStatus
-}
-
 export type TransactionCreateNestedOneWithoutItemsInput = {
   create?: Prisma.XOR<Prisma.TransactionCreateWithoutItemsInput, Prisma.TransactionUncheckedCreateWithoutItemsInput>
   connectOrCreate?: Prisma.TransactionCreateOrConnectWithoutItemsInput
@@ -651,7 +625,6 @@ export type TransactionCreateWithoutUserInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -668,7 +641,6 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -714,7 +686,6 @@ export type TransactionScalarWhereInput = {
   id?: Prisma.StringFilter<"Transaction"> | string
   invoiceNumber?: Prisma.StringNullableFilter<"Transaction"> | string | null
   type?: Prisma.EnumTransactionTypeFilter<"Transaction"> | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFilter<"Transaction"> | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFilter<"Transaction"> | $Enums.ProductCategory
   deleted?: Prisma.BoolFilter<"Transaction"> | boolean
   totalAmount?: Prisma.IntFilter<"Transaction"> | number
@@ -731,7 +702,6 @@ export type TransactionCreateWithoutItemsInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -748,7 +718,6 @@ export type TransactionUncheckedCreateWithoutItemsInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -781,7 +750,6 @@ export type TransactionUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -798,7 +766,6 @@ export type TransactionUncheckedUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -815,7 +782,6 @@ export type TransactionCreateManyUserInput = {
   id?: string
   invoiceNumber?: string | null
   type: $Enums.TransactionType
-  status?: $Enums.TransactionStatus
   category?: $Enums.ProductCategory
   deleted?: boolean
   totalAmount: number
@@ -831,7 +797,6 @@ export type TransactionUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -848,7 +813,6 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -865,7 +829,6 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumTransactionTypeFieldUpdateOperationsInput | $Enums.TransactionType
-  status?: Prisma.EnumTransactionStatusFieldUpdateOperationsInput | $Enums.TransactionStatus
   category?: Prisma.EnumProductCategoryFieldUpdateOperationsInput | $Enums.ProductCategory
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -912,7 +875,6 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   id?: boolean
   invoiceNumber?: boolean
   type?: boolean
-  status?: boolean
   category?: boolean
   deleted?: boolean
   totalAmount?: boolean
@@ -932,7 +894,6 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   invoiceNumber?: boolean
   type?: boolean
-  status?: boolean
   category?: boolean
   deleted?: boolean
   totalAmount?: boolean
@@ -950,7 +911,6 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   id?: boolean
   invoiceNumber?: boolean
   type?: boolean
-  status?: boolean
   category?: boolean
   deleted?: boolean
   totalAmount?: boolean
@@ -968,7 +928,6 @@ export type TransactionSelectScalar = {
   id?: boolean
   invoiceNumber?: boolean
   type?: boolean
-  status?: boolean
   category?: boolean
   deleted?: boolean
   totalAmount?: boolean
@@ -981,7 +940,7 @@ export type TransactionSelectScalar = {
   userId?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invoiceNumber" | "type" | "status" | "category" | "deleted" | "totalAmount" | "totalCost" | "profit" | "note" | "debt_note" | "servedByName" | "createdAt" | "userId", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invoiceNumber" | "type" | "category" | "deleted" | "totalAmount" | "totalCost" | "profit" | "note" | "debt_note" | "servedByName" | "createdAt" | "userId", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   items?: boolean | Prisma.Transaction$itemsArgs<ExtArgs>
@@ -1004,7 +963,6 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     id: string
     invoiceNumber: string | null
     type: $Enums.TransactionType
-    status: $Enums.TransactionStatus
     category: $Enums.ProductCategory
     deleted: boolean
     totalAmount: number
@@ -1443,7 +1401,6 @@ export interface TransactionFieldRefs {
   readonly id: Prisma.FieldRef<"Transaction", 'String'>
   readonly invoiceNumber: Prisma.FieldRef<"Transaction", 'String'>
   readonly type: Prisma.FieldRef<"Transaction", 'TransactionType'>
-  readonly status: Prisma.FieldRef<"Transaction", 'TransactionStatus'>
   readonly category: Prisma.FieldRef<"Transaction", 'ProductCategory'>
   readonly deleted: Prisma.FieldRef<"Transaction", 'Boolean'>
   readonly totalAmount: Prisma.FieldRef<"Transaction", 'Int'>

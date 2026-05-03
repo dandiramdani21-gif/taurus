@@ -56,7 +56,6 @@ export async function GET(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -69,117 +68,28 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const nextStatusRaw = body?.status ? String(body.status) : null;
     const nextDeletedRaw = typeof body?.deleted === "boolean" ? body.deleted : null;
     const nextDebtNote = typeof body?.debt_note === "string" ? body.debt_note.trim() : null;
 
-    if (nextStatusRaw !== null && !isValidStatus(nextStatusRaw)) {
-      return NextResponse.json({ error: "Status tidak valid" }, { status: 400 });
-    }
-
-    if (nextStatusRaw === null && nextDeletedRaw === null && nextDebtNote === null) {
+    // Hanya untuk update debt_note dan deleted (status sudah tidak ada di sini)
+    if (nextDeletedRaw === null && nextDebtNote === null) {
       return NextResponse.json({ error: "Tidak ada perubahan yang dikirim" }, { status: 400 });
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.findUnique({
-        where: { id },
-        include: {
-          items: true,
-        },
-      });
-
-      if (!transaction) {
-        throw new Error("NOT_FOUND");
-      }
-
-      const prevStatus = transaction.status;
-      const nextStatus = nextStatusRaw as TransactionStatus | null;
-      const nextDeleted = nextDeletedRaw;
-
-      const statusUnchanged = nextStatus === null || prevStatus === nextStatus;
-      const deletedUnchanged = nextDeleted === null || transaction.deleted === nextDeleted;
-      const debtNoteUnchanged = nextDebtNote === null;
-
-      if (statusUnchanged && deletedUnchanged && debtNoteUnchanged) {
-        return transaction;
-      }
-
-      const shouldRevertSale = nextStatus === "REFUND" && prevStatus === "PAID";
-      const shouldApplySale = nextStatus === "PAID" && prevStatus === "REFUND";
-
-      if (shouldRevertSale || shouldApplySale) {
-        for (const item of transaction.items) {
-          const qty = Number(item.quantity || 1);
-
-          if (item.phoneId) {
-            await tx.phone.update({
-              where: { id: item.phoneId },
-              data: {
-                stock: { [shouldRevertSale ? "increment" : "decrement"]: qty },
-                isHidden: shouldRevertSale ? false : true,
-              },
-            });
-          }
-
-          if (item.accessoryId) {
-            await tx.accessory.update({
-              where: { id: item.accessoryId },
-              data: {
-                stock: { [shouldRevertSale ? "increment" : "decrement"]: qty },
-              },
-            });
-          }
-
-          if (item.voucherId) {
-            await tx.voucher.update({
-              where: { id: item.voucherId },
-              data: {
-                stock: { [shouldRevertSale ? "increment" : "decrement"]: qty },
-              },
-            });
-          }
-
-          const isPulsaItem = Boolean(item.pulsaId || item.pulsaDestinationNumber || item.pulsaDescription);
-          if (isPulsaItem) {
-            const currentBalance = Number(item.pulsaBalance || 0);
-            const modal = Number(item.costPrice || 0) * qty;
-            const nextBalance = shouldRevertSale
-              ? currentBalance + modal
-              : Math.max(0, currentBalance - modal);
-
-            await tx.transactionItem.update({
-              where: { id: item.id },
-              data: {
-                pulsaBalance: nextBalance,
-              },
-            });
-          }
-        }
-      }
-
-      return tx.transaction.update({
-        where: { id },
-        data: {
-          ...(nextStatus ? { status: nextStatus } : {}),
-          ...(nextDeleted !== null ? { deleted: nextDeleted } : {}),
-          ...(nextDebtNote !== null ? { debt_note: nextDebtNote } : {}),
-        },
-        include: {
-          items: true,
-          user: {
-            select: { id: true, name: true, email: true },
-          },
-        },
-      });
+    const updated = await prisma.transaction.update({
+      where: { id },
+      data: {
+        ...(nextDeletedRaw !== null ? { deleted: nextDeletedRaw } : {}),
+        ...(nextDebtNote !== null ? { debt_note: nextDebtNote } : {}),
+      },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
+    console.error("Error updating transaction:", error);
     if (error instanceof Error && error.message === "NOT_FOUND") {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
-    console.error("Error updating transaction status:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
