@@ -6,8 +6,6 @@ type GetLaporanParams = {
   endDate: string;
   category: ProductCategory;
   search: string | null;
-  page?: number;
-  pageSize?: number;
 };
 
 export async function getCategoryLaporan({
@@ -15,18 +13,15 @@ export async function getCategoryLaporan({
   endDate,
   category,
   search,
-  page = 1,
-  pageSize = 6,
 }: GetLaporanParams) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   end.setHours(23, 59, 59, 999);
 
-  const skip = (page - 1) * pageSize;
-
+  // WHERE condition untuk semua transaksi (termasuk REFUND)
   const whereCondition = {
     type: "SALE" as const,
-    category,
+    category: category,
     deleted: false,
     createdAt: {
       gte: start,
@@ -58,13 +53,13 @@ export async function getCategoryLaporan({
       : {}),
   };
 
-  // ✅ Summary condition: hanya PAID
-  const summaryWhereCondition = {
+  // WHERE condition untuk summary (hanya PAID)
+  const whereConditionPaid = {
     ...whereCondition,
     status: "PAID" as const,
   };
 
-  // ✅ Today's date range
+  // WHERE condition untuk keuntungan hari ini
   const today = new Date();
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const todayEnd = new Date(todayStart);
@@ -72,7 +67,7 @@ export async function getCategoryLaporan({
 
   const todayWhereCondition = {
     type: "SALE" as const,
-    category,
+    category: category,
     deleted: false,
     status: "PAID" as const,
     createdAt: {
@@ -81,8 +76,8 @@ export async function getCategoryLaporan({
     },
   };
 
-  const [totalCount, transactions, aggregateResult, todayAggregate] = await Promise.all([
-    prisma.transaction.count({ where: whereCondition }),
+  const [transactions, aggregateResult, todayAggregate] = await Promise.all([
+    // Ambil semua transaksi (include REFUND)
     prisma.transaction.findMany({
       where: whereCondition,
       include: {
@@ -102,17 +97,19 @@ export async function getCategoryLaporan({
         },
       },
       orderBy: { createdAt: "desc" },
-      skip,
-      take: pageSize,
     }),
+    
+    // Summary total revenue, cost, profit (hanya PAID)
     prisma.transaction.aggregate({
-      where: summaryWhereCondition, // ✅ Hanya PAID
+      where: whereConditionPaid,
       _sum: {
         totalAmount: true,
         totalCost: true,
         profit: true,
       },
     }),
+    
+    // Keuntungan hari ini (independen, tidak kena filter bulan)
     prisma.transaction.aggregate({
       where: todayWhereCondition,
       _sum: {
@@ -121,44 +118,41 @@ export async function getCategoryLaporan({
     }),
   ]);
 
+  // Hitung total transaksi PAID
+  const paidTransactions = transactions.filter(t => t.status === "PAID");
+  const totalCount = paidTransactions.length;
+
   const totalRevenue = aggregateResult._sum.totalAmount || 0;
   const totalCost = aggregateResult._sum.totalCost || 0;
   const totalProfit = aggregateResult._sum.profit || 0;
   const todayProfit = todayAggregate._sum.profit || 0;
 
+  // Daily breakdown (hanya untuk transaksi PAID)
   const dailyMap = new Map<string, { date: string; revenue: number; cost: number; profit: number }>();
 
-  transactions.forEach((transaction) => {
+  paidTransactions.forEach((transaction) => {
     const dateStr = transaction.createdAt.toISOString().split("T")[0];
     if (!dailyMap.has(dateStr)) {
       dailyMap.set(dateStr, { date: dateStr, revenue: 0, cost: 0, profit: 0 });
     }
 
     const day = dailyMap.get(dateStr)!;
-    const multiplier = transaction.status === "REFUND" ? 0 : 1;
-    day.revenue += transaction.totalAmount * multiplier;
-    day.cost += transaction.totalCost * multiplier;
-    day.profit += transaction.profit * multiplier;
+    day.revenue += transaction.totalAmount;
+    day.cost += transaction.totalCost;
+    day.profit += transaction.profit;
   });
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const dailySummary = Array.from(dailyMap.values());
 
   return {
     transactions,
+    dailySummary,
     summary: {
       totalRevenue,
       totalCost,
       totalProfit,
-      todayProfit,
-      transactionCount: totalCount,
-    },
-    pagination: {
-      page,
-      pageSize,
-      totalCount,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
+      todayProfit,        // ← KEUNTUNGAN HARI INI (REAL TIME)
+      transactionCount: totalCount,  // ← HANYA PAID DI RANGE FILTER
     },
   };
 }

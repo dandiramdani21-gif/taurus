@@ -453,15 +453,13 @@ const applyBestEffortFill = (worksheet: XLSX.WorkSheet, rowIndex: number, colCou
   }
 };
 
-async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[], search: string, page: number = 1) {
+async function fetchCategoryReport(startDate: string, endDate: string, categories: ReportCategory[], search: string) {
   const responses = await Promise.all(
     categories.map(async (category) => {
       const url = new URL(categoryEndpointMap[category], window.location.origin);
       url.searchParams.set("startDate", startDate);
       url.searchParams.set("endDate", endDate);
       url.searchParams.set("search", search);
-      url.searchParams.set("page", page.toString());
-      url.searchParams.set("pageSize", "6");
 
       const res = await fetch(url.toString());
       if (!res.ok) {
@@ -483,13 +481,7 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
         transactionCount: acc.summary.transactionCount + (report.summary?.transactionCount || 0),
       };
 
-      // Get pagination from last report (they should all be the same)
-      const pagination = report.pagination || { page: 1, pageSize: 6, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false };
-
-      // Limit transactions to pageSize after merging from multiple categories
-      const limitedTransactions = transactions.slice(0, pagination.pageSize);
-
-      return { transactions: limitedTransactions, summary, pagination };
+      return { transactions, summary };
     },
     {
       transactions: [] as ReportTransaction[],
@@ -499,7 +491,6 @@ async function fetchCategoryReport(startDate: string, endDate: string, categorie
         totalProfit: 0,
         transactionCount: 0,
       },
-      pagination: { page: 1, pageSize: 6, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false },
     }
   );
 }
@@ -695,7 +686,7 @@ export default function LaporanKeuanganPage() {
       const requestStart = [startDate, monthStart, today].sort()[0];
       const requestEnd = [endDate, today].sort()[1];
 
-      const report = await fetchCategoryReport(requestStart, requestEnd, categories, search, page);
+      const report = await fetchCategoryReport(requestStart, requestEnd, categories, search);
       const allTransactions = report.transactions || [];
       const tableTransactions = filterTransactionsByDateRange(allTransactions, startDate, endDate);
       const monthTransactions = filterTransactionsByDateRange(allTransactions, monthStart, today);
@@ -1239,6 +1230,7 @@ const exportToExcel = async () => {
                           <td className="px-6 py-4 text-sm" colSpan={2}>
                             Laba/Rugi kelompok tanggal ini
                           </td>
+                          <td></td>
                           <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalModal)}</td>
                           <td className="px-6 py-4 text-right text-sm font-semibold">-</td>
                           <td className="px-6 py-4 text-right text-sm font-semibold">{rupiah(group.subtotalTotal)}</td>
