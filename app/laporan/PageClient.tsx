@@ -560,7 +560,7 @@ export default function LaporanKeuanganPage() {
   const inFlightKeyRef = useRef<string | null>(null);
   const [updatingStatusTxId, setUpdatingStatusTxId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = Number.MAX_SAFE_INTEGER;
   const [search, setSearch] = useState("");
 
   const fixedFilter: ReportProductFilter | null =
